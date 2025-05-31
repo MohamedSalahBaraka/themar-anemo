@@ -23,6 +23,7 @@ import {
     CreditCardOutlined,
 } from "@ant-design/icons";
 import { Link, usePage } from "@inertiajs/react";
+// @ts-ignore
 import { Scrollbars } from "@pezhmanparsaee/react-custom-scrollbars";
 import { ThemeProvider } from "styled-components";
 import AuthInfo from "./AuthInfo";

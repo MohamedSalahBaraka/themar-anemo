@@ -379,9 +379,13 @@ const Page: React.FC = () => {
                                                 <Text>
                                                     {!isLoggedIn &&
                                                         "you need to register to make offers and inquires "}
-                                                    {property.status !==
-                                                        "available" &&
-                                                        "the property isn't available to make offers and inquires"}
+
+                                                    {
+                                                        // @ts-ignore
+                                                        property.status !==
+                                                            "available" &&
+                                                            "the property isn't available to make offers and inquires"
+                                                    }
                                                 </Text>
                                             </>
                                         )}
