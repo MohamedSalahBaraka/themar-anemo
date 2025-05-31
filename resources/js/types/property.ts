@@ -21,6 +21,7 @@ export interface Property {
     longitude?: number;
     address?: string;
     published_at?: string | null;
+    primaryImage?: string | null;
     image_url?: string | null;
     expires_at?: string | null;
     rejection_reason?: string | null;

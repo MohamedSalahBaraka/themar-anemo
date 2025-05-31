@@ -21,7 +21,7 @@ class SubscriptionController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('error', 'You must be logged in to view subscriptions.');
         }
-        $activeSubscription = $user->activeSubscription();
+        $subscription = $user->subscription();
         return Inertia::render('user/SubscriptionPage', [
             'packages' => Package::where('isActive', true)->get()->map(function ($package) {
                 return [
@@ -35,19 +35,19 @@ class SubscriptionController extends Controller
                     'is_active' => $package->is_active,
                 ];
             }),
-            'currentSubscription' => $activeSubscription ? [
-                'id' => $activeSubscription->id,
-                'package_id' => $activeSubscription->package_id,
-                'started_at' => $activeSubscription->started_at,
-                'expires_at' => $activeSubscription->expires_at,
-                'is_active' => $activeSubscription->is_active,
+            'currentSubscription' => $subscription ? [
+                'id' => $subscription->id,
+                'package_id' => $subscription->package_id,
+                'started_at' => $subscription->started_at,
+                'expires_at' => $subscription->expires_at,
+                'is_active' => $subscription->is_active,
                 'package' => [
-                    'id' => $activeSubscription->package->id,
-                    'name' => $activeSubscription->package->name,
-                    'price' => $activeSubscription->package->price,
-                    'duration' => $activeSubscription->package->duration,
-                    'max_listings' => $activeSubscription->package->max_listings,
-                    'features' => $activeSubscription->package->features ?? [],
+                    'id' => $subscription->package->id,
+                    'name' => $subscription->package->name,
+                    'price' => $subscription->package->price,
+                    'duration' => $subscription->package->duration,
+                    'max_listings' => $subscription->package->max_listings,
+                    'features' => $subscription->package->features ?? [],
                 ]
             ] : null,
             'transactions' => $user->transactions()

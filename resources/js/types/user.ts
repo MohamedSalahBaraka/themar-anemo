@@ -8,10 +8,15 @@ export interface User {
     profile: {
         bio?: string;
         profile_image?: string | null;
+        id_photo?: string | null;
         company_name?: string | null;
+        address?: string | null;
+        national_id?: string | null;
+        tax_id?: string | null;
     };
     created_at: string;
     updated_at: string;
+    subscription: Subscription;
 }
 
 export interface Stats {
@@ -28,9 +33,13 @@ export interface LoginResponse {
 export interface Subscription {
     id: number;
     user_id: number;
+    price: number;
+    package_id: string;
+    billing_frequency: string;
+    package_name: string;
     plan_name: string;
     plan_id: string;
-    status: "active" | "expired" | "canceled";
+    status: "active" | "expired" | "canceled" | "pending";
     starts_at: string;
     expires_at: string;
     features: string[];
@@ -48,7 +57,9 @@ export interface UsersResponse {
 export interface Package {
     id: number;
     name: string;
+    user_type: string;
     price: number;
+    yearly_price: number;
     duration: number; // in days
     max_listings: number;
     features: string[] | null;

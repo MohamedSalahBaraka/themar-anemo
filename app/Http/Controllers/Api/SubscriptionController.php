@@ -14,7 +14,7 @@ class SubscriptionController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $activeSubscription = $user->activeSubscription();
+        $subscription = $user->subscription();
 
         return response()->json([
             'data' => [
@@ -23,7 +23,7 @@ class SubscriptionController extends Controller
                         'id' => $package->id,
                         'name' => $package->name,
                         'price' => (int) $package->price,
-                        'duration' => $package->duration,
+                        'billing_frequency' => $package->billing_frequency,
                         'description' => $package->description,
                         'max_listings' => $package->max_listings,
                         'features' => $package->features ?? [],
@@ -31,20 +31,20 @@ class SubscriptionController extends Controller
                         'subscribe_url' => url("/api/subscriptions/subscribe/{$package->id}"),
                     ];
                 }),
-                'current_subscription' => $activeSubscription ? [
-                    'id' => $activeSubscription->id,
-                    'package_id' => $activeSubscription->package_id,
-                    'started_at' => $activeSubscription->started_at->toIso8601String(),
-                    'expires_at' => $activeSubscription->expires_at->toIso8601String(),
-                    'is_active' => $activeSubscription->is_active,
-                    'days_remaining' => now()->diffInDays($activeSubscription->expires_at, false),
+                'current_subscription' => $subscription ? [
+                    'id' => $subscription->id,
+                    'package_id' => $subscription->package_id,
+                    'started_at' => $subscription->started_at->toIso8601String(),
+                    'expires_at' => $subscription->expires_at->toIso8601String(),
+                    'is_active' => $subscription->is_active,
+                    'days_remaining' => now()->diffInDays($subscription->expires_at, false),
                     'package' => [
-                        'id' => $activeSubscription->package->id,
-                        'name' => $activeSubscription->package->name,
-                        'price' => $activeSubscription->package->price,
-                        'duration' => $activeSubscription->package->duration,
-                        'max_listings' => $activeSubscription->package->max_listings,
-                        'features' => $activeSubscription->package->features ?? [],
+                        'id' => $subscription->package->id,
+                        'name' => $subscription->package->name,
+                        'price' => $subscription->package->price,
+                        'billing_frequency' => $subscription->package->billing_frequency,
+                        'max_listings' => $subscription->package->max_listings,
+                        'features' => $subscription->package->features ?? [],
                     ]
                 ] : null,
                 'transactions' => $user->transactions()
@@ -72,9 +72,9 @@ class SubscriptionController extends Controller
                     }),
             ],
             'meta' => [
-                'can_subscribe' => !$activeSubscription || $activeSubscription->expires_at < now()->addDays(7),
+                'can_subscribe' => !$subscription || $subscription->expires_at < now()->addDays(7),
                 'active_listings_count' => $user->properties()->count(),
-                'max_listings' => $activeSubscription ? $activeSubscription->package->max_listings : 0,
+                'max_listings' => $subscription ? $subscription->package->max_listings : 0,
             ]
         ], Response::HTTP_OK);
     }
@@ -82,15 +82,15 @@ class SubscriptionController extends Controller
     public function subscribe(Request $request, Package $package)
     {
         $user = $request->user();
-        $activeSubscription = $user->activeSubscription();
+        $subscription = $user->subscription();
 
         // Check if user has an active subscription that hasn't expired
-        if ($activeSubscription && $activeSubscription->expires_at > now()) {
+        if ($subscription && $subscription->expires_at > now()) {
             return response()->json([
                 'message' => 'You already have an active subscription',
                 'current_subscription' => [
-                    'expires_at' => $activeSubscription->expires_at->toIso8601String(),
-                    'days_remaining' => now()->diffInDays($activeSubscription->expires_at, false),
+                    'expires_at' => $subscription->expires_at->toIso8601String(),
+                    'days_remaining' => now()->diffInDays($subscription->expires_at, false),
                 ]
             ], Response::HTTP_CONFLICT);
         }
@@ -99,7 +99,16 @@ class SubscriptionController extends Controller
         // $payment = $this->processPayment($user, $package->price);
 
         // Create subscription
-        $subscription = $user->subscribeToPackage($package);
+        $package = Package::findOrFail($request->package_id);
+        $duration = $package->billing_frequency === 'yearly' ? 365 : 30;
+
+        $subscription =  $user->subscriptions()->create([
+            'package_id' => $package->id,
+            'expires_at' => now()->addDays($duration),
+            'billing_frequency' => $request->billing_frequency ?? 'monthly',
+            'cancel_at' => null, // Explicitly set to null for new subscriptions
+            'is_active' => true,
+        ]);
 
         // Create transaction record
         $transaction = Transaction::create([
@@ -156,7 +165,7 @@ class SubscriptionController extends Controller
     public function cancel(Request $request)
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+        $subscription = $user->subscription();
 
         if (!$subscription) {
             return response()->json([

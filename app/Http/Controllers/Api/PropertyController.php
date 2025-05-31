@@ -128,7 +128,7 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+        $subscription = $user->subscription();
 
         if (!$subscription || !$subscription->is_active) {
             return response()->json([

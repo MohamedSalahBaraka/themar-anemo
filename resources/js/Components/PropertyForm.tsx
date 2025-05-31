@@ -36,7 +36,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 }) => {
     const [form] = Form.useForm();
     const [deletedImages, setDeletedImages] = useState<number[]>([]);
-    // Set initial values when they change
+
     React.useEffect(() => {
         form.setFieldsValue(initialValues);
     }, [initialValues, form]);
@@ -47,9 +47,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             deletedImages: deletedImages,
         });
     };
+
     const handleRemoveImage = (id: number) => {
         if (!isNaN(id)) setDeletedImages([...deletedImages, id]);
     };
+
     const normFile = (e: any) => {
         if (Array.isArray(e)) {
             return e;
@@ -68,27 +70,32 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="title"
-                        label="Property Title"
+                        label="عنوان العقار"
                         rules={[
-                            { required: true, message: "Please enter a title" },
+                            { required: true, message: "الرجاء إدخال العنوان" },
                         ]}
                     >
-                        <Input placeholder="e.g. Beautiful 3-Bedroom Apartment" />
+                        <Input
+                            style={{
+                                background: "transparent",
+                            }}
+                            placeholder="مثال: شقة جميلة 3 غرف نوم"
+                        />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="type"
-                        label="Property Type"
+                        label="نوع العقار"
                         rules={[
-                            { required: true, message: "Please select a type" },
+                            { required: true, message: "الرجاء اختيار النوع" },
                         ]}
                     >
-                        <Select placeholder="Select property type">
-                            <Option value="apartment">Apartment</Option>
-                            <Option value="villa">Villa</Option>
-                            <Option value="office">Office</Option>
-                            <Option value="land">Land</Option>
+                        <Select placeholder="اختر نوع العقار">
+                            <Option value="apartment">شقة</Option>
+                            <Option value="villa">فيلا</Option>
+                            <Option value="office">مكتب</Option>
+                            <Option value="land">أرض</Option>
                         </Select>
                     </Form.Item>
                 </Col>
@@ -98,26 +105,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="purpose"
-                        label="Purpose"
+                        label="الغرض"
                         rules={[
-                            {
-                                required: true,
-                                message: "Please select a purpose",
-                            },
+                            { required: true, message: "الرجاء اختيار الغرض" },
                         ]}
                     >
-                        <Select placeholder="Select purpose">
-                            <Option value="sale">For Sale</Option>
-                            <Option value="rent">For Rent</Option>
+                        <Select placeholder="اختر الغرض">
+                            <Option value="sale">للبيع</Option>
+                            <Option value="rent">للإيجار</Option>
                         </Select>
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="price"
-                        label="Price"
+                        label="السعر"
                         rules={[
-                            { required: true, message: "Please enter a price" },
+                            { required: true, message: "الرجاء إدخال السعر" },
                         ]}
                     >
                         <InputNumber<number>
@@ -139,47 +143,47 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <Form.Item
                 name="description"
-                label="Description"
-                rules={[
-                    { required: true, message: "Please enter a description" },
-                ]}
+                label="الوصف"
+                rules={[{ required: true, message: "الرجاء إدخال الوصف" }]}
             >
-                <TextArea
-                    rows={4}
-                    placeholder="Detailed description of the property"
-                />
+                <TextArea rows={4} placeholder="وصف تفصيلي للعقار" />
             </Form.Item>
 
-            <Divider orientation="left">Details</Divider>
+            <Divider orientation="left">التفاصيل</Divider>
 
             <Row gutter={16}>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="bedrooms" label="Bedrooms">
+                    <Form.Item name="bedrooms" label="غرف النوم">
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="bathrooms" label="Bathrooms">
+                    <Form.Item name="bathrooms" label="الحمامات">
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="area" label="Area (sq.ft)">
+                    <Form.Item name="area" label="المساحة (قدم مربع)">
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
             </Row>
 
-            <Divider orientation="left">Location</Divider>
+            <Divider orientation="left">الموقع</Divider>
 
             <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name="address" label="Address">
-                        <Input placeholder="Full address of the property" />
+                    <Form.Item name="address" label="العنوان">
+                        <Input
+                            style={{
+                                background: "transparent",
+                            }}
+                            placeholder="العنوان الكامل للعقار"
+                        />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name="floor" label="Floor (if applicable)">
+                    <Form.Item name="floor" label="الطابق (إن وجد)">
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
@@ -187,36 +191,36 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name="latitude" label="Latitude">
+                    <Form.Item name="latitude" label="خط العرض">
                         <InputNumber style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name="longitude" label="Longitude">
+                    <Form.Item name="longitude" label="خط الطول">
                         <InputNumber style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
             </Row>
 
-            <Divider orientation="left">Images</Divider>
+            <Divider orientation="left">الصور</Divider>
 
             <Form.Item
                 name="images"
-                label="Property Images"
+                label="صور العقار"
                 valuePropName="fileList"
                 getValueFromEvent={normFile}
             >
                 <Upload
                     listType="picture-card"
                     multiple
-                    beforeUpload={() => false} // Prevent actual upload in this example
+                    beforeUpload={() => false}
                     onRemove={(file) => {
                         handleRemoveImage(parseInt(file.uid));
                     }}
                 >
                     <div>
                         <PlusOutlined />
-                        <div style={{ marginTop: 8 }}>Upload</div>
+                        <div style={{ marginTop: 8 }}>رفع</div>
                     </div>
                 </Upload>
             </Form.Item>
@@ -224,9 +228,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <Form.Item>
                 <Space>
                     <Button type="primary" htmlType="submit" loading={loading}>
-                        Save Changes
+                        حفظ التغييرات
                     </Button>
-                    <Button onClick={onCancel}>Cancel</Button>
+                    <Button onClick={onCancel}>إلغاء</Button>
                 </Space>
             </Form.Item>
         </Form>

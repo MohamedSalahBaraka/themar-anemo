@@ -15,16 +15,19 @@ class RegisterController extends Controller
     public function create()
     {
         return Inertia::render('Auth/Register', [
-
-            'packages' => \App\Models\Package::orderBy('price')->where('isActive', true)
+            'packages' => \App\Models\Package::orderBy('price')
+                ->where('isActive', true)
                 ->get()
                 ->map(fn($package) => [
                     'id' => $package->id,
                     'name' => $package->name,
                     'price' => $package->price,
-                    'duration' => $package->duration,
                     'description' => $package->description,
                     'max_listings' => $package->max_listings,
+                    'user_type' => $package->user_type,
+                    'monthly_price' => $package->price,
+                    'yearly_price' =>  $package->yearly_price, // 10% discount for yearly
+                    'features' => json_decode($package->features),
                 ]),
         ]);
     }
@@ -38,6 +41,7 @@ class RegisterController extends Controller
             'phone' => 'nullable|string|max:20',
             'role' => 'required|in:buyer,owner,agent,company',
             'package_id' => 'nullable|exists:packages,id',
+            'billing_frequency' => 'nullable|in:monthly,yearly',
         ]);
 
         $user = User::create([
@@ -49,9 +53,22 @@ class RegisterController extends Controller
         ]);
 
         if ($request->package_id && $request->role !== 'buyer') {
+            $package = Package::findOrFail($request->package_id);
+
+            // Calculate duration based on billing frequency
+            $duration = $request->billing_frequency === 'yearly' ? 365 : 30;
+
+            // Calculate price based on billing frequency
+            $price = $request->billing_frequency === 'yearly'
+                ? ($package->yearly_price ?? $package->price * 12)
+                : $package->price;
+
             $user->subscriptions()->create([
-                'package_id' => $request->package_id,
-                'expires_at' => now()->addDays(Package::find($request->package_id)->duration),
+                'package_id' => $package->id,
+                'expires_at' => now()->addDays($duration),
+                'billing_frequency' => $request->billing_frequency ?? 'monthly',
+                'cancel_at' => null,
+                'price' => $price,
             ]);
         }
 

@@ -62,7 +62,7 @@ const MyListingsPage: React.FC = () => {
     const [currentProperty, setCurrentProperty] = React.useState<any>(null);
     const [createModalVisible, setCreateModalVisible] =
         React.useState<boolean>(false);
-    // Add this function
+
     const handleCreateSubmit = async (values: any) => {
         const formData = new FormData();
 
@@ -82,12 +82,12 @@ const MyListingsPage: React.FC = () => {
         router.post(route("user.properties.store"), formData, {
             forceFormData: true,
             onSuccess: () => {
-                messageApi.success("Property created successfully");
+                messageApi.success("تم إنشاء العقار بنجاح");
                 setCreateModalVisible(false);
             },
             onError: (errors) => {
                 console.error(errors);
-                messageApi.error("Failed to create property");
+                messageApi.error("فشل إنشاء العقار");
             },
         });
     };
@@ -109,12 +109,11 @@ const MyListingsPage: React.FC = () => {
     const handleDelete = async (id: number) => {
         router.delete(route("user.properties.destroy", id), {
             onSuccess: () => {
-                // Optionally, you can refresh the page or filter
-                messageApi.success("Property deleted successfully");
+                messageApi.success("تم حذف العقار بنجاح");
             },
             onError: (errors) => {
                 console.error(errors);
-                messageApi.error("Failed to delete property");
+                messageApi.error("فشل حذف العقار");
             },
         });
     };
@@ -127,12 +126,11 @@ const MyListingsPage: React.FC = () => {
             },
             {
                 onSuccess: () => {
-                    // Optionally, you can refresh the page or filter
-                    messageApi.success("Status updated successfully");
+                    messageApi.success("تم تحديث الحالة بنجاح");
                 },
                 onError: (errors) => {
                     console.error(errors);
-                    messageApi.error("Failed to update property status");
+                    messageApi.error("فشل تحديث حالة العقار");
                 },
             }
         );
@@ -144,9 +142,9 @@ const MyListingsPage: React.FC = () => {
         const fileList =
             property.images?.map((img: any, index: number) => ({
                 uid: img.id,
-                name: img.image_url.split("/").pop(), // just the filename
+                name: img.image_url.split("/").pop(),
                 status: "done",
-                url: `${window.location.origin}/storage/${img.image_url}`, // actual preview URL
+                url: `${window.location.origin}/storage/${img.image_url}`,
             })) || [];
 
         setCurrentProperty({
@@ -162,7 +160,6 @@ const MyListingsPage: React.FC = () => {
 
         const formData = new FormData();
 
-        // Append regular fields
         Object.entries(values).forEach(([key, val]) => {
             if (key === "images" && Array.isArray(val)) {
                 val.forEach((fileWrapper: any) => {
@@ -187,12 +184,12 @@ const MyListingsPage: React.FC = () => {
             {
                 forceFormData: true,
                 onSuccess: () => {
-                    messageApi.success("Property updated successfully");
+                    messageApi.success("تم تحديث العقار بنجاح");
                     setEditModalVisible(false);
                 },
                 onError: (errors) => {
                     console.error(errors);
-                    messageApi.error("Failed to update property");
+                    messageApi.error("فشل تحديث العقار");
                 },
             }
         );
@@ -200,10 +197,12 @@ const MyListingsPage: React.FC = () => {
 
     const getStatusTag = (status: string) => {
         const statusMap: Record<string, { color: string; text: string }> = {
-            available: { color: "green", text: "Available" },
-            sold: { color: "red", text: "Sold" },
-            rented: { color: "blue", text: "Rented" },
-            reserved: { color: "orange", text: "Reserved" },
+            available: { color: "green", text: "متاح" },
+            sold: { color: "red", text: "تم البيع" },
+            rented: { color: "blue", text: "مؤجر" },
+            reserved: { color: "orange", text: "محجوز" },
+            pending: { color: "gold", text: "قيد المراجعة" },
+            rejected: { color: "red", text: "مرفوض" },
         };
         return (
             <Tag color={statusMap[status]?.color || "default"}>
@@ -219,35 +218,35 @@ const MyListingsPage: React.FC = () => {
                 disabled={currentStatus === "available"}
                 onClick={() => handleStatusChange(id, "available")}
             >
-                Mark as Available
+                تعيين كمتاح
             </Menu.Item>
             <Menu.Item
                 key="sold"
                 disabled={currentStatus === "sold"}
                 onClick={() => handleStatusChange(id, "sold")}
             >
-                Mark as Sold
+                تعيين كتم البيع
             </Menu.Item>
             <Menu.Item
                 key="rented"
                 disabled={currentStatus === "rented"}
                 onClick={() => handleStatusChange(id, "rented")}
             >
-                Mark as Rented
+                تعيين كمؤجر
             </Menu.Item>
             <Menu.Item
                 key="reserved"
                 disabled={currentStatus === "reserved"}
                 onClick={() => handleStatusChange(id, "reserved")}
             >
-                Mark as Reserved
+                تعيين كمحجوز
             </Menu.Item>
         </Menu>
     );
 
     const columns = [
         {
-            title: "Title",
+            title: "العنوان",
             dataIndex: "title",
             key: "title",
             render: (text: string, record: any) => (
@@ -257,33 +256,40 @@ const MyListingsPage: React.FC = () => {
             ),
         },
         {
-            title: "Type",
+            title: "النوع",
             dataIndex: "type",
             key: "type",
             render: (text: string) =>
-                text.charAt(0).toUpperCase() + text.slice(1),
+                text === "house"
+                    ? "منزل"
+                    : text === "apartment"
+                    ? "شقة"
+                    : text === "land"
+                    ? "أرض"
+                    : text === "commercial"
+                    ? "تجاري"
+                    : text,
         },
         {
-            title: "Purpose",
+            title: "الغرض",
             dataIndex: "purpose",
             key: "purpose",
-            render: (text: string) =>
-                text === "sale" ? "For Sale" : "For Rent",
+            render: (text: string) => (text === "sale" ? "للبيع" : "للإيجار"),
         },
         {
-            title: "Price",
+            title: "السعر",
             dataIndex: "price",
             key: "price",
-            render: (price: number) => `$${price.toLocaleString()}`,
+            render: (price: number) => `${price.toLocaleString()} ر.س`,
         },
         {
-            title: "Status",
+            title: "الحالة",
             dataIndex: "status",
             key: "status",
             render: (status: string) => getStatusTag(status),
         },
         {
-            title: "Actions",
+            title: "الإجراءات",
             key: "actions",
             render: (_: any, record: any) => (
                 <Space size="middle">
@@ -302,10 +308,10 @@ const MyListingsPage: React.FC = () => {
                     />
 
                     <Popconfirm
-                        title="Are you sure to delete this property?"
+                        title="هل أنت متأكد من حذف هذا العقار؟"
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
+                        okText="نعم"
+                        cancelText="لا"
                     >
                         <Button danger icon={<DeleteOutlined />} />
                     </Popconfirm>
@@ -313,6 +319,7 @@ const MyListingsPage: React.FC = () => {
             ),
         },
     ];
+
     const actions = (property: Property) => {
         if (property.status == "rejected") {
             return [<Text type="danger">{property.rejection_reason}</Text>];
@@ -332,22 +339,23 @@ const MyListingsPage: React.FC = () => {
                 href={route("properties.show", property.id)}
             />,
             <Popconfirm
-                title="Are you sure to delete this property?"
+                title="هل أنت متأكد من حذف هذا العقار؟"
                 onConfirm={() => handleDelete(property.id)}
-                okText="Yes"
-                cancelText="No"
+                okText="نعم"
+                cancelText="لا"
             >
                 <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>,
         ];
         return actions.filter((action) => action !== null);
     };
+
     return (
         <AppLayout>
             <div className="my-listings-page" style={{ padding: "24px" }}>
                 {contexHolder}
-                <Title level={2}>My Listings</Title>
-                <Text type="secondary">Manage your property listings</Text>
+                <Title level={2}>عقاراتي</Title>
+                <Text type="secondary">إدارة قوائم العقارات الخاصة بك</Text>
 
                 <Divider />
 
@@ -356,7 +364,7 @@ const MyListingsPage: React.FC = () => {
                     <Row gutter={16} align="middle">
                         <Col xs={24} sm={12} md={8} lg={6}>
                             <Input
-                                placeholder="Search properties..."
+                                placeholder="ابحث عن عقارات..."
                                 prefix={<SearchOutlined />}
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
@@ -371,12 +379,12 @@ const MyListingsPage: React.FC = () => {
                                 onChange={(value) => setStatusFilter(value)}
                                 onSelect={filterProperties}
                             >
-                                <Option value="all">All Statuses</Option>
-                                <Option value="available">Available</Option>
-                                <Option value="sold">Sold</Option>
-                                <Option value="rented">Rented</Option>
-                                <Option value="reserved">Reserved</Option>
-                                <Option value="pending">Pending</Option>
+                                <Option value="all">جميع الحالات</Option>
+                                <Option value="available">متاح</Option>
+                                <Option value="sold">تم البيع</Option>
+                                <Option value="rented">مؤجر</Option>
+                                <Option value="reserved">محجوز</Option>
+                                <Option value="pending">قيد المراجعة</Option>
                             </Select>
                         </Col>
                         <Col xs={24} sm={12} md={8} lg={6}>
@@ -386,10 +394,10 @@ const MyListingsPage: React.FC = () => {
                                 buttonStyle="solid"
                             >
                                 <Radio.Button value="table">
-                                    Table View
+                                    عرض جدول
                                 </Radio.Button>
                                 <Radio.Button value="grid">
-                                    Grid View
+                                    عرض شبكة
                                 </Radio.Button>
                             </Radio.Group>
                         </Col>
@@ -405,7 +413,7 @@ const MyListingsPage: React.FC = () => {
                                 icon={<PlusOutlined />}
                                 onClick={() => setCreateModalVisible(true)}
                             >
-                                Add New Property
+                                إضافة عقار جديد
                             </Button>
                         </Col>
                     </Row>
@@ -445,12 +453,12 @@ const MyListingsPage: React.FC = () => {
                 {props.properties.length === 0 && (
                     <Card style={{ textAlign: "center", padding: "40px" }}>
                         <Title level={4} type="secondary">
-                            No properties found
+                            لا توجد عقارات
                         </Title>
                         <Text type="secondary">
                             {props.properties.length === 0
-                                ? "You haven't listed any properties yet"
-                                : "No properties match your filters"}
+                                ? "لم تقم بإدراج أي عقارات بعد"
+                                : "لا توجد عقارات تطابق عوامل التصفية الخاصة بك"}
                         </Text>
                         <br />
                         <Button
@@ -458,13 +466,14 @@ const MyListingsPage: React.FC = () => {
                             style={{ marginTop: "16px" }}
                             onClick={() => setCreateModalVisible(true)}
                         >
-                            List Your First Property
+                            أدرج عقارك الأول
                         </Button>
                     </Card>
                 )}
+
                 {/* Create Property Modal */}
                 <Modal
-                    title="Create New Property"
+                    title="إضافة عقار جديد"
                     visible={createModalVisible}
                     onCancel={() => setCreateModalVisible(false)}
                     footer={null}
@@ -476,9 +485,10 @@ const MyListingsPage: React.FC = () => {
                         onCancel={() => setCreateModalVisible(false)}
                     />
                 </Modal>
+
                 {/* Edit Modal */}
                 <Modal
-                    title="Edit Property"
+                    title="تعديل العقار"
                     visible={editModalVisible}
                     onCancel={() => setEditModalVisible(false)}
                     footer={null}

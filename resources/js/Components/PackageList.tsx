@@ -24,12 +24,11 @@ const PackageList: React.FC<PackageListProps> = ({ initialPackages }) => {
         try {
             router.delete(route("admin.packages.destroy", id), {
                 onSuccess: () => {
-                    message.success("Package deleted successfully");
+                    message.success("تم حذف الباقة بنجاح");
                 },
             });
-            // router.reload({ only: ["packages"] });
         } catch (error) {
-            message.error("Failed to delete package");
+            message.error("فشل حذف الباقة");
         }
     };
 
@@ -41,53 +40,52 @@ const PackageList: React.FC<PackageListProps> = ({ initialPackages }) => {
     const handleSuccess = () => {
         setIsModalVisible(false);
         setEditingPackage(null);
-        // router.reload({ only: ["packages"] });
     };
 
     const columns = [
         {
-            title: "Name",
+            title: "الاسم",
             dataIndex: "name",
             key: "name",
         },
         {
-            title: "Description",
+            title: "الوصف",
             dataIndex: "description",
             key: "description",
         },
         {
-            title: "Price",
+            title: "السعر",
             dataIndex: "price",
             key: "price",
             render: (price: number) => `$${parseInt(`${price}`).toFixed(2)}`,
         },
         {
-            title: "Duration (days)",
+            title: "المدة (أيام)",
             dataIndex: "duration",
             key: "duration",
         },
         {
-            title: "Status",
+            title: "الحالة",
             dataIndex: "isActive",
             key: "isActive",
-            render: (isActive: boolean) => (isActive ? "Active" : "Inactive"),
+            render: (isActive: boolean) => (isActive ? "نشط" : "غير نشط"),
         },
         {
-            title: "Actions",
+            title: "الإجراءات",
             key: "actions",
             render: (_: any, record: Package) => (
                 <Space size="middle">
                     <Button type="link" onClick={() => handleEdit(record)}>
-                        Edit
+                        تعديل
                     </Button>
                     <Popconfirm
-                        title="Are you sure to delete this package?"
+                        title="هل أنت متأكد من حذف هذه الباقة؟"
                         onConfirm={() => handleDelete(record.id!)}
-                        okText="Yes"
-                        cancelText="No"
+                        okText="نعم"
+                        cancelText="لا"
                     >
                         <Button type="link" danger>
-                            Delete
+                            حذف
                         </Button>
                     </Popconfirm>
                 </Space>
@@ -99,7 +97,7 @@ const PackageList: React.FC<PackageListProps> = ({ initialPackages }) => {
         <div>
             <div style={{ marginBottom: 16 }}>
                 <Button type="primary" onClick={() => setIsModalVisible(true)}>
-                    Add Package
+                    إضافة باقة
                 </Button>
             </div>
             <Table

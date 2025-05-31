@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Property extends Model
 {
@@ -43,14 +44,26 @@ class Property extends Model
     {
         return $this->hasMany(PropertyImage::class);
     }
-    public function     views()
+    public function views()
     {
         return $this->hasMany(PropertyView::class);
+    }
+    public  function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
     }
     // Query scope for pending properties
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');
+    }
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('approved', true);
+    }
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $query->where('status', 'rejected');
     }
     public function inquiries()
     {

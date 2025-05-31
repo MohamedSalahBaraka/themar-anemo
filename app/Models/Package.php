@@ -10,5 +10,5 @@ class Package extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['id', 'name', 'price', 'duration', 'max_listings', 'features', 'isActive', 'description'];
+    protected $fillable = ['id', 'name', 'price', 'yearly_price', 'max_listings', 'features', 'isActive', 'user_type', 'description'];
 }

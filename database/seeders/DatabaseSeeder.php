@@ -19,5 +19,6 @@ class DatabaseSeeder extends Seeder
         \App\Models\Property::factory(20)->create();
         \App\Models\Subscription::factory(10)->create();
         \App\Models\Transaction::factory(10)->create();
+        $this->call(ConfigSeeder::class);
     }
 }

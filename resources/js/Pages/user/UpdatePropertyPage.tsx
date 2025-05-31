@@ -65,12 +65,12 @@ const UpdatePropertyPage: React.FC = () => {
             {
                 forceFormData: true,
                 onSuccess: () => {
-                    messageApi.success("Property updated successfully");
+                    messageApi.success("تم تحديث العقار بنجاح");
                     router.visit(route("user.properties.index"));
                 },
                 onError: (errors) => {
                     console.error(errors);
-                    messageApi.error("Failed to update property");
+                    messageApi.error("فشل تحديث العقار");
                 },
             }
         );
@@ -81,10 +81,9 @@ const UpdatePropertyPage: React.FC = () => {
             <AppLayout>
                 <div style={{ padding: "24px" }}>
                     <Card>
-                        <Title level={4}>Property not found</Title>
+                        <Title level={4}>العقار غير موجود</Title>
                         <Text>
-                            This property doesn't exist or you don't have
-                            permission to edit it.
+                            هذا العقار غير موجود أو ليس لديك صلاحية لتعديله.
                         </Text>
                     </Card>
                 </div>
@@ -98,9 +97,9 @@ const UpdatePropertyPage: React.FC = () => {
                 {contextHolder}
                 <Card>
                     <Title level={2}>
-                        <EditOutlined /> Edit Property
+                        <EditOutlined /> تعديل العقار
                     </Title>
-                    <Text type="secondary">Update your property details</Text>
+                    <Text type="secondary">قم بتحديث تفاصيل عقارك</Text>
 
                     <div style={{ marginTop: 24 }}>
                         <PropertyForm

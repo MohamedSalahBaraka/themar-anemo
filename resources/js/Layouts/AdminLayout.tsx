@@ -1,236 +1,315 @@
-import { JSX, useCallback, useEffect, useState } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import {
-    message,
-    Layout as AntLayout,
+    Layout,
     Menu,
-    theme,
-    Avatar,
-    Dropdown,
     Button,
+    ConfigProvider,
+    theme,
+    ConfigProviderProps,
 } from "antd";
 import {
     DashboardOutlined,
     HistoryOutlined,
     TeamOutlined,
-    ApiOutlined,
     UserOutlined,
-    PhoneOutlined,
-    LogoutOutlined,
+    SettingOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    FileTextOutlined,
-    BookOutlined,
-    SwapOutlined,
-    ApartmentOutlined,
-    PercentageOutlined,
-    AuditOutlined,
-    SettingOutlined,
 } from "@ant-design/icons";
 import { Link, usePage } from "@inertiajs/react";
+import { Scrollbars } from "@pezhmanparsaee/react-custom-scrollbars";
+import { ThemeProvider } from "styled-components";
+import AuthInfo from "./AuthInfo";
+import { theme as themeVariables } from "../config/theme/themeVariables";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 
-const { Header, Sider, Content, Footer } = AntLayout;
+const { Header, Sider, Content, Footer } = Layout;
 
-const AdminLayout = ({ children }: { children: JSX.Element }) => {
-    const [messageApi, contextHolder] = message.useMessage();
+interface AdminLayoutProps {
+    children: ReactNode;
+}
+
+type DirectionType = ConfigProviderProps["direction"];
+const AdminLayout = ({ children }: AdminLayoutProps) => (
+    <LanguageProvider>
+        <MainLayout>{children}</MainLayout>
+    </LanguageProvider>
+);
+const MainLayout = ({ children }: AdminLayoutProps) => {
+    const { t, language, direction, antdLocale, setLanguage } = useLanguage();
     const user = usePage().props.auth.user;
     const [collapsed, setCollapsed] = useState(false);
-    // const [settings, setsettings] = useState<Setting>();
     const [isMobile, setIsMobile] = useState(false);
+    const appConfigs = usePage().props.appConfigs as Record<string, any>;
+    const [darkMode, setDarkMode] = useState(() => {
+        // Get theme preference from localStorage if it exists
+        if (typeof window !== "undefined") {
+            const savedMode = localStorage.getItem("darkMode");
+            return savedMode ? JSON.parse(savedMode) : false;
+        }
+        return false;
+    });
 
-    const {
-        token: { colorBgContainer, colorTextBase },
-    } = theme.useToken();
+    const [currentTheme, setCurrentTheme] = useState({
+        algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+            colorPrimary: darkMode
+                ? themeVariables.darkMode.primary
+                : themeVariables.lightMode.primary, // Your primary color
+            borderRadius: 2, // Your border radius
+            // Add other token overrides if needed
+        },
+    });
+    // Debug effect
+    useEffect(() => {
+        setCurrentTheme({
+            algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+            token: {
+                colorPrimary: darkMode
+                    ? themeVariables.darkMode.primary
+                    : themeVariables.lightMode.primary, // Your primary color
+                borderRadius: 2, // Your border radius
+                // Add other token overrides if needed
+            },
+        });
+    }, [darkMode]);
+
+    useEffect(() => {
+        // Save theme preference to localStorage whenever it changes
+        localStorage.setItem("darkMode", JSON.stringify(darkMode));
+    }, [darkMode]);
 
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 992); // Ant Design's lg breakpoint is 992px
+            const small = window.innerWidth < 992;
+            setIsMobile(small);
+            setCollapsed(small);
         };
-
-        handleResize(); // Check on initial render
+        handleResize();
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    const userMenu = (
-        <Menu>
-            <Menu.Item key="profile" icon={<UserOutlined />}>
-                <Link href="/profile">Profile</Link>
-            </Menu.Item>
-            <Menu.Item key="logout" icon={<LogoutOutlined />}>
-                <Link href="/logout" method="post">
-                    تسجيل خروج
-                </Link>
-            </Menu.Item>
-        </Menu>
-    );
+    const toggleCollapsed = () => setCollapsed(!collapsed);
 
     const MenuItems = [
         {
             key: "dashboard",
             icon: <DashboardOutlined />,
-            label: <Link href="/admin/dashboard">الرئيسية</Link>,
+            label: <Link href="/admin/dashboard">{t("dashboard")}</Link>,
         },
         {
             key: "inquiries",
             icon: <HistoryOutlined />,
-            label: <Link href="/admin/packages">عروض الاشتراكات</Link>,
+            label: (
+                <Link href="/admin/packages">{t("subscription_plans")}</Link>
+            ),
         },
         {
             key: "MyListingsPage",
             icon: <TeamOutlined />,
             label: (
-                <Link href="/admin/properties/pending">اذن نشر العقارات</Link>
+                <Link href="/admin/properties">{t("property_publishing")}</Link>
             ),
         },
         {
             key: "services",
             icon: <UserOutlined />,
-            label: <Link href="/admin/users">ادارة المستخدمين</Link>,
+            label: <Link href="/admin/users">{t("user_management")}</Link>,
         },
         {
             key: "SettingsPage",
             icon: <SettingOutlined />,
-            label: <Link href="/admin/SettingsPage">الاعدادات</Link>,
+            label: <Link href="/admin/configs">{t("settings")}</Link>,
         },
     ];
 
+    const renderThumb = ({ style }: { style: React.CSSProperties }) => (
+        <div
+            style={{
+                ...style,
+                borderRadius: 6,
+                backgroundColor: "#F1F2F6",
+            }}
+        />
+    );
+
+    const renderView = ({ style }: { style: React.CSSProperties }) => (
+        <div style={{ ...style, marginRight: "auto" }} />
+    );
+
     return (
-        <AntLayout style={{ minHeight: "100vh" }}>
-            {contextHolder}
-            <Sider
-                collapsible
-                collapsed={collapsed}
-                onCollapse={(value) => setCollapsed(value)}
-                width={250}
-                theme="dark"
-                breakpoint="lg"
-                collapsedWidth={isMobile ? 0 : 80}
-                trigger={null}
-                style={{
-                    overflow: "auto",
-                    height: "100vh",
-                    position: "fixed",
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                }}
+        <ConfigProvider
+            theme={currentTheme}
+            direction={direction}
+            locale={antdLocale}
+        >
+            <ThemeProvider
+                theme={
+                    darkMode
+                        ? themeVariables.darkMode
+                        : themeVariables.lightMode
+                }
             >
-                <div
-                    className="logo"
-                    style={{
-                        height: "64px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: collapsed ? "16px" : "20px",
-                        fontWeight: "bold",
-                        margin: "16px 0",
-                    }}
-                >
-                    {/* {collapsed ? "DT" : settings?.value} */}
-                    DT
-                </div>
-                <Menu
-                    theme="dark"
-                    mode="inline"
-                    // @ts-ignore
-                    items={MenuItems}
-                    style={{ paddingBottom: "64px" }} // Add padding to prevent items from being hidden behind the footer
-                />
-            </Sider>
-            <AntLayout
-                style={{
-                    marginRight: collapsed ? (isMobile ? 0 : 80) : 250,
-                    minHeight: "100vh",
-                }}
-            >
-                <Header
-                    style={{
-                        padding: 0,
-                        background: colorBgContainer,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingLeft: "24px",
-                        boxShadow: "0 1px 4px rgba(0,21,41,.08)",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 1,
-                    }}
-                >
-                    <Button
-                        type="text"
-                        icon={
-                            collapsed ? (
-                                <MenuUnfoldOutlined />
-                            ) : (
-                                <MenuFoldOutlined />
-                            )
-                        }
-                        onClick={() => setCollapsed(!collapsed)}
+                <Layout className="font-cairo min-h-screen">
+                    {/* Header */}
+                    <Header
+                        className="p-0 flex items-center justify-between h-[72px] z-[998] fixed w-full right-0 top-0"
                         style={{
-                            fontSize: "16px",
-                            width: 64,
-                            height: 64,
-                        }}
-                    />
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "16px",
-                            marginRight: "16px",
+                            backgroundColor: darkMode
+                                ? themeVariables.darkMode.background
+                                : themeVariables.lightMode.background,
                         }}
                     >
-                        <Dropdown overlay={userMenu} placement="bottomRight">
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <Avatar
-                                    size="default"
-                                    style={{ backgroundColor: "#1890ff" }}
-                                    icon={<UserOutlined />}
-                                />
-                                {!collapsed && (
-                                    <span style={{ color: colorTextBase }}>
-                                        {user?.name || "User"}
-                                    </span>
-                                )}
+                        <div className="flex items-center w-full h-full px-4">
+                            <div className="flex items-center justify-between w-full max-w-[260px]">
+                                <Link href="/admin">
+                                    <img
+                                        className="w-full max-w-[120px]"
+                                        src={
+                                            darkMode
+                                                ? appConfigs[
+                                                      "app.logo_dark_url"
+                                                  ]
+                                                : appConfigs["app.logo_url"]
+                                        }
+                                        alt="Logo"
+                                    />
+                                </Link>
+                                <Button type="text" onClick={toggleCollapsed}>
+                                    {collapsed ? (
+                                        <MenuUnfoldOutlined
+                                            color={
+                                                darkMode
+                                                    ? themeVariables.lightMode
+                                                          .text
+                                                    : themeVariables.darkMode
+                                                          .text
+                                            }
+                                        />
+                                    ) : (
+                                        <MenuFoldOutlined
+                                            color={
+                                                darkMode
+                                                    ? themeVariables.lightMode
+                                                          .text
+                                                    : themeVariables.darkMode
+                                                          .text
+                                            }
+                                        />
+                                    )}
+                                </Button>
                             </div>
-                        </Dropdown>
-                    </div>
-                </Header>
-                <Content
-                    style={{
-                        margin: "24px 16px",
-                        padding: 24,
-                        minHeight: "calc(100vh - 180px)", // Adjust based on header and footer height
-                        background: colorBgContainer,
-                        borderRadius: "8px",
-                        overflow: "auto",
-                    }}
-                >
-                    {children}
-                </Content>
-                <Footer
-                    style={{
-                        textAlign: "center",
-                        background: colorBgContainer,
-                        padding: "16px 50px",
-                    }}
-                >
-                    {/* {settings?.value} © {new Date().getFullYear()} - All Rights */}
-                    Dragon tech © {new Date().getFullYear()} - All Rights
-                    Reserved
-                </Footer>
-            </AntLayout>
-        </AntLayout>
+                            <div className="flex justify-end flex-1 items-center gap-4 pr-6">
+                                <Button
+                                    type="text"
+                                    onClick={() => {
+                                        setLanguage(
+                                            language === "ar" ? "en" : "ar"
+                                        );
+                                    }}
+                                >
+                                    {t("switch_to_arabic")}
+                                </Button>
+                                <AuthInfo
+                                    darkMode={darkMode}
+                                    setDarkMode={setDarkMode}
+                                />
+                            </div>
+                        </div>
+                    </Header>
+
+                    {/* Main layout */}
+                    <Layout style={{ marginTop: 72 }}>
+                        {/* Sidebar */}
+                        <Sider
+                            width={280}
+                            theme={darkMode ? "dark" : "light"}
+                            collapsed={collapsed}
+                            collapsible
+                            className="shadow-sm fixed z-[998]"
+                            style={{
+                                height: "calc(100vh - 72px)",
+                                overflowY: "auto",
+                                top: 72,
+                                ...(direction === "rtl"
+                                    ? { right: 0 }
+                                    : { left: 0 }),
+                            }}
+                        >
+                            <Scrollbars
+                                autoHide
+                                autoHideTimeout={500}
+                                autoHideDuration={200}
+                                renderThumbVertical={renderThumb}
+                                renderView={renderView}
+                            >
+                                <Menu
+                                    mode="inline"
+                                    theme={darkMode ? "dark" : "light"}
+                                    items={MenuItems}
+                                    style={{ paddingBottom: 64 }}
+                                />
+                            </Scrollbars>
+                        </Sider>
+
+                        {/* Content */}
+                        <Layout
+                            className="transition-all"
+                            style={{
+                                ...(direction === "rtl"
+                                    ? {
+                                          marginRight: collapsed ? 80 : 280,
+                                      }
+                                    : {
+                                          marginLeft: collapsed ? 80 : 280,
+                                      }),
+                            }}
+                        >
+                            <Content className="m-6">{children}</Content>
+                            <Footer className="text-center py-4">
+                                <div className="flex justify-between items-center flex-wrap gap-2">
+                                    <span className="text-theme-gray dark:text-white60">
+                                        {t("copyright", {
+                                            year: new Date().getFullYear(),
+                                            name: appConfigs["app.name"],
+                                        })}
+                                    </span>
+                                    <div className="flex gap-4 flex-wrap">
+                                        <Link
+                                            href="/about"
+                                            className="text-theme-gray dark:text-white60 light:text-black60 hover:text-primary"
+                                        >
+                                            {t("about")}
+                                        </Link>
+                                        <Link
+                                            href="/team"
+                                            className="text-theme-gray dark:text-white60 light:text-black60 hover:text-primary"
+                                        >
+                                            {t("team")}
+                                        </Link>
+                                        <Link
+                                            href="/contact"
+                                            className="text-theme-gray dark:text-white60 light:text-black60 hover:text-primary"
+                                        >
+                                            {t("contact")}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </Footer>
+                        </Layout>
+                    </Layout>
+
+                    {/* Mobile overlay */}
+                    {isMobile && !collapsed && (
+                        <div
+                            className="fixed inset-0 bg-black bg-opacity-50 z-[997]"
+                            onClick={toggleCollapsed}
+                        />
+                    )}
+                </Layout>
+            </ThemeProvider>
+        </ConfigProvider>
     );
 };
 

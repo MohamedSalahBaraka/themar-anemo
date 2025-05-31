@@ -29,12 +29,12 @@ const CreatePropertyPage: React.FC = () => {
         router.post(route("user.properties.store"), formData, {
             forceFormData: true,
             onSuccess: () => {
-                messageApi.success("Property created successfully");
+                messageApi.success("تم إنشاء العقار بنجاح");
                 router.visit(route("user.properties.index"));
             },
             onError: (errors) => {
                 console.error(errors);
-                messageApi.error("Failed to create property");
+                messageApi.error("فشل إنشاء العقار");
             },
         });
     };
@@ -45,11 +45,9 @@ const CreatePropertyPage: React.FC = () => {
                 {contextHolder}
                 <Card>
                     <Title level={2}>
-                        <PlusOutlined /> Create New Property
+                        <PlusOutlined /> إضافة عقار جديد
                     </Title>
-                    <Text type="secondary">
-                        Fill out the form to list a new property
-                    </Text>
+                    <Text type="secondary">املأ النموذج لإدراج عقار جديد</Text>
 
                     <div style={{ marginTop: 24 }}>
                         <PropertyForm

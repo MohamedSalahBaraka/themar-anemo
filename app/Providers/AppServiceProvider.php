@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\configs;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
         Builder::macro('filter', function ($callback) {
             return $callback($this);
+        });
+        Inertia::share('appConfigs', function () {
+            return configs::pluck('value', 'key')->toArray();
         });
     }
 }

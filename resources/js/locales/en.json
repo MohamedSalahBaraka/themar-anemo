@@ -1,0 +1,13 @@
+{
+    "dashboard": "Dashboard",
+    "subscription_plans": "Subscription Plans",
+    "property_publishing": "Property Management",
+    "user_management": "User Management",
+    "settings": "Settings",
+    "copyright": "{name} © {year} - All rights reserved",
+    "about": "About",
+    "team": "Team",
+    "contact": "Contact Us",
+    "switch_to_arabic": "العربية",
+    "toggle_theme": "Toggle Theme"
+}

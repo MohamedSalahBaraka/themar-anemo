@@ -28,7 +28,7 @@ const Login: React.FC = () => {
                         level={3}
                         style={{ textAlign: "center", marginBottom: 24 }}
                     >
-                        Login to Your Account
+                        تسجيل الدخول إلى حسابك
                     </Title>
 
                     <Form
@@ -39,23 +39,23 @@ const Login: React.FC = () => {
                     >
                         <Form.Item
                             name="email"
-                            label="Email"
+                            label="البريد الإلكتروني"
                             validateStatus={errors.email ? "error" : ""}
                             help={errors.email}
                             rules={[
                                 {
                                     required: true,
-                                    message: "Please input your email!",
+                                    message: "الرجاء إدخال البريد الإلكتروني!",
                                 },
                                 {
                                     type: "email",
-                                    message: "Please enter a valid email!",
+                                    message: "الرجاء إدخال بريد إلكتروني صحيح!",
                                 },
                             ]}
                         >
                             <Input
                                 prefix={<MailOutlined />}
-                                placeholder="Email"
+                                placeholder="البريد الإلكتروني"
                                 value={data.email}
                                 onChange={(e) =>
                                     setData("email", e.target.value)
@@ -66,19 +66,19 @@ const Login: React.FC = () => {
 
                         <Form.Item
                             name="password"
-                            label="Password"
+                            label="كلمة المرور"
                             validateStatus={errors.password ? "error" : ""}
                             help={errors.password}
                             rules={[
                                 {
                                     required: true,
-                                    message: "Please input your password!",
+                                    message: "الرجاء إدخال كلمة المرور!",
                                 },
                             ]}
                         >
                             <Input.Password
                                 prefix={<LockOutlined />}
-                                placeholder="Password"
+                                placeholder="كلمة المرور"
                                 value={data.password}
                                 onChange={(e) =>
                                     setData("password", e.target.value)
@@ -94,18 +94,18 @@ const Login: React.FC = () => {
                                 loading={processing}
                                 block
                             >
-                                Log in
+                                تسجيل الدخول
                             </Button>
                         </Form.Item>
                     </Form>
 
-                    <Divider>or</Divider>
+                    <Divider>أو</Divider>
 
                     <div style={{ textAlign: "center" }}>
-                        <Text>Don't have an account? </Text>
+                        <Text>ليس لديك حساب؟ </Text>
                         <a href={route("register")}>
                             <Button type="link" style={{ padding: 0 }}>
-                                Register now
+                                سجل الآن
                             </Button>
                         </a>
                     </div>

@@ -74,16 +74,16 @@ const ServicePurchasePage: React.FC = () => {
                 }
             );
         } catch (error) {
-            console.error("Purchase failed:", error);
+            console.error("فشل في الشراء:", error);
         }
     };
 
     const getCategoryTag = (category: string) => {
         switch (category) {
             case "featured_ad":
-                return <Tag color="blue">Featured Ad</Tag>;
+                return <Tag color="blue">إعلان مميز</Tag>;
             case "photography":
-                return <Tag color="green">Photography</Tag>;
+                return <Tag color="green">تصوير</Tag>;
             default:
                 return <Tag>{category}</Tag>;
         }
@@ -110,8 +110,8 @@ const ServicePurchasePage: React.FC = () => {
         return (
             <AppLayout>
                 <Alert
-                    message="Error"
-                    description="Services data is not available."
+                    message="خطأ"
+                    description="بيانات الخدمات غير متوفرة"
                     type="error"
                     showIcon
                 />
@@ -122,9 +122,9 @@ const ServicePurchasePage: React.FC = () => {
     return (
         <AppLayout>
             <div className="service-purchase-page">
-                <Title level={2}>Purchase Services</Title>
+                <Title level={2}>شراء الخدمات</Title>
                 <Text type="secondary">
-                    Enhance your listings with our premium services
+                    حسن من قوائمك العقارية مع خدماتنا المميزة
                 </Text>
 
                 <Divider />
@@ -132,7 +132,6 @@ const ServicePurchasePage: React.FC = () => {
                 <List
                     grid={{ gutter: 16, xs: 1, sm: 2, lg: 3 }}
                     dataSource={props.services.filter((s) => s.isActive)}
-                    // loading={router.page?.props?.processing} // Safe access with optional chaining
                     renderItem={(service) => (
                         <List.Item>
                             <Card
@@ -154,7 +153,7 @@ const ServicePurchasePage: React.FC = () => {
                                             handlePurchaseClick(service)
                                         }
                                     >
-                                        Purchase
+                                        شراء
                                     </Button>,
                                 ]}
                             >
@@ -173,8 +172,7 @@ const ServicePurchasePage: React.FC = () => {
                                     {service.duration && (
                                         <div style={{ marginTop: 8 }}>
                                             <Text type="secondary">
-                                                Duration: {service.duration}{" "}
-                                                days
+                                                المدة: {service.duration} يوم
                                             </Text>
                                         </div>
                                     )}
@@ -184,9 +182,9 @@ const ServicePurchasePage: React.FC = () => {
                     )}
                 />
 
-                {/* Purchase Confirmation Modal */}
+                {/* نافذة تأكيد الشراء */}
                 <Modal
-                    title={`Purchase ${selectedService?.name}`}
+                    title={`شراء ${selectedService?.name}`}
                     open={purchaseModalVisible}
                     onCancel={() => setPurchaseModalVisible(false)}
                     footer={
@@ -195,7 +193,7 @@ const ServicePurchasePage: React.FC = () => {
                                 type="primary"
                                 onClick={() => setPurchaseModalVisible(false)}
                             >
-                                Close
+                                إغلاق
                             </Button>
                         ) : (
                             <Space>
@@ -204,14 +202,13 @@ const ServicePurchasePage: React.FC = () => {
                                         setPurchaseModalVisible(false)
                                     }
                                 >
-                                    Cancel
+                                    إلغاء
                                 </Button>
                                 <Button
                                     type="primary"
                                     onClick={confirmPurchase}
-                                    // loading={router.page?.props?.processing} // Safe access
                                 >
-                                    Confirm Purchase
+                                    تأكيد الشراء
                                 </Button>
                             </Space>
                         )
@@ -220,17 +217,17 @@ const ServicePurchasePage: React.FC = () => {
                     {purchaseSuccess ? (
                         <div style={{ textAlign: "center" }}>
                             <Alert
-                                message="Purchase Successful!"
-                                description="Your service has been purchased successfully."
+                                message="تم الشراء بنجاح!"
+                                description="تم شراء الخدمة بنجاح."
                                 type="success"
                                 showIcon
                                 style={{ marginBottom: 16 }}
                             />
                             <Descriptions bordered column={1}>
-                                <Descriptions.Item label="Service">
+                                <Descriptions.Item label="الخدمة">
                                     {selectedService?.name}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Amount">
+                                <Descriptions.Item label="المبلغ">
                                     ${selectedService?.price.toFixed(2)}
                                 </Descriptions.Item>
                             </Descriptions>
@@ -238,24 +235,24 @@ const ServicePurchasePage: React.FC = () => {
                     ) : (
                         <>
                             <Descriptions bordered column={1}>
-                                <Descriptions.Item label="Service">
+                                <Descriptions.Item label="الخدمة">
                                     {selectedService?.name}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Description">
+                                <Descriptions.Item label="الوصف">
                                     {selectedService?.description}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Price">
+                                <Descriptions.Item label="السعر">
                                     ${selectedService?.price.toFixed(2)}
                                 </Descriptions.Item>
                                 {selectedService?.duration && (
-                                    <Descriptions.Item label="Duration">
-                                        {selectedService.duration} days
+                                    <Descriptions.Item label="المدة">
+                                        {selectedService.duration} يوم
                                     </Descriptions.Item>
                                 )}
                             </Descriptions>
                             <Divider />
                             <Alert
-                                message="Payment will be processed using your default payment method."
+                                message="سيتم معالجة الدفع باستخدام طريقة الدفع الافتراضية الخاصة بك."
                                 type="info"
                                 showIcon
                             />

@@ -43,6 +43,7 @@ interface DashboardPageProps extends PageProps {
         active_listings: number;
         total_views: number;
         total_inquiries: number;
+        total_reservations: number;
     };
     subscription: {
         id: string;
@@ -60,9 +61,9 @@ const DashboardPage: React.FC = () => {
 
     const getSubscriptionStatusTag = (status: string) => {
         const statusMap: Record<string, { color: string; text: string }> = {
-            active: { color: "green", text: "Active" },
-            expired: { color: "red", text: "Expired" },
-            canceled: { color: "orange", text: "Canceled" },
+            active: { color: "green", text: "نشط" },
+            expired: { color: "red", text: "منتهي" },
+            canceled: { color: "orange", text: "ملغي" },
         };
         return (
             <Tag color={statusMap[status]?.color || "default"}>
@@ -74,19 +75,19 @@ const DashboardPage: React.FC = () => {
     return (
         <AppLayout>
             <div className="dashboard-page" style={{ padding: "24px" }}>
-                <Title level={2}>Dashboard</Title>
+                <Title level={2}>لوحة التحكم</Title>
                 <Text type="secondary">
-                    Welcome back, {user?.name || "User"}!
+                    أهلاً بعودتك، {user?.name || "مستخدم"}!
                 </Text>
 
                 <Divider />
 
-                {/* Stats Overview */}
+                {/* نظرة عامة على الإحصائيات */}
                 <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-                    <Col xs={24} sm={12} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
                             <Statistic
-                                title="Active Listings"
+                                title="العقارات النشطة"
                                 value={stats?.active_listings || 0}
                                 prefix={<HomeOutlined />}
                             />
@@ -95,14 +96,14 @@ const DashboardPage: React.FC = () => {
                                 href={route("user.properties.index")}
                                 style={{ paddingLeft: 0 }}
                             >
-                                View all properties
+                                عرض جميع العقارات
                             </Button>
                         </Card>
                     </Col>
-                    <Col xs={24} sm={12} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
                             <Statistic
-                                title="Total Views"
+                                title="عدد المشاهدات"
                                 value={stats?.total_views || 0}
                                 prefix={<EyeOutlined />}
                             />
@@ -117,10 +118,10 @@ const DashboardPage: React.FC = () => {
                             />
                         </Card>
                     </Col>
-                    <Col xs={24} sm={12} md={8}>
+                    <Col xs={24} sm={12} md={6}>
                         <Card>
                             <Statistic
-                                title="Inquiries"
+                                title="الاستفسارات"
                                 value={stats?.total_inquiries || 0}
                                 prefix={<MessageOutlined />}
                             />
@@ -129,31 +130,47 @@ const DashboardPage: React.FC = () => {
                                 href={route("user.inquiries.index")}
                                 style={{ paddingLeft: 0 }}
                             >
-                                View inquiries
+                                عرض الاستفسارات
+                            </Button>
+                        </Card>
+                    </Col>
+                    <Col xs={24} sm={12} md={6}>
+                        <Card>
+                            <Statistic
+                                title="طلبات الحجز"
+                                value={stats?.total_reservations || 0}
+                                prefix={<MessageOutlined />}
+                            />
+                            <Button
+                                type="link"
+                                href={route("user.reservations")}
+                                style={{ paddingLeft: 0 }}
+                            >
+                                عرض الحجوزات
                             </Button>
                         </Card>
                     </Col>
                 </Row>
 
-                {/* Subscription Status */}
+                {/* حالة الاشتراك */}
                 <Card
-                    title="Subscription Plan"
+                    title="باقة الاشتراك"
                     style={{ marginBottom: "24px" }}
                     extra={
                         <Space>
                             {subscription?.status === "active" ? (
                                 <Countdown
-                                    title="Expires in"
+                                    title="تنتهي خلال"
                                     value={subscription.expires_at}
                                     prefix={<ClockCircleOutlined />}
-                                    format="D day H hour"
+                                    format="D يوم H ساعة"
                                 />
                             ) : (
                                 <Button
                                     type="primary"
                                     href={route("user.subscription.index")}
                                 >
-                                    Upgrade Plan
+                                    ترقية الباقة
                                 </Button>
                             )}
                         </Space>
@@ -167,7 +184,7 @@ const DashboardPage: React.FC = () => {
                                     style={{ marginBottom: "4px" }}
                                 >
                                     {subscription?.plan_name ||
-                                        "No active subscription"}
+                                        "لا يوجد اشتراك نشط"}
                                     {subscription && (
                                         <span style={{ marginLeft: "8px" }}>
                                             {getSubscriptionStatusTag(
@@ -182,14 +199,13 @@ const DashboardPage: React.FC = () => {
                                         <Text type="secondary">
                                             <DollarOutlined />{" "}
                                             {subscription.status === "active"
-                                                ? "Active"
-                                                : "Inactive"}{" "}
-                                            plan
+                                                ? "باقة نشطة"
+                                                : "باقة غير نشطة"}{" "}
                                         </Text>
                                     </>
                                 ) : (
                                     <Text type="secondary">
-                                        You don't have an active subscription
+                                        ليس لديك اشتراك نشط
                                     </Text>
                                 )}
                             </Space>
@@ -206,24 +222,23 @@ const DashboardPage: React.FC = () => {
                                     level={5}
                                     style={{ marginBottom: "16px" }}
                                 >
-                                    Subscription Benefits
+                                    مميزات الاشتراك
                                 </Title>
                                 <Space direction="vertical">
                                     <Text>
-                                        <CheckCircleOutlined /> Priority listing
-                                        in search results
+                                        <CheckCircleOutlined /> أولوية الظهور في
+                                        نتائج البحث
                                     </Text>
                                     <Text>
-                                        <CheckCircleOutlined /> Unlimited
-                                        property uploads
+                                        <CheckCircleOutlined /> رفع عدد غير
+                                        محدود من العقارات
                                     </Text>
                                     <Text>
-                                        <CheckCircleOutlined /> Detailed
-                                        analytics dashboard
+                                        <CheckCircleOutlined /> لوحة تحليل
+                                        بيانات مفصلة
                                     </Text>
                                     <Text>
-                                        <CheckCircleOutlined /> Dedicated
-                                        support
+                                        <CheckCircleOutlined /> دعم فني مخصص
                                     </Text>
                                 </Space>
                                 <Button
@@ -232,38 +247,21 @@ const DashboardPage: React.FC = () => {
                                     href={route("user.subscription.index")}
                                 >
                                     {subscription
-                                        ? "Manage Subscription"
-                                        : "Choose a Plan"}
+                                        ? "إدارة الاشتراك"
+                                        : "اختر باقة"}
                                 </Button>
                             </div>
                         </Col>
                     </Row>
                 </Card>
 
-                {/* Recent Properties */}
-                <Card
-                    title="Your Recent Listings"
-                    // extra={
-                    //     <Button
-                    //         type="primary"
-                    //         icon={<PlusOutlined />}
-                    //         href={route("user.properties.create")}
-                    //     >
-                    //         Add New Property
-                    //     </Button>
-                    // }
-                >
+                {/* أحدث العقارات */}
+                <Card title="أحدث عقاراتك">
                     {properties.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "24px" }}>
                             <Title level={4} type="secondary">
-                                You haven't listed any properties yet
+                                لم تقم بإدراج أي عقارات حتى الآن
                             </Title>
-                            {/* <Button
-                            type="primary"
-                            href={route("user.properties.create")}
-                        >
-                            List Your First Property
-                        </Button> */}
                         </div>
                     ) : (
                         <Row gutter={[16, 16]}>
@@ -286,7 +284,7 @@ const DashboardPage: React.FC = () => {
                                                     property.id
                                                 )}
                                             >
-                                                Edit
+                                                تعديل
                                             </Button>,
                                             <Button
                                                 type="link"
@@ -295,7 +293,7 @@ const DashboardPage: React.FC = () => {
                                                     property.id
                                                 )}
                                             >
-                                                View
+                                                عرض
                                             </Button>,
                                         ]}
                                     />

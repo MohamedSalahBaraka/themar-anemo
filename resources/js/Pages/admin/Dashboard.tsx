@@ -33,6 +33,7 @@ import {
 import { usePage } from "@inertiajs/react";
 import { AdminDashboardProps } from "@/types/admin";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 ChartJS.register(
     CategoryScale,
@@ -48,18 +49,23 @@ ChartJS.register(
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-
-const AdminDashboard: React.FC = () => {
+const AdminDashboard: React.FC = () => (
+    <AdminLayout>
+        <Page />
+    </AdminLayout>
+);
+const Page: React.FC = () => {
     const [timeRange, setTimeRange] = useState<string>("7days");
     const [dateRange, setDateRange] = useState<any>(null);
 
+    const { t, language, setLanguage } = useLanguage();
     const { stats, revenueData } = usePage<AdminDashboardProps>().props;
 
     const revenueChartData = {
         labels: revenueData.map((item) => item.date),
         datasets: [
             {
-                label: "Daily Revenue",
+                label: "الإيرادات اليومية",
                 data: revenueData.map((item) => item.total),
                 backgroundColor: "rgba(54, 162, 235, 0.5)",
                 borderColor: "rgba(54, 162, 235, 1)",
@@ -69,10 +75,10 @@ const AdminDashboard: React.FC = () => {
     };
 
     const userGrowthData = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        labels: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو"],
         datasets: [
             {
-                label: "New Users",
+                label: "مستخدمين جدد",
                 data: [12, 19, 3, 5, 2, 3],
                 backgroundColor: "rgba(75, 192, 192, 0.5)",
                 borderColor: "rgba(75, 192, 192, 1)",
@@ -89,7 +95,7 @@ const AdminDashboard: React.FC = () => {
             },
             title: {
                 display: true,
-                text: "Revenue Overview",
+                text: "نظرة عامة على الإيرادات",
             },
         },
         scales: {
@@ -103,147 +109,142 @@ const AdminDashboard: React.FC = () => {
     };
 
     return (
-        <AdminLayout>
-            <div className="admin-dashboard" style={{ padding: "24px" }}>
-                <Title level={2}>Admin Dashboard</Title>
+        <div className="admin-dashboard" style={{ padding: "24px" }}>
+            <Title level={2}>لوحة تحكم المشرف</Title>
 
-                {/* Stats Cards */}
-                <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="Total Users"
-                                value={stats?.users_count || 0}
-                                prefix={<UserOutlined />}
-                                valueStyle={{ color: "#3f8600" }}
-                            />
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="Total Properties"
-                                value={stats?.properties_count || 0}
-                                prefix={<HomeOutlined />}
-                                valueStyle={{ color: "#3f8600" }}
-                            />
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="Active Listings"
-                                value={stats?.active_listings || 0}
-                                prefix={<HomeOutlined />}
-                                valueStyle={{ color: "#3f8600" }}
-                            />
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="30-Day Revenue"
-                                value={stats?.revenue_30days || 0}
-                                prefix={<DollarOutlined />}
-                                valueStyle={{ color: "#3f8600" }}
-                                prefixCls="dollar"
-                                formatter={(value) => `$${value}`}
-                            />
-                        </Card>
-                    </Col>
-                </Row>
-
-                {/* Filters */}
-                <Card style={{ marginBottom: "24px" }}>
-                    <Space size="large">
-                        <Select
-                            defaultValue="7days"
-                            style={{ width: 120 }}
-                            onChange={(value) => setTimeRange(value)}
-                        >
-                            <Option value="7days">Last 7 Days</Option>
-                            <Option value="30days">Last 30 Days</Option>
-                            <Option value="90days">Last 90 Days</Option>
-                        </Select>
-
-                        <RangePicker
-                            onChange={(dates) => setDateRange(dates)}
-                            style={{ width: 250 }}
+            {/* بطاقات الإحصائيات */}
+            <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title="إجمالي المستخدمين"
+                            value={stats?.users_count || 0}
+                            prefix={<UserOutlined />}
+                            valueStyle={{ color: "#3f8600" }}
                         />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title="إجمالي العقارات"
+                            value={stats?.properties_count || 0}
+                            prefix={<HomeOutlined />}
+                            valueStyle={{ color: "#3f8600" }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title="العروض النشطة"
+                            value={stats?.active_listings || 0}
+                            prefix={<HomeOutlined />}
+                            valueStyle={{ color: "#3f8600" }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title="إيرادات 30 يوم"
+                            value={stats?.revenue_30days || 0}
+                            prefix={<DollarOutlined />}
+                            valueStyle={{ color: "#3f8600" }}
+                            prefixCls="dollar"
+                            formatter={(value) => `$${value}`}
+                        />
+                    </Card>
+                </Col>
+            </Row>
 
-                        <Select defaultValue="all" style={{ width: 120 }}>
-                            <Option value="all">All Types</Option>
-                            <Option value="sale">For Sale</Option>
-                            <Option value="rent">For Rent</Option>
-                        </Select>
-                    </Space>
-                </Card>
-
-                {/* Charts */}
-                <Row gutter={[16, 16]}>
-                    <Col xs={24} lg={12}>
-                        <Card
-                            title={
-                                <Space>
-                                    <BarChartOutlined />
-                                    <Text strong>Revenue Report</Text>
-                                </Space>
-                            }
-                        >
-                            <Bar
-                                data={revenueChartData}
-                                options={chartOptions}
-                            />
-                        </Card>
-                    </Col>
-                    <Col xs={24} lg={12}>
-                        <Card
-                            title={
-                                <Space>
-                                    <UserOutlined />
-                                    <Text strong>User Growth</Text>
-                                </Space>
-                            }
-                        >
-                            <Line
-                                data={userGrowthData}
-                                options={{
-                                    ...chartOptions,
-                                    plugins: {
-                                        ...chartOptions.plugins,
-                                        title: {
-                                            display: true,
-                                            text: "User Growth",
-                                        },
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                        },
-                                    },
-                                }}
-                            />
-                        </Card>
-                    </Col>
-                </Row>
-
-                {/* Recent Activity */}
-                <Card title="Recent Activity" style={{ marginTop: "24px" }}>
-                    <div
-                        style={{
-                            minHeight: "200px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
+            {/* الفلاتر */}
+            <Card style={{ marginBottom: "24px" }}>
+                <Space size="large">
+                    <Select
+                        defaultValue="7days"
+                        style={{ width: 120 }}
+                        onChange={(value) => setTimeRange(value)}
                     >
-                        <Text type="secondary">
-                            Recent transactions and activities will appear here
-                        </Text>
-                    </div>
-                </Card>
-            </div>
-        </AdminLayout>
+                        <Option value="7days">آخر 7 أيام</Option>
+                        <Option value="30days">آخر 30 يوم</Option>
+                        <Option value="90days">آخر 90 يوم</Option>
+                    </Select>
+
+                    <RangePicker
+                        onChange={(dates) => setDateRange(dates)}
+                        style={{ width: 250 }}
+                    />
+
+                    <Select defaultValue="all" style={{ width: 120 }}>
+                        <Option value="all">جميع الأنواع</Option>
+                        <Option value="sale">للبيع</Option>
+                        <Option value="rent">للإيجار</Option>
+                    </Select>
+                </Space>
+            </Card>
+
+            {/* الرسوم البيانية */}
+            <Row gutter={[16, 16]}>
+                <Col xs={24} lg={12}>
+                    <Card
+                        title={
+                            <Space>
+                                <BarChartOutlined />
+                                <Text strong>تقرير الإيرادات</Text>
+                            </Space>
+                        }
+                    >
+                        <Bar data={revenueChartData} options={chartOptions} />
+                    </Card>
+                </Col>
+                <Col xs={24} lg={12}>
+                    <Card
+                        title={
+                            <Space>
+                                <UserOutlined />
+                                <Text strong>نمو المستخدمين</Text>
+                            </Space>
+                        }
+                    >
+                        <Line
+                            data={userGrowthData}
+                            options={{
+                                ...chartOptions,
+                                plugins: {
+                                    ...chartOptions.plugins,
+                                    title: {
+                                        display: true,
+                                        text: "نمو المستخدمين",
+                                    },
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                    },
+                                },
+                            }}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+
+            {/* النشاط الأخير */}
+            <Card title="النشاط الأخير" style={{ marginTop: "24px" }}>
+                <div
+                    style={{
+                        minHeight: "200px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Text type="secondary">
+                        ستظهر هنا أحدث المعاملات والأنشطة
+                    </Text>
+                </div>
+            </Card>
+        </div>
     );
 };
 

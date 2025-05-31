@@ -33,12 +33,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
     const getStatusTag = (status: Property["status"]) => {
         const statusMap = {
-            available: { color: "green", text: "Available" },
-            sold: { color: "red", text: "Sold" },
-            rejected: { color: "red", text: "Rejected" },
-            pending: { color: "yellow", text: "Pending" },
-            rented: { color: "blue", text: "Rented" },
-            reserved: { color: "orange", text: "Reserved" },
+            available: { color: "green", text: "متاح" },
+            sold: { color: "red", text: "مباع" },
+            rejected: { color: "red", text: "مرفوض" },
+            pending: { color: "yellow", text: "قيد الانتظار" },
+            rented: { color: "blue", text: "مؤجر" },
+            reserved: { color: "orange", text: "محجوز" },
         };
         return (
             <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>
@@ -78,11 +78,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 actions || mode === "grid"
                     ? [
                           <Space>
-                              <HomeOutlined /> {property.bedrooms || "N/A"} beds
+                              <HomeOutlined /> {property.bedrooms || "N/A"} غرف
                           </Space>,
                           <Space>
                               <EnvironmentOutlined />{" "}
-                              {property.address?.split(",")[0] || "Location"}
+                              {property.address?.split(",")[0] || "موقع"}
                           </Space>,
                           <Text strong>{formatPrice(property.price)}</Text>,
                       ]
@@ -100,9 +100,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                             {property.title}
                         </Text>
                         {getStatusTag(property.status)}
-                        {property.is_featured && (
-                            <Tag color="gold">Featured</Tag>
-                        )}
+                        {property.is_featured && <Tag color="gold">مميز</Tag>}
                     </Space>
                 }
                 description={
@@ -116,7 +114,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                                 style={{ marginTop: "12px" }}
                                 onClick={handleViewDetails}
                             >
-                                View Details
+                                عرض التفاصيل
                             </Button>
                         </>
                     )

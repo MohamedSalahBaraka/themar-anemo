@@ -17,6 +17,7 @@ import {
     DatePicker,
     Badge,
     message,
+    InputNumber,
 } from "antd";
 import {
     EnvironmentOutlined,
@@ -30,7 +31,9 @@ import Map from "@/Components/Map";
 import dayjs from "dayjs";
 import { PageProps } from "@/types";
 import { Property } from "@/types/property";
+
 import { FaBath, FaBed } from "react-icons/fa";
+import FrontLayout from "@/Layouts/FrontLayout";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -51,9 +54,14 @@ interface InquiryFormValues {
 interface ReservationFormValues {
     dates?: [dayjs.Dayjs, dayjs.Dayjs];
     special_requests: string;
+    price: number;
 }
-
-const PropertyDetails: React.FC = () => {
+const PropertyDetails: React.FC = () => (
+    <FrontLayout>
+        <Page />
+    </FrontLayout>
+);
+const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
     const { property, isLoggedIn } = props;
     const user = usePage().props.auth.user;
@@ -64,46 +72,57 @@ const PropertyDetails: React.FC = () => {
     const [reservationForm] = Form.useForm();
 
     const handleInquirySubmit = async (values: InquiryFormValues) => {
-        try {
-            await router.post(
-                route("properties.inquiries.store", property.id),
-                { ...values }
-            );
-            message.success("Your inquiry has been submitted successfully!");
-            setInquiryModalVisible(false);
-            inquiryForm.resetFields();
-        } catch (error) {
-            message.error("Failed to submit inquiry. Please try again.");
-        }
+        router.post(
+            route("properties.inquiries.store", property.id),
+            { ...values },
+            {
+                onSuccess: () => {
+                    message.success(
+                        "Your inquiry has been submitted successfully!"
+                    );
+                    setInquiryModalVisible(false);
+                    inquiryForm.resetFields();
+                },
+                onError: () => {
+                    message.error(
+                        "Failed to submit inquiry. Please try again."
+                    );
+                },
+            }
+        );
     };
 
     const handleReservationSubmit = async (values: ReservationFormValues) => {
-        try {
-            const reservationData: any = {
-                special_requests: values.special_requests || "",
-            };
+        const reservationData: any = {
+            special_requests: values.special_requests || "",
+            price: values.price,
+        };
 
-            if (property.purpose === "rent" && values.dates) {
-                reservationData.start_date =
-                    values.dates[0].format("YYYY-MM-DD");
-                reservationData.end_date = values.dates[1].format("YYYY-MM-DD");
-            }
-
-            await router.post(
-                route("properties.reservations.store", property.id),
-                reservationData
-            );
-
-            message.success(
-                property.purpose === "rent"
-                    ? "Your rental request has been submitted successfully!"
-                    : "Your purchase request has been submitted successfully!"
-            );
-            setReservationModalVisible(false);
-            reservationForm.resetFields();
-        } catch (error) {
-            message.error("Failed to submit request. Please try again.");
+        if (property.purpose === "rent" && values.dates) {
+            reservationData.start_date = values.dates[0].format("YYYY-MM-DD");
+            reservationData.end_date = values.dates[1].format("YYYY-MM-DD");
         }
+
+        router.post(
+            route("properties.reservations.store", property.id),
+            reservationData,
+            {
+                onSuccess: () => {
+                    message.success(
+                        property.purpose === "rent"
+                            ? "Your rental request has been submitted successfully!"
+                            : "Your purchase request has been submitted successfully!"
+                    );
+                    setReservationModalVisible(false);
+                    reservationForm.resetFields();
+                },
+                onError: () => {
+                    message.error(
+                        "Failed to submit inquiry. Please try again."
+                    );
+                },
+            }
+        );
     };
 
     type StatusKey = "available" | "sold" | "rented" | "reserved";
@@ -314,7 +333,7 @@ const PropertyDetails: React.FC = () => {
                             <Divider />
 
                             <Space size="middle">
-                                {user.id == property.user_id ? (
+                                {user && user.id == property.user_id ? (
                                     <Button
                                         type="primary"
                                         size="large"
@@ -327,30 +346,45 @@ const PropertyDetails: React.FC = () => {
                                     </Button>
                                 ) : (
                                     <>
-                                        <Button
-                                            type="primary"
-                                            size="large"
-                                            onClick={() =>
-                                                setInquiryModalVisible(true)
-                                            }
-                                        >
-                                            Contact Owner
-                                        </Button>
-                                        <Button
-                                            type="default"
-                                            size="large"
-                                            onClick={() =>
-                                                setReservationModalVisible(true)
-                                            }
-                                            disabled={
-                                                property.status !==
-                                                    "available" || !isLoggedIn
-                                            }
-                                        >
-                                            {property.purpose === "rent"
-                                                ? "Rent Now"
-                                                : "Make Offer"}
-                                        </Button>
+                                        {property.status === "available" ||
+                                        isLoggedIn ? (
+                                            <>
+                                                <Button
+                                                    type="primary"
+                                                    size="large"
+                                                    onClick={() =>
+                                                        setInquiryModalVisible(
+                                                            true
+                                                        )
+                                                    }
+                                                >
+                                                    Contact Owner
+                                                </Button>
+                                                <Button
+                                                    type="default"
+                                                    size="large"
+                                                    onClick={() =>
+                                                        setReservationModalVisible(
+                                                            true
+                                                        )
+                                                    }
+                                                >
+                                                    {property.purpose === "rent"
+                                                        ? "Rent Now"
+                                                        : "Make Offer"}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Text>
+                                                    {!isLoggedIn &&
+                                                        "you need to register to make offers and inquires "}
+                                                    {property.status !==
+                                                        "available" &&
+                                                        "the property isn't available to make offers and inquires"}
+                                                </Text>
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </Space>
@@ -371,37 +405,6 @@ const PropertyDetails: React.FC = () => {
                     layout="vertical"
                     onFinish={handleInquirySubmit}
                 >
-                    <Form.Item
-                        name="name"
-                        label="Your Name"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Please enter your name",
-                            },
-                        ]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="email"
-                        label="Email"
-                        rules={[
-                            {
-                                required: true,
-                                message: "Please enter your email",
-                            },
-                            {
-                                type: "email",
-                                message: "Please enter a valid email",
-                            },
-                        ]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="phone" label="Phone Number">
-                        <Input />
-                    </Form.Item>
                     <Form.Item
                         name="message"
                         label="Message"
@@ -456,6 +459,15 @@ const PropertyDetails: React.FC = () => {
                             <RangePicker style={{ width: "100%" }} />
                         </Form.Item>
                     )}
+                    <Form.Item
+                        name="price"
+                        label="السعر "
+                        rules={[
+                            { required: true, message: "يرجى إدخال السعر" },
+                        ]}
+                    >
+                        <InputNumber min={0} style={{ width: "100%" }} />
+                    </Form.Item>
                     <Form.Item name="special_requests" label="Special Requests">
                         <Input.TextArea
                             rows={4}

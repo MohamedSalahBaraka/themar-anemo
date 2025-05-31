@@ -11,18 +11,67 @@ use Inertia\Inertia;
 
 class PropertyController extends Controller
 {
-    public function pending()
+    public function propertyManagement()
     {
-        $properties = Property::pending()
-            ->with(['user'])
-            ->paginate(request('limit', 10));
+        $query = Property::query()
+            ->with(['user', 'images'])
+            ->when(request('status'), function ($query, $status) {
+                if ($status === 'pending') {
+                    $query->pending();
+                } elseif ($status === 'approved') {
+                    $query->approved();
+                } elseif ($status === 'rejected') {
+                    $query->rejected();
+                }
+            }, function ($query) {
+                // Default to pending if no status filter
+                $query->pending();
+            });
 
-        return Inertia::render('admin/PropertyApproval', [
+        // Apply filters
+        $query->when(request('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        })
+            ->when(request('type'), function ($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when(request('purpose'), function ($query, $purpose) {
+                $query->where('purpose', $purpose);
+            })
+            ->when(request('min_price'), function ($query, $minPrice) {
+                $query->where('price', '>=', $minPrice);
+            })
+            ->when(request('max_price'), function ($query, $maxPrice) {
+                $query->where('price', '<=', $maxPrice);
+            })
+            ->when(request('date_from'), function ($query, $dateFrom) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            })
+            ->when(request('date_to'), function ($query, $dateTo) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            });
+
+        $properties = $query->paginate(request('limit', 10));
+
+        return Inertia::render('admin/PropertyManagement', [
             'properties' => $properties->items(),
             'pagination' => [
                 'current' => $properties->currentPage(),
                 'pageSize' => $properties->perPage(),
                 'total' => $properties->total(),
+            ],
+            'filters' => [
+                'type' => request('type'),
+                'purpose' => request('purpose'),
+                'min_price' => request('min_price'),
+                'max_price' => request('max_price'),
+                'search' => request('search'),
+                'status' => request('status'),
+                'date_from' => request('date_from'),
+                'date_to' => request('date_to'),
             ],
         ]);
     }
@@ -214,7 +263,7 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
         $user = User::findOrFail(Auth::id());
-        $subscription = $user->activeSubscription();
+        $subscription = $user->subscription();
 
         if (!$subscription || !$subscription->is_active) {
             return redirect()->back()->with('error', 'You need an active subscription to create a property listing.');
@@ -284,7 +333,7 @@ class PropertyController extends Controller
 
         $property->delete();
 
-        return redirect()->route('user.properties.index');
+        return redirect()->back()->with('success', 'Property status deleted successfully.');
     }
     public function show($id)
     {
@@ -319,17 +368,12 @@ class PropertyController extends Controller
     public function storeInquiry(Request $request, Property $property)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
             'message' => 'required|string',
         ]);
 
         $property->inquiries()->create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
             'message' => $request->message,
+            'user_id' => Auth::id()
         ]);
 
         return back()->with('success', 'Inquiry submitted successfully');
@@ -338,6 +382,7 @@ class PropertyController extends Controller
     public function storeReservation(Request $request, Property $property)
     {
         $request->validate([
+            'price' => 'nullable|numeric',
             'special_requests' => 'nullable|string',
             'dates' => 'sometimes|required|array|size:2',
             'dates.0' => 'sometimes|required|date',
@@ -347,6 +392,7 @@ class PropertyController extends Controller
         $reservationData = [
             'user_id' => Auth::id(),
             'special_requests' => $request->special_requests,
+            'price' => $request->price,
         ];
 
         if ($property->purpose === 'rent') {

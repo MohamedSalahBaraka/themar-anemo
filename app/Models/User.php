@@ -40,12 +40,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Inquiry::class);
     }
-    public function activeSubscription()
+    public function reservations(): HasMany
     {
-        return $this->subscriptions()->with('package')->where('expires_at', '>', now())
-            ->where('is_active', true)
-            ->latest()
-            ->first();
+        return $this->hasMany(Reservation::class);
+    }
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->latestOfMany();
     }
     public function recentlyViewedProperties()
     {
@@ -61,6 +63,17 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(
             Inquiry::class,
+            Property::class,
+            'user_id',      // Foreign key on Property table...
+            'property_id',  // Foreign key on Inquiry table...
+            'id',           // Local key on User table...
+            'id'            // Local key on Property table...
+        );
+    }
+    public function receivedReservations(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Reservation::class,
             Property::class,
             'user_id',      // Foreign key on Property table...
             'property_id',  // Foreign key on Inquiry table...

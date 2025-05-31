@@ -1,7 +1,21 @@
 import React from "react";
-import { Form, Input, InputNumber, Switch, Modal, message } from "antd";
+import {
+    Form,
+    Input,
+    InputNumber,
+    Switch,
+    Modal,
+    message,
+    Button,
+    Space,
+    Select,
+} from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { router } from "@inertiajs/react";
 import { Package } from "@/types/user";
+import { useLanguage } from "@/contexts/LanguageContext";
+import useToken from "antd/es/theme/useToken";
+import { theme } from "@/config/theme/themeVariables";
 
 interface PackageFormProps {
     visible: boolean;
@@ -10,6 +24,12 @@ interface PackageFormProps {
     packageData?: Package | null;
 }
 
+interface FeatureItem {
+    key: string;
+    value: string;
+}
+
+const { Option } = Select;
 const PackageForm: React.FC<PackageFormProps> = ({
     visible,
     onCancel,
@@ -19,38 +39,89 @@ const PackageForm: React.FC<PackageFormProps> = ({
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [isLoading, setisLoading] = React.useState(false);
-
     const handleSubmit = async () => {
-        const values = await form.validateFields();
-        setisLoading(true);
-        if (packageData && packageData.id) {
-            router.put(route("admin.packages.update", packageData.id), values, {
-                onSuccess: () => {
-                    message.success("Package updated successfully");
-                },
-                onError: (errors) => {
-                    console.error(errors);
-                    messageApi.error("Failed to update Package");
-                },
-                onFinish: () => {
-                    onSuccess();
-                    setisLoading(false);
-                },
-            });
-        } else {
-            router.post(route("admin.packages.store"), values, {
-                onSuccess: () => {
-                    message.success("Package created successfully");
-                },
-                onError: (errors) => {
-                    console.error(errors);
-                    messageApi.error("Failed to create Package");
-                },
-                onFinish: () => {
-                    onSuccess();
-                    setisLoading(false);
-                },
-            });
+        try {
+            const values = await form.validateFields();
+
+            // Convert features array to JSON object
+            if (values.features && Array.isArray(values.features)) {
+                const featuresObj = values.features.reduce(
+                    (acc: Record<string, string>, item: FeatureItem) => {
+                        if (item.key) {
+                            acc[item.key] = item.value || "";
+                        }
+                        return acc;
+                    },
+                    {}
+                );
+                values.features = JSON.stringify(featuresObj);
+            } else {
+                values.features = "{}";
+            }
+
+            setisLoading(true);
+
+            if (packageData && packageData.id) {
+                router.put(
+                    route("admin.packages.update", packageData.id),
+                    values,
+                    {
+                        onSuccess: () => {
+                            message.success("تم تحديث الباقة بنجاح");
+                        },
+                        onError: (errors) => {
+                            console.error(errors);
+                            messageApi.error("فشل تحديث الباقة");
+                        },
+                        onFinish: () => {
+                            onSuccess();
+                            setisLoading(false);
+                        },
+                    }
+                );
+            } else {
+                router.post(route("admin.packages.store"), values, {
+                    onSuccess: () => {
+                        message.success("تم إنشاء الباقة بنجاح");
+                    },
+                    onError: (errors) => {
+                        console.error(errors);
+                        messageApi.error("فشل إنشاء الباقة");
+                    },
+                    onFinish: () => {
+                        onSuccess();
+                        setisLoading(false);
+                    },
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            setisLoading(false);
+        }
+    };
+
+    // Convert features JSON to array for the form
+    const parseFeatures = (
+        features: string | Record<string, any> | null | undefined
+    ): FeatureItem[] => {
+        try {
+            if (!features) return [{ key: "", value: "" }];
+
+            const featuresObj =
+                typeof features === "string" ? JSON.parse(features) : features;
+
+            if (!featuresObj || typeof featuresObj !== "object") {
+                return [{ key: "", value: "" }];
+            }
+
+            return Object.entries(featuresObj).map(([key, value]) => ({
+                key,
+                value:
+                    typeof value === "string" ? value : JSON.stringify(value),
+            }));
+        } catch (e) {
+            console.error("Error parsing features", e);
+            return [{ key: "", value: "" }];
         }
     };
 
@@ -58,20 +129,18 @@ const PackageForm: React.FC<PackageFormProps> = ({
         if (visible && packageData) {
             form.setFieldsValue({
                 ...packageData,
-                // Ensure features is properly formatted if it's a string
-                features:
-                    typeof packageData.features === "string"
-                        ? JSON.parse(packageData.features)
-                        : packageData.features,
+                features: parseFeatures(packageData.features),
             });
-        } else {
-            form.resetFields();
+        } else if (visible) {
+            form.setFieldsValue({
+                features: [{ key: "", value: "" }],
+            });
         }
     }, [visible, packageData, form]);
 
     return (
         <Modal
-            title={packageData ? "Edit Package" : "Add Package"}
+            title={packageData ? "تعديل الباقة" : "إضافة باقة"}
             visible={visible}
             onOk={handleSubmit}
             onCancel={onCancel}
@@ -82,92 +151,146 @@ const PackageForm: React.FC<PackageFormProps> = ({
             <Form form={form} layout="vertical">
                 <Form.Item
                     name="name"
-                    label="Package Name"
+                    label="اسم الباقة"
                     rules={[
                         {
                             required: true,
-                            message: "Please input package name",
+                            message: "يرجى إدخال اسم الباقة",
                         },
                     ]}
                 >
-                    <Input />
+                    <Input
+                        style={{
+                            background: "transparent",
+                        }}
+                    />
                 </Form.Item>
 
                 <Form.Item
                     name="description"
-                    label="Description"
-                    rules={[
-                        { required: true, message: "Please input description" },
-                    ]}
+                    label="الوصف"
+                    rules={[{ required: true, message: "يرجى إدخال الوصف" }]}
                 >
                     <Input.TextArea rows={4} />
                 </Form.Item>
 
                 <Form.Item
                     name="price"
-                    label="Price"
-                    rules={[{ required: true, message: "Please input price" }]}
+                    label="السعر الشهري"
+                    rules={[{ required: true, message: "يرجى إدخال السعر" }]}
+                >
+                    <InputNumber min={0} style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item
+                    name="yearly_price"
+                    label="السعر السنوي"
+                    rules={[{ required: true, message: "يرجى إدخال السعر" }]}
                 >
                     <InputNumber min={0} style={{ width: "100%" }} />
                 </Form.Item>
 
                 <Form.Item
-                    name="duration"
-                    label="Duration (days)"
+                    name="user_type"
+                    label="نوع المستخدم"
                     rules={[
-                        { required: true, message: "Please input duration" },
+                        {
+                            required: true,
+                            message: "الرجاء اختيار نوع المستخدم",
+                        },
                     ]}
                 >
-                    <InputNumber min={1} style={{ width: "100%" }} />
+                    <Select placeholder="اختر الدور">
+                        <Option value="owner">مالك</Option>
+                        <Option value="agent">وسيط</Option>
+                        <Option value="company">شركة</Option>
+                    </Select>
                 </Form.Item>
 
                 <Form.Item
                     name="max_listings"
-                    label="Maximum Listings"
+                    label="الحد الأقصى للعروض"
                     rules={[
                         {
                             required: true,
-                            message: "Please input maximum listings",
+                            message: "يرجى إدخال الحد الأقصى للعروض",
                         },
                     ]}
                 >
                     <InputNumber min={1} style={{ width: "100%" }} />
                 </Form.Item>
 
-                <Form.Item
-                    name="features"
-                    label="Features (JSON)"
-                    rules={[
-                        {
-                            validator: (_, value) => {
-                                try {
-                                    if (value && typeof value === "string") {
-                                        JSON.parse(value);
-                                    }
-                                    return Promise.resolve();
-                                } catch (e) {
-                                    return Promise.reject(
-                                        "Please enter valid JSON"
-                                    );
-                                }
-                            },
-                        },
-                    ]}
-                >
-                    <Input.TextArea
-                        rows={4}
-                        placeholder='Enter features as JSON, e.g. {"feature1": true, "feature2": "value"}'
-                    />
+                <Form.Item label="الميزات">
+                    <Form.List name="features">
+                        {(fields, { add, remove }) => (
+                            <>
+                                {fields.map(({ key, name, ...restField }) => (
+                                    <Space
+                                        key={key}
+                                        style={{
+                                            display: "flex",
+                                            marginBottom: 8,
+                                        }}
+                                        align="baseline"
+                                    >
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, "key"]}
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message: "مطلوب",
+                                                },
+                                            ]}
+                                        >
+                                            <Input
+                                                style={{
+                                                    background: "transparent",
+                                                }}
+                                                placeholder="اسم الميزة"
+                                            />
+                                        </Form.Item>
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, "value"]}
+                                        >
+                                            <Input
+                                                style={{
+                                                    background: "transparent",
+                                                }}
+                                                placeholder="وصف الميزة"
+                                            />
+                                        </Form.Item>
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<DeleteOutlined />}
+                                            onClick={() => remove(name)}
+                                        />
+                                    </Space>
+                                ))}
+                                <Form.Item>
+                                    <Button
+                                        type="dashed"
+                                        onClick={() => add()}
+                                        block
+                                        icon={<PlusOutlined />}
+                                    >
+                                        إضافة ميزة
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+                    </Form.List>
                 </Form.Item>
 
                 <Form.Item
                     name="isActive"
-                    label="Status"
+                    label="الحالة"
                     valuePropName="checked"
                 >
                     <Switch
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
+                        checkedChildren="مفعل"
+                        unCheckedChildren="غير مفعل"
                     />
                 </Form.Item>
             </Form>

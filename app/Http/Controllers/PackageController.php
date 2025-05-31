@@ -22,7 +22,8 @@ class PackageController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'duration' => 'required|integer|min:1',
+            'yearly_price' => 'required|numeric|min:0',
+            'user_type' => 'required|in:owner,agent,company',
             'max_listings' => 'required|integer|min:1',
             'features' => 'nullable|json',
             'isActive' => 'boolean',
@@ -44,9 +45,10 @@ class PackageController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'duration' => 'required|integer|min:1',
+            'yearly_price' => 'required|numeric|min:0',
+            'user_type' => 'required|in:owner,agent,company',
             'max_listings' => 'required|integer|min:1',
-            // 'features' => 'nullable|json',
+            'features' => 'nullable|json',
             'isActive' => 'boolean',
         ]);
 
@@ -54,7 +56,6 @@ class PackageController extends Controller
         if (isset($validated['features']) && is_string($validated['features'])) {
             $validated['features'] = json_decode($validated['features'], true);
         }
-
         $package->update($validated);
 
         return redirect()->back()->with('success', 'Package updated successfully');

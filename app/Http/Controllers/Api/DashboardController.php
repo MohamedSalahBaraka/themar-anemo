@@ -13,7 +13,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $subscription = $user->activeSubscription();
+        $subscription = $user->subscription();
         $properties = $user->properties()->with(['images'])->latest()->take(4)->get();
 
         return response()->json([
@@ -21,6 +21,7 @@ class DashboardController extends Controller
             'stats' => [
                 'active_listings' => $user->properties()->count(),
                 'total_inquiries' => $user->inquiries()->count() + $user->receivedInquiries()->count(),
+                'total_reservations' => $user->reservations()->count() + $user->receivedReservations()->count(),
             ],
             'subscription' => $subscription ? [
                 'id' => $subscription->id,

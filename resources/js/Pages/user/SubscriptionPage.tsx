@@ -106,7 +106,7 @@ const SubscriptionPage: React.FC = () => {
                         });
                     },
                     onError: (errors) => {
-                        console.error("Subscription error:", errors);
+                        console.error("خطأ في الاشتراك:", errors);
                     },
                     onFinish: () => {
                         setIsSubscribing(false);
@@ -114,7 +114,7 @@ const SubscriptionPage: React.FC = () => {
                 }
             );
         } catch (error) {
-            console.error("Subscription failed:", error);
+            console.error("فشل الاشتراك:", error);
             setIsSubscribing(false);
         }
     };
@@ -130,12 +130,12 @@ const SubscriptionPage: React.FC = () => {
                     },
                 }
             );
-            if (!res.ok) throw new Error("Failed to fetch invoice");
+            if (!res.ok) throw new Error("فشل جلب الفاتورة");
             const data = await res.json();
             setSelectedInvoice(data.invoice);
             setModalVisible(true);
         } catch (error) {
-            console.error("Failed to fetch invoice:", error);
+            console.error("فشل جلب الفاتورة:", error);
         } finally {
             setIsFetchingInvoice(false);
         }
@@ -143,27 +143,35 @@ const SubscriptionPage: React.FC = () => {
 
     const columns: TableProps<Transaction>["columns"] = [
         {
-            title: "Date",
+            title: "التاريخ",
             dataIndex: "created_at",
             key: "date",
             render: (date) => new Date(date).toLocaleDateString(),
         },
         {
-            title: "Amount",
+            title: "المبلغ",
             dataIndex: "amount",
             key: "amount",
             render: (amount) => <Text>${amount.toFixed(2)}</Text>,
         },
         {
-            title: "Payment Method",
+            title: "طريقة الدفع",
             dataIndex: "method",
             key: "method",
             render: (method) => (
-                <Tag color="blue">{method.replace("_", " ").toUpperCase()}</Tag>
+                <Tag color="blue">
+                    {method === "credit_card"
+                        ? "بطاقة ائتمان"
+                        : method === "paypal"
+                        ? "باي بال"
+                        : method === "bank"
+                        ? "حوالة بنكية"
+                        : "نقدي"}
+                </Tag>
             ),
         },
         {
-            title: "Status",
+            title: "الحالة",
             dataIndex: "status",
             key: "status",
             render: (status) => (
@@ -178,12 +186,18 @@ const SubscriptionPage: React.FC = () => {
                             : "red"
                     }
                 >
-                    {status.toUpperCase()}
+                    {status === "completed"
+                        ? "مكتمل"
+                        : status === "pending"
+                        ? "قيد الانتظار"
+                        : status === "refunded"
+                        ? "تم الاسترداد"
+                        : "فشل"}
                 </Tag>
             ),
         },
         {
-            title: "Action",
+            title: "إجراء",
             key: "action",
             render: (_, record) => (
                 <Button
@@ -192,7 +206,7 @@ const SubscriptionPage: React.FC = () => {
                     disabled={record.status !== "completed" || !record.invoice}
                     loading={isFetchingInvoice}
                 >
-                    {record.invoice ? "View Invoice" : "No Invoice"}
+                    {record.invoice ? "عرض الفاتورة" : "لا يوجد فاتورة"}
                 </Button>
             ),
         },
@@ -203,12 +217,12 @@ const SubscriptionPage: React.FC = () => {
             ? [
                   {
                       key: "1",
-                      label: "Package",
+                      label: "الباقة",
                       children: props.currentSubscription.package.name,
                   },
                   {
                       key: "2",
-                      label: "Status",
+                      label: "الحالة",
                       children: (
                           <Tag
                               color={
@@ -218,47 +232,47 @@ const SubscriptionPage: React.FC = () => {
                               }
                           >
                               {props.currentSubscription.is_active
-                                  ? "ACTIVE"
-                                  : "INACTIVE"}
+                                  ? "نشط"
+                                  : "غير نشط"}
                           </Tag>
                       ),
                   },
                   {
                       key: "3",
-                      label: "Started At",
+                      label: "تاريخ البدء",
                       children: new Date(
                           props.currentSubscription.started_at
                       ).toLocaleDateString(),
                   },
                   {
                       key: "4",
-                      label: "Expires At",
+                      label: "تاريخ الانتهاء",
                       children: props.currentSubscription.expires_at
                           ? new Date(
                                 props.currentSubscription.expires_at
                             ).toLocaleDateString()
-                          : "Never",
+                          : "لا ينتهي",
                   },
                   {
                       key: "5",
-                      label: "Max Listings",
+                      label: "الحد الأقصى للعقارات",
                       children: props.currentSubscription.package.max_listings,
                   },
                   {
                       key: "6",
-                      label: "Duration",
-                      children: `${props.currentSubscription.package.duration} days`,
+                      label: "المدة",
+                      children: `${props.currentSubscription.package.duration} يوم`,
                   },
               ]
             : [];
 
     return (
         <AppLayout>
-            <div className="subscription-page">
-                <Title level={2}>Subscription & Billing</Title>
+            <div className="subscription-page" style={{ direction: "rtl" }}>
+                <Title level={2}>الاشتراكات والفوترة</Title>
 
                 <Card
-                    title="Current Subscription"
+                    title="الاشتراك الحالي"
                     loading={!props}
                     style={{ marginBottom: 24 }}
                 >
@@ -270,7 +284,7 @@ const SubscriptionPage: React.FC = () => {
                         />
                     ) : (
                         <Alert
-                            message="No active subscription"
+                            message="لا يوجد اشتراك نشط"
                             type="warning"
                             showIcon
                             action={
@@ -278,7 +292,7 @@ const SubscriptionPage: React.FC = () => {
                                     type="primary"
                                     onClick={() => router.reload()}
                                 >
-                                    Refresh
+                                    تحديث
                                 </Button>
                             }
                         />
@@ -286,7 +300,7 @@ const SubscriptionPage: React.FC = () => {
                 </Card>
 
                 <Card
-                    title="Available Packages"
+                    title="الباقات المتاحة"
                     loading={!props.packages}
                     style={{ marginBottom: 24 }}
                 >
@@ -299,15 +313,15 @@ const SubscriptionPage: React.FC = () => {
                                     <Card
                                         hoverable
                                         style={{
-                                            border: "2px solid #1890ff", // Highlight the border
+                                            border: "2px solid #1890ff",
                                             borderRadius: 12,
                                             boxShadow:
-                                                "0 4px 12px rgba(0, 0, 0, 0.15)", // Add soft shadow
-                                            backgroundColor: "#f9f9f9", // Slightly off-white background
+                                                "0 4px 12px rgba(0, 0, 0, 0.15)",
+                                            backgroundColor: "#f9f9f9",
                                             transition: "0.3s",
                                         }}
                                         headStyle={{
-                                            backgroundColor: "#e6f7ff", // Light blue header background
+                                            backgroundColor: "#e6f7ff",
                                             borderBottom: "1px solid #91d5ff",
                                         }}
                                         title={
@@ -360,8 +374,8 @@ const SubscriptionPage: React.FC = () => {
                                             >
                                                 {props.currentSubscription
                                                     ?.package_id === pkg.id
-                                                    ? "Current Plan"
-                                                    : "Subscribe"}
+                                                    ? "الباقة الحالية"
+                                                    : "اشترك الآن"}
                                             </Button>,
                                         ]}
                                     >
@@ -372,11 +386,10 @@ const SubscriptionPage: React.FC = () => {
                                                 size="middle"
                                             >
                                                 <Text>
-                                                    📅 Duration: {pkg.duration}{" "}
-                                                    days
+                                                    📅 المدة: {pkg.duration} يوم
                                                 </Text>
                                                 <Text>
-                                                    📦 Max Listings:{" "}
+                                                    📦 الحد الأقصى للعقارات:{" "}
                                                     {pkg.max_listings}
                                                 </Text>
                                                 <Text>{pkg.description}</Text>
@@ -389,7 +402,7 @@ const SubscriptionPage: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card title="Transaction History" loading={!props.transactions}>
+                <Card title="سجل المعاملات" loading={!props.transactions}>
                     <Table
                         columns={columns}
                         dataSource={props.transactions}
@@ -399,7 +412,7 @@ const SubscriptionPage: React.FC = () => {
                 </Card>
 
                 <Modal
-                    title="Invoice Details"
+                    title="تفاصيل الفاتورة"
                     open={modalVisible}
                     onCancel={() => setModalVisible(false)}
                     footer={null}
@@ -408,49 +421,49 @@ const SubscriptionPage: React.FC = () => {
                     {selectedInvoice && (
                         <div>
                             <Descriptions bordered column={2}>
-                                <Descriptions.Item label="Invoice Number">
+                                <Descriptions.Item label="رقم الفاتورة">
                                     {selectedInvoice.invoice_number}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Issue Date">
+                                <Descriptions.Item label="تاريخ الإصدار">
                                     {new Date(
                                         selectedInvoice.issue_date
                                     ).toLocaleDateString()}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Due Date">
+                                <Descriptions.Item label="تاريخ الاستحقاق">
                                     {new Date(
                                         selectedInvoice.due_date
                                     ).toLocaleDateString()}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Total Amount">
+                                <Descriptions.Item label="المبلغ الإجمالي">
                                     <Text strong>
                                         ${selectedInvoice.total.toFixed(2)}
                                     </Text>
                                 </Descriptions.Item>
                             </Descriptions>
 
-                            <Divider orientation="left">Items</Divider>
+                            <Divider orientation="right">العناصر</Divider>
 
                             <Table
                                 columns={[
                                     {
-                                        title: "Description",
+                                        title: "الوصف",
                                         dataIndex: "description",
                                         key: "description",
                                     },
                                     {
-                                        title: "Quantity",
+                                        title: "الكمية",
                                         dataIndex: "quantity",
                                         key: "quantity",
                                     },
                                     {
-                                        title: "Unit Price",
+                                        title: "سعر الوحدة",
                                         dataIndex: "unit_price",
                                         key: "unitPrice",
                                         render: (value) =>
                                             `$${value.toFixed(2)}`,
                                     },
                                     {
-                                        title: "Total",
+                                        title: "الإجمالي",
                                         dataIndex: "total_price",
                                         key: "totalPrice",
                                         render: (value) =>
@@ -466,9 +479,11 @@ const SubscriptionPage: React.FC = () => {
                                             <Table.Summary.Cell
                                                 index={0}
                                                 colSpan={3}
-                                                align="right"
+                                                align="left"
                                             >
-                                                <Text strong>Subtotal:</Text>
+                                                <Text strong>
+                                                    المجموع الفرعي:
+                                                </Text>
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}>
                                                 <Text strong>
@@ -483,9 +498,9 @@ const SubscriptionPage: React.FC = () => {
                                             <Table.Summary.Cell
                                                 index={0}
                                                 colSpan={3}
-                                                align="right"
+                                                align="left"
                                             >
-                                                <Text strong>Tax:</Text>
+                                                <Text strong>الضريبة:</Text>
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}>
                                                 <Text strong>
@@ -500,9 +515,9 @@ const SubscriptionPage: React.FC = () => {
                                             <Table.Summary.Cell
                                                 index={0}
                                                 colSpan={3}
-                                                align="right"
+                                                align="left"
                                             >
-                                                <Text strong>Total:</Text>
+                                                <Text strong>الإجمالي:</Text>
                                             </Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}>
                                                 <Text strong>
@@ -524,7 +539,7 @@ const SubscriptionPage: React.FC = () => {
                                         href={selectedInvoice.invoice_pdf_url}
                                         target="_blank"
                                     >
-                                        Download PDF
+                                        تحميل PDF
                                     </Button>
                                 </div>
                             )}
