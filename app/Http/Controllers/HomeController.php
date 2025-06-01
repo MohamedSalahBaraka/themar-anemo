@@ -150,7 +150,7 @@ class HomeController extends Controller
     {
         return Inertia::render('Pricing', [
             'packages' => Package::limit(3)->get()->map(function ($pkg) {
-                $pkg['features'] = json_decode($pkg['features']);
+                $pkg['features'] = json_decode($pkg['features'] ?? '[]') ?: [];
                 return $pkg;
             }),
         ]);
