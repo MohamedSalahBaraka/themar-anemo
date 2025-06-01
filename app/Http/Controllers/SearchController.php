@@ -48,6 +48,8 @@ class SearchController extends Controller
             'filters' => $filters,
             'meta' => [
                 'total' => $properties->total(),
+                'per_page' => $filters['per_page'] ?? 12,
+                'current_page' => $filters['page'] ?? 12,
             ],
         ]);
     }

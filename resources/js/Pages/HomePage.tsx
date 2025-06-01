@@ -1,5 +1,5 @@
 import React from "react";
-import { usePage, router } from "@inertiajs/react";
+import { usePage, router, Link } from "@inertiajs/react";
 import {
     Row,
     Col,
@@ -17,6 +17,9 @@ import {
     Badge,
     Grid,
     Tabs,
+    Checkbox,
+    Radio,
+    Image,
 } from "antd";
 import {
     DollarOutlined,
@@ -35,6 +38,8 @@ import { PageProps } from "@/types";
 import { Property, PropertyFilter } from "@/types/property";
 import { FaBath } from "react-icons/fa";
 import FrontLayout from "@/Layouts/FrontLayout";
+import { theme } from "@/config/theme/themeVariables";
+import PackageCard, { Package } from "@/Components/PackageCard";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -46,6 +51,7 @@ const { TabPane } = Tabs;
 interface HomePageProps extends PageProps {
     featuredProperties: Property[];
     filters: PropertyFilter;
+    packages: Package[];
     recentlyViewed?: Property[];
     sectionedProperties: {
         forSale: Property[];
@@ -58,6 +64,8 @@ const HomePage: React.FC = () => (
         <Page />
     </FrontLayout>
 );
+type RealEstateType = "apartment" | "villa" | "land" | "office";
+
 const Page: React.FC = () => {
     const { props } = usePage<HomePageProps>();
     const screens = useBreakpoint();
@@ -79,7 +87,22 @@ const Page: React.FC = () => {
             }
         );
     };
+    const realEstateTypes: { type: RealEstateType; count: number }[] = [
+        { type: "apartment", count: 1600 },
+        { type: "villa", count: 1400 },
+        { type: "land", count: 3800 },
+        { type: "office", count: 4200 },
+    ];
 
+    const translateType = (type: RealEstateType): string => {
+        const translations: Record<RealEstateType, string> = {
+            apartment: "شقة",
+            villa: "فيلا",
+            land: "أرض",
+            office: "مكتب",
+        };
+        return translations[type];
+    };
     const handleFilterChange = (key: keyof PropertyFilter, value: any) => {
         setFilter((prev) => ({ ...prev, [key]: value }));
     };
@@ -146,7 +169,7 @@ const Page: React.FC = () => {
                             }
                             className="w-full h-full object-cover rounded-lg"
                         />
-                        <button
+                        {/* <button
                             type="button"
                             className="absolute top-1 right-1 bg-white/80 p-1 rounded-full shadow hover:bg-white focus:outline-none"
                             onClick={(e) => {
@@ -159,7 +182,7 @@ const Page: React.FC = () => {
                             ) : (
                                 <HeartOutlined className="text-sm" />
                             )}
-                        </button>
+                        </button> */}
                         <span
                             className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${
                                 property.purpose === "sale"
@@ -178,49 +201,49 @@ const Page: React.FC = () => {
             >
                 <Meta
                     title={
-                        <Space>
-                            {property.title}
-                            {getStatusTag(property.status)}
-                        </Space>
+                        <>
+                            <Space
+                                style={{ display: "block", marginBottom: 8 }}
+                            >
+                                <Title level={4} style={{ color: "#2563EB" }}>
+                                    {formatPrice(property.price)}
+                                </Title>
+                            </Space>
+                            <Space>
+                                {property.title}
+                                {getStatusTag(property.status)}
+                            </Space>
+                        </>
                     }
                     description={
                         <>
-                            <Text
-                                ellipsis={{ tooltip: property.description }}
-                                style={{ display: "block", marginBottom: 8 }}
-                            >
-                                {property.description}
-                            </Text>
+                            <Space>
+                                <EnvironmentOutlined />
+                                <Text type="secondary">
+                                    {property.address?.split(",")[0] ||
+                                        "الموقع غير محدد"}
+                                </Text>
+                            </Space>
                             <Divider style={{ margin: "8px 0" }} />
                             <Space size="large">
                                 <Space>
-                                    <HomeOutlined />{" "}
-                                    {property.bedrooms || "غير محدد"}
+                                    <HomeOutlined />
+                                    {property.bedrooms || "غير محدد"} غرفة
                                 </Space>
                                 <Space>
-                                    <FaBath />{" "}
-                                    {property.bathrooms || "غير محدد"}
+                                    <FaBath />
+                                    {property.bathrooms || "غير محدد"}حمام
                                 </Space>
                                 <Space>
-                                    <ArrowsAltOutlined />{" "}
+                                    <ArrowsAltOutlined />
                                     {property.area
-                                        ? `${property.area} قدم²`
+                                        ? `${property.area} m²`
                                         : "غير محدد"}
                                 </Space>
                             </Space>
                         </>
                     }
                 />
-                <div className="property-footer">
-                    <Space>
-                        <EnvironmentOutlined />
-                        <Text type="secondary">
-                            {property.address?.split(",")[0] ||
-                                "الموقع غير محدد"}
-                        </Text>
-                    </Space>
-                    <Text strong>{formatPrice(property.price)}</Text>
-                </div>
             </Card>
         </Badge.Ribbon>
     );
@@ -230,12 +253,21 @@ const Page: React.FC = () => {
         title: string,
         icon: React.ReactNode
     ) => (
-        <section className="section">
-            <Divider orientation="left">
+        <section className="section" style={{ margin: 30 }}>
+            <Row
+                className="flex flex-row justify-between"
+                style={{ marginBottom: 20 }}
+            >
                 <Title level={3} style={{ marginBottom: 0 }}>
-                    {icon} {title}
+                    {title}
                 </Title>
-            </Divider>
+                <Link
+                    style={{ color: "#2563EB", fontSize: 16, fontWeight: 700 }}
+                    href={route("properties.search")}
+                >
+                    عرض الكل
+                </Link>
+            </Row>
             {properties?.length > 0 ? (
                 <Row gutter={[24, 24]}>
                     {properties.map((property) => (
@@ -252,6 +284,53 @@ const Page: React.FC = () => {
 
     return (
         <div className="home-page">
+            {/* BG IMG */}
+            <img
+                src={`${window.location.origin}/Images/landBg.jpg`}
+                width={"100%"}
+                // height={100}
+                style={{
+                    top: 0,
+                    right: 0,
+                    position: "absolute",
+                    zIndex: 0,
+                    height: 500,
+                }}
+            />
+            <div
+                // height={100}
+                style={{
+                    top: 0,
+                    right: 0,
+                    position: "absolute",
+                    zIndex: 0,
+                    height: 500,
+                    width: "100%",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)", // semi-transparent black
+                }}
+            />
+            <Col
+                span={24}
+                className="flex flex-col items-center justify-center text-center text-white"
+                style={{ zIndex: 1, margin: 50 }}
+            >
+                <Title level={1} style={{ color: "white" }}>
+                    مستعد للعثور على منزل أحلامك؟
+                </Title>
+                <Title
+                    level={2}
+                    style={{
+                        display: "block",
+                        marginBottom: 24,
+                        color: "white",
+                        zIndex: 1,
+                    }}
+                >
+                    انضم إلى الآلاف من الملاك السعداء الذين وجدوا عقارهم المثالي
+                    من خلالنا
+                </Title>
+            </Col>
+
             {/* Hero Search Section */}
             <div className="hero-section">
                 <div className="hero-overlay">
@@ -261,30 +340,104 @@ const Page: React.FC = () => {
                         style={{ height: "100%" }}
                     >
                         <Col span={24} style={{ textAlign: "center" }}>
-                            <Title
-                                level={1}
-                                style={{ color: "#fff", marginBottom: 24 }}
+                            <div
+                                className="search-container"
+                                style={{
+                                    background: "rgba(255, 255, 255, 0.9)",
+                                    padding: "24px",
+                                    borderRadius: "8px",
+                                    maxWidth: "1200px",
+                                    margin: "0 auto",
+                                }}
                             >
-                                ابحث عن عقارك المثالي
-                            </Title>
-                            <div className="search-container">
                                 <Row gutter={[16, 16]} justify="center">
-                                    <Col xs={24} sm={24} md={6}>
-                                        <Search
-                                            placeholder="العنوان، الحي أو الرمز البريدي"
-                                            allowClear
+                                    {/* Sale/Rent/Offices Toggle */}
+                                    <Col span={24}>
+                                        <Radio.Group
                                             size="large"
-                                            value={filter.location}
+                                            value={filter.purpose}
                                             onChange={(e) =>
                                                 handleFilterChange(
-                                                    "location",
+                                                    "purpose",
                                                     e.target.value
                                                 )
                                             }
-                                            onPressEnter={handleSearch}
+                                            buttonStyle="solid"
+                                            style={{
+                                                display: "flex",
+                                                gap: "1rem",
+                                            }}
+                                        >
+                                            <Radio.Button
+                                                value="sale"
+                                                style={{
+                                                    padding: "4px 12px",
+                                                    border: "none",
+                                                    borderBottom:
+                                                        filter.purpose ===
+                                                        "sale"
+                                                            ? "2px solid #1890ff"
+                                                            : "2px solid transparent",
+                                                    color:
+                                                        filter.purpose ===
+                                                        "sale"
+                                                            ? "#1890ff"
+                                                            : "inherit",
+                                                    background: "transparent",
+                                                    boxShadow: "none",
+                                                    margin: 0,
+                                                }}
+                                            >
+                                                بيع
+                                            </Radio.Button>
+                                            <Radio.Button
+                                                value="rent"
+                                                style={{
+                                                    padding: "4px 12px",
+                                                    border: "none",
+                                                    borderBottom:
+                                                        filter.purpose ===
+                                                        "rent"
+                                                            ? "2px solid #1890ff"
+                                                            : "2px solid transparent",
+                                                    color:
+                                                        filter.purpose ===
+                                                        "rent"
+                                                            ? "#1890ff"
+                                                            : "inherit",
+                                                    background: "transparent",
+                                                    boxShadow: "none",
+                                                    margin: 0,
+                                                }}
+                                            >
+                                                إيجار
+                                            </Radio.Button>
+                                        </Radio.Group>
+                                    </Col>
+
+                                    {/* Area and Property Type */}
+                                    <Col xs={24} sm={12} md={6}>
+                                        <Select
+                                            placeholder="المنطقة"
+                                            style={{ width: "100%" }}
+                                            size="large"
+                                            value={filter.location}
+                                            onChange={(value) =>
+                                                handleFilterChange(
+                                                    "location",
+                                                    value
+                                                )
+                                            }
+                                            options={[
+                                                {
+                                                    value: "all",
+                                                    label: "جميع المناطق",
+                                                },
+                                                // Add other area options here
+                                            ]}
                                         />
                                     </Col>
-                                    <Col xs={24} sm={12} md={4}>
+                                    <Col xs={24} sm={12} md={6}>
                                         <Select
                                             placeholder="نوع العقار"
                                             style={{ width: "100%" }}
@@ -299,30 +452,12 @@ const Page: React.FC = () => {
                                             options={propertyTypes}
                                         />
                                     </Col>
-                                    <Col xs={24} sm={12} md={4}>
-                                        <Select
-                                            placeholder="الغرض"
-                                            style={{ width: "100%" }}
-                                            size="large"
-                                            value={filter.purpose}
-                                            onChange={(value) =>
-                                                handleFilterChange(
-                                                    "purpose",
-                                                    value
-                                                )
-                                            }
-                                        >
-                                            <Option value="sale">للبيع</Option>
-                                            <Option value="rent">
-                                                للإيجار
-                                            </Option>
-                                        </Select>
-                                    </Col>
-                                    <Col xs={24} sm={12} md={3}>
+
+                                    {/* Price Range */}
+                                    <Col xs={24} sm={12} md={6}>
                                         <Input
                                             type="number"
                                             placeholder="أقل سعر"
-                                            prefix={<DollarOutlined />}
                                             size="large"
                                             value={filter.minPrice}
                                             onChange={(e) =>
@@ -334,13 +469,13 @@ const Page: React.FC = () => {
                                                 )
                                             }
                                             onPressEnter={handleSearch}
+                                            style={{ width: "100%" }}
                                         />
                                     </Col>
-                                    <Col xs={24} sm={12} md={3}>
+                                    <Col xs={24} sm={12} md={6}>
                                         <Input
                                             type="number"
                                             placeholder="أعلى سعر"
-                                            prefix={<DollarOutlined />}
                                             size="large"
                                             value={filter.maxPrice}
                                             onChange={(e) =>
@@ -352,15 +487,24 @@ const Page: React.FC = () => {
                                                 )
                                             }
                                             onPressEnter={handleSearch}
+                                            style={{ width: "100%" }}
                                         />
                                     </Col>
-                                    <Col xs={24} sm={24} md={4}>
+                                    <Col
+                                        xs={24}
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                        }}
+                                    >
+                                        <Button type="default" size="small">
+                                            خيارات متقدمة
+                                        </Button>
                                         <Button
                                             type="primary"
                                             onClick={handleSearch}
                                             loading={loading}
-                                            size="large"
-                                            style={{ width: "100%" }}
+                                            size="small"
                                             icon={<SearchOutlined />}
                                         >
                                             بحث
@@ -372,144 +516,103 @@ const Page: React.FC = () => {
                     </Row>
                 </div>
             </div>
-
             {/* Main Content */}
             <div
-                className="container"
+                className="container mx-auto px-4 py-6"
                 style={{ padding: screens.xs ? "16px" : "24px" }}
             >
                 {/* Featured Properties Carousel */}
                 <section className="section">
-                    <Divider orientation="left">
-                        <Title level={3} style={{ marginBottom: 0 }}>
-                            <StarFilled style={{ color: "#faad14" }} /> عقارات
-                            مميزة
-                        </Title>
-                    </Divider>
                     {props.featuredProperties?.length > 0 ? (
-                        <Spin spinning={loading}>
-                            <Carousel
-                                autoplay
-                                dots={{ className: "carousel-dots" }}
-                                effect="fade"
-                                className="featured-carousel"
-                            >
-                                {props.featuredProperties.map((property) => (
-                                    <div key={property.id}>
-                                        {renderPropertyCard(property)}
-                                    </div>
-                                ))}
-                            </Carousel>
-                        </Spin>
+                        <>
+                            {renderPropertySection(
+                                props.featuredProperties,
+                                "عقارات مميزة ",
+                                <StarFilled />
+                            )}
+                        </>
                     ) : (
                         <Empty description="لا توجد عقارات مميزة متاحة" />
                     )}
                 </section>
-
-                {/* Property Sections */}
-                <Tabs defaultActiveKey="1" className="property-tabs">
-                    <TabPane
-                        tab={
-                            <span>
-                                <HomeFilled /> عقارات للبيع
-                            </span>
-                        }
-                        key="1"
-                    >
-                        {renderPropertySection(
-                            props.sectionedProperties.forSale,
-                            "عقارات معروضة للبيع",
-                            <ShopOutlined />
-                        )}
-                    </TabPane>
-                    <TabPane
-                        tab={
-                            <span>
-                                <HomeOutlined /> عقارات للإيجار
-                            </span>
-                        }
-                        key="2"
-                    >
-                        {renderPropertySection(
-                            props.sectionedProperties.forRent,
-                            "عقارات معروضة للإيجار",
-                            <HomeOutlined />
-                        )}
-                    </TabPane>
-                    <TabPane
-                        tab={
-                            <span>
-                                <CrownFilled /> الأنواع الأكثر طلباً
-                            </span>
-                        }
-                        key="3"
-                    >
-                        {renderPropertySection(
-                            props.sectionedProperties.popularTypes,
-                            "العقارات الأكثر طلباً",
-                            <CrownFilled />
-                        )}
-                    </TabPane>
-                </Tabs>
-
-                {/* Recently Viewed Section */}
-                {props.recentlyViewed && props.recentlyViewed?.length > 0 && (
-                    <section className="section">
-                        <Divider orientation="left">
-                            <Title level={3} style={{ marginBottom: 0 }}>
-                                معروضات شاهدتها مؤخراً
-                            </Title>
-                        </Divider>
-                        <Row gutter={[24, 24]}>
-                            {props.recentlyViewed.map((property) => (
-                                <Col
-                                    key={property.id}
-                                    xs={24}
-                                    sm={12}
-                                    md={8}
-                                    lg={6}
+                <Card
+                    title="الفئات العقارية"
+                    style={{ textAlign: "right", direction: "rtl" }}
+                >
+                    <Row gutter={16}>
+                        {realEstateTypes.map((item, index) => (
+                            <Col key={index} span={6}>
+                                <Card
+                                    style={{
+                                        textAlign: "center",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        display: "flex",
+                                    }}
                                 >
-                                    {renderPropertyCard(property)}
-                                </Col>
-                            ))}
-                        </Row>
-                    </section>
-                )}
-
-                {/* CTA Section */}
-                <section className="cta-section">
-                    <Row justify="center" align="middle">
-                        <Col xs={24} md={18} style={{ textAlign: "center" }}>
-                            <Title level={3}>
-                                مستعد للعثور على منزل أحلامك؟
-                            </Title>
-                            <Text
-                                type="secondary"
-                                style={{ display: "block", marginBottom: 24 }}
-                            >
-                                انضم إلى الآلاف من الملاك السعداء الذين وجدوا
-                                عقارهم المثالي من خلالنا
-                            </Text>
-                            <Space size="large">
-                                <Button
-                                    type="primary"
-                                    size="large"
-                                    href={route("register")}
-                                >
-                                    سجل الآن
-                                </Button>
-                                <Button
-                                    type="default"
-                                    size="large"
-                                    // href={route("properties.index")}
-                                >
-                                    تصفح جميع العقارات
-                                </Button>
-                            </Space>
-                        </Col>
+                                    <div
+                                        style={{
+                                            height: 50,
+                                            width: 50,
+                                            borderRadius: 25,
+                                            backgroundColor:
+                                                "rgba(5, 150, 105, 0.06)",
+                                        }}
+                                    >
+                                        <HomeOutlined
+                                            style={{
+                                                fontSize: 40,
+                                                color: "rgba(5, 150, 105, 0.19)",
+                                            }}
+                                        />
+                                    </div>
+                                    <h3>{translateType(item.type)}</h3>
+                                    <p>عقار {item.count}+</p>
+                                </Card>
+                            </Col>
+                        ))}
                     </Row>
-                </section>
+                </Card>
+                {renderPropertySection(
+                    props.sectionedProperties.forSale,
+                    "احدث العقارات",
+                    <ShopOutlined />
+                )}
             </div>
+            <section className="section container mx-auto px-4 py-6">
+                <Row
+                    className="flex flex-row justify-between"
+                    style={{ marginBottom: 20 }}
+                >
+                    <Title level={3} style={{ marginBottom: 0 }}>
+                        باقات الاشتراك
+                    </Title>
+                    <Link
+                        style={{
+                            color: "#2563EB",
+                            fontSize: 16,
+                            fontWeight: 700,
+                        }}
+                        href={"#"}
+                    >
+                        عرض الكل
+                    </Link>
+                </Row>
+                <Row className="flex flex-row justify-around ">
+                    {props.packages.map((pkg) => (
+                        <PackageCard
+                            key={pkg.id}
+                            pkg={{
+                                ...pkg,
+                                features: Object.values(pkg.features),
+                            }}
+                            selected={false}
+                            onSelect={() => {}}
+                            selectedFrequency={"monthly"}
+                        />
+                    ))}
+                </Row>
+            </section>
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { usePage, router } from "@inertiajs/react";
+import { usePage, router, Link } from "@inertiajs/react";
 import {
     Card,
     Row,
@@ -18,6 +18,8 @@ import {
     Badge,
     message,
     InputNumber,
+    List,
+    Empty,
 } from "antd";
 import {
     EnvironmentOutlined,
@@ -26,6 +28,15 @@ import {
     CalendarOutlined,
     HomeOutlined,
     StarOutlined,
+    EyeOutlined,
+    ArrowsAltOutlined,
+    TagOutlined,
+    DotChartOutlined,
+    CommentOutlined,
+    WhatsAppOutlined,
+    FacebookFilled,
+    CopyOutlined,
+    ShopOutlined,
 } from "@ant-design/icons";
 import Map from "@/Components/Map";
 import dayjs from "dayjs";
@@ -34,6 +45,7 @@ import { Property } from "@/types/property";
 
 import { FaBath, FaBed } from "react-icons/fa";
 import FrontLayout from "@/Layouts/FrontLayout";
+import Meta from "antd/es/card/Meta";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -42,6 +54,7 @@ const { RangePicker } = DatePicker;
 interface PropertyDetailsPageProps extends PageProps {
     property: Property;
     isLoggedIn: boolean;
+    similarProperties: Property[];
 }
 
 interface InquiryFormValues {
@@ -63,7 +76,7 @@ const PropertyDetails: React.FC = () => (
 );
 const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
-    const { property, isLoggedIn } = props;
+    const { property, isLoggedIn, similarProperties } = props;
     const user = usePage().props.auth.user;
     const [inquiryModalVisible, setInquiryModalVisible] = React.useState(false);
     const [reservationModalVisible, setReservationModalVisible] =
@@ -124,7 +137,139 @@ const Page: React.FC = () => {
             }
         );
     };
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat("ar-SA", {
+            style: "currency",
+            currency: "SAR",
+            maximumFractionDigits: 0,
+        }).format(price);
+    };
+    const renderPropertyCard = (property: Property) => (
+        <Badge.Ribbon
+            text="مميز"
+            color="gold"
+            placement="start"
+            style={{ display: property.is_featured ? "block" : "none" }}
+        >
+            <Card
+                hoverable
+                cover={
+                    <div className="relative aspect-[4/3]">
+                        <img
+                            alt={property.title}
+                            src={
+                                property.primaryImage
+                                    ? `${window.location.origin}/storage/${property.primaryImage}`
+                                    : "/placeholder-property.jpg"
+                            }
+                            className="w-full h-full object-cover rounded-lg"
+                        />
+                        {/* <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full shadow hover:bg-white focus:outline-none"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(property.id);
+                            }}
+                        >
+                            {favorites.has(property.id) ? (
+                                <HeartFilled className="text-red-500 text-sm" />
+                            ) : (
+                                <HeartOutlined className="text-sm" />
+                            )}
+                        </button> */}
+                        <span
+                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${
+                                property.purpose === "sale"
+                                    ? "bg-blue-600"
+                                    : "bg-green-600"
+                            }`}
+                        >
+                            {property.purpose === "sale" ? "للبيع" : "للإيجار"}
+                        </span>
+                    </div>
+                }
+                className="property-card"
+                onClick={() =>
+                    router.visit(route("properties.show", { id: property.id }))
+                }
+            >
+                <Meta
+                    title={
+                        <>
+                            <Space
+                                style={{ display: "block", marginBottom: 8 }}
+                            >
+                                <Title level={4} style={{ color: "#2563EB" }}>
+                                    {formatPrice(property.price)}
+                                </Title>
+                            </Space>
+                            <Space>
+                                {property.title}
+                                {getStatusTag(property.status)}
+                            </Space>
+                        </>
+                    }
+                    description={
+                        <>
+                            <Space>
+                                <EnvironmentOutlined />
+                                <Text type="secondary">
+                                    {property.address?.split(",")[0] ||
+                                        "الموقع غير محدد"}
+                                </Text>
+                            </Space>
+                            <Divider style={{ margin: "8px 0" }} />
+                            <Space size="large">
+                                <Space>
+                                    <HomeOutlined />
+                                    {property.bedrooms || "غير محدد"} غرفة
+                                </Space>
+                                <Space>
+                                    <FaBath />
+                                    {property.bathrooms || "غير محدد"}حمام
+                                </Space>
+                                <Space>
+                                    <ArrowsAltOutlined />
+                                    {property.area
+                                        ? `${property.area} m²`
+                                        : "غير محدد"}
+                                </Space>
+                            </Space>
+                        </>
+                    }
+                />
+            </Card>
+        </Badge.Ribbon>
+    );
 
+    const renderPropertySection = (
+        properties: Property[],
+        title: string,
+        icon: React.ReactNode
+    ) => (
+        <section className="section" style={{ margin: 30 }}>
+            <Row
+                className="flex flex-row justify-between"
+                style={{ marginBottom: 20 }}
+            >
+                <Title level={3} style={{ marginBottom: 0 }}>
+                    {title}
+                </Title>
+            </Row>
+            {properties?.length > 0 ? (
+                <Row gutter={[24, 24]}>
+                    {properties.map((property) => (
+                        <Col key={property.id} xs={24} sm={12} md={8} lg={6}>
+                            {renderPropertyCard(property)}
+                        </Col>
+                    ))}
+                </Row>
+            ) : (
+                <Empty description={`لا توجد ${title} متاحة حالياً`} />
+            )}
+        </section>
+    );
     type StatusKey = "available" | "sold" | "rented" | "reserved";
     type TypeKey = "apartment" | "villa" | "land" | "office";
 
@@ -150,55 +295,271 @@ const Page: React.FC = () => {
         return <Tag color={typeMap[key]?.color}>{typeMap[key]?.text}</Tag>;
     };
 
+    const features = [
+        "إطلالة على المدينة",
+        "قريب من الخدمات",
+        "نظام أمان",
+        "موقف سيارات خاص",
+        "تكييف مركزي",
+        "مطبخ مجهز",
+    ];
+    const handleFacebookShare = () => {
+        const url = encodeURIComponent(window.location.href); // or your property URL
+        window.open(
+            `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+            "_blank"
+        );
+    };
+    const handleWhatsAppShare = () => {
+        const url = window.location.href;
+        const text = `مسكن دليلك العقاري, تصفح هذا العقار: ${url}`;
+        window.open(
+            `https://wa.me/?text=${encodeURIComponent(text)}`,
+            "_blank"
+        );
+    };
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            message.success("تم نسخ الرابط بنجاح!");
+        } catch (err) {
+            message.error("حدث خطأ أثناء نسخ الرابط");
+        }
+    };
+
     return (
-        <div className="property-details-page" style={{ padding: "24px" }}>
-            <Card
-                title={
-                    <Space>
-                        <Title level={3} style={{ margin: 0 }}>
-                            {property.title}
-                        </Title>
-                        {property.is_featured && (
-                            <Badge
-                                count={
-                                    <StarOutlined
-                                        style={{ color: "#fadb14" }}
-                                    />
-                                }
-                            />
-                        )}
-                    </Space>
-                }
-                extra={getStatusTag(property.status)}
-            >
+        <div className="property-details-page">
+            <div style={{ position: "relative" }}>
+                {/* Background Image with Overlay */}
+                <img
+                    src={
+                        property.images?.length
+                            ? `${window.location.origin}/storage/${property.images[0].image_url}`
+                            : "/placeholder-property.jpg"
+                    }
+                    alt={property.title}
+                    style={{
+                        width: "100%",
+                        height: "90vh",
+                        objectFit: "cover",
+                        filter: "brightness(60%)",
+                    }}
+                />
+
+                {/* Overlay Content */}
+                <div
+                    style={{
+                        position: "absolute",
+                        bottom: 40,
+                        right: 40,
+                        maxWidth: 500,
+                        // backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        borderRadius: 12,
+                        padding: 24,
+                        fontFamily: "Arial, sans-serif",
+                    }}
+                >
+                    {/* Title */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                        }}
+                    >
+                        {getStatusTag(property.status)}
+                        <div
+                            style={{
+                                fontSize: 14,
+                                color: "#fff",
+                                marginBottom: 4,
+                            }}
+                        >
+                            REF-{property.id || "2023-12345"}
+                        </div>
+                    </div>
+                    <Title level={3} style={{ marginBottom: 4, color: "#fff" }}>
+                        {property.title}
+                    </Title>
+                    <Text style={{ fontSize: 16, color: "#fff" }}>
+                        <EnvironmentOutlined />{" "}
+                        {property.address || "الدوار السابع، عمان"}
+                    </Text>
+
+                    {/* Features */}
+                    <Row gutter={[16, 16]}>
+                        <Col span={6}>
+                            <div style={{ textAlign: "center", color: "#fff" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <FaBath size={20} />
+                                    <div>الحمامات</div>
+                                </div>
+                                <Text strong style={{ color: "#fff" }}>
+                                    {property.bathrooms}
+                                </Text>
+                            </div>
+                        </Col>
+                        <Col span={6}>
+                            <div style={{ textAlign: "center", color: "#fff" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <HomeOutlined />
+                                    <div>الغرف</div>
+                                </div>
+                                <Text strong style={{ color: "#fff" }}>
+                                    {property.bedrooms}
+                                </Text>
+                            </div>
+                        </Col>
+                        <Col span={6}>
+                            <div style={{ textAlign: "center", color: "#fff" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <ArrowsAltOutlined />
+                                    <div>المساحة</div>
+                                </div>
+                                <Text strong style={{ color: "#fff" }}>
+                                    {property.area} م²
+                                </Text>
+                            </div>
+                        </Col>
+                        <Col span={6}>
+                            <div style={{ textAlign: "center", color: "#fff" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <TagOutlined />
+                                    <div>السعر</div>
+                                </div>
+                                <Text strong style={{ color: "#fff" }}>
+                                    {property.price} دينار
+                                </Text>
+                            </div>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16} style={{ marginTop: 24 }}>
+                        <Col span={12}>
+                            <Button
+                                block
+                                icon={<EyeOutlined />}
+                                size="large"
+                                href="#photos"
+                            >
+                                عرض جميع الصور ({property.images?.length || 5})
+                            </Button>
+                        </Col>
+                        <Col span={12}>
+                            <Button
+                                type="primary"
+                                block
+                                icon={<PhoneOutlined />}
+                                onClick={() => setInquiryModalVisible(true)}
+                                size="large"
+                            >
+                                تواصل مع المعلن
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
+            </div>
+            <Card style={{ margin: 20 }}>
                 <Row gutter={[24, 24]}>
-                    {/* Property Images */}
-                    <Col xs={24} md={12}>
+                    {/* Property Images would go here */}
+
+                    {/* Property Description */}
+                    <Col span={24}>
+                        <Title level={4}>الوصف التفصيلي</Title>
+                        <Paragraph>
+                            شقة مفروشة بالكامل، تقع في منطقة رافية بعمان. تتميز
+                            بإطلالة رائعة على المدينة، وقريبة من جميع الخدمات
+                            الأساسية. الشقة حديثة البناء ومفروشة بالكامل، وتحتوي
+                            على مطبخ مجهز، وغرفة معيشة واسعة، وغرفة نوم رئيسية،
+                            وتكييف مركزي، وموقف سيارات خاص. المبنى مزود بنظام
+                            أمان متطور ومصعد خاص.
+                        </Paragraph>
+
+                        <Divider />
+
+                        <Space>
+                            <Text>
+                                <EyeOutlined /> 1243
+                            </Text>
+                            <Text>
+                                <CalendarOutlined /> 15/04/2025
+                            </Text>
+                        </Space>
+
+                        <Divider />
+
+                        <Title level={4}>مميزات العقار</Title>
+                        <Space wrap size="large">
+                            {features.map((item, index) => (
+                                <Space key={index} align="start">
+                                    <DotChartOutlined
+                                        style={{ color: "#52c41a" }}
+                                    />
+                                    <Text>{item}</Text>
+                                </Space>
+                            ))}
+                        </Space>
+                    </Col>
+                </Row>
+            </Card>
+            <Card style={{ margin: 20 }}>
+                <Row gutter={[24, 24]}>
+                    {property.latitude && property.longitude && (
+                        <>
+                            <Title level={4}>الموقع</Title>
+                            <div
+                                style={{
+                                    height: "300px",
+                                    width: "100%",
+                                    zIndex: 1,
+                                }}
+                            >
+                                <Map
+                                    latitude={property.latitude}
+                                    longitude={property.longitude}
+                                    address={property.address || ""}
+                                />
+                            </div>
+                        </>
+                    )}
+                </Row>
+            </Card>
+            <Card style={{ margin: 20 }}>
+                <Row gutter={[24, 24]} id="photos">
+                    <Col xs={24} md={24}>
+                        <Title level={4}>معرض الصور</Title>
                         <Image.PreviewGroup>
                             <Space
                                 direction="vertical"
                                 size="middle"
                                 style={{ width: "100%" }}
                             >
-                                <Image
-                                    src={
-                                        property.images?.length
-                                            ? `${window.location.origin}/storage/${property.images[0].image_url}`
-                                            : "/placeholder-property.jpg"
-                                    }
-                                    alt={property.title}
-                                    style={{
-                                        width: "100%",
-                                        borderRadius: "8px",
-                                    }}
-                                />
                                 {property.images &&
                                     property.images.length > 1 && (
                                         <Row gutter={[8, 8]}>
                                             {property.images
                                                 .slice(1)
                                                 .map((img, index) => (
-                                                    <Col key={index} xs={8}>
+                                                    <Col key={index} xs={6}>
                                                         <Image
                                                             src={`${window.location.origin}/storage/${img.image_url}`}
                                                             alt={`${
@@ -216,187 +577,92 @@ const Page: React.FC = () => {
                             </Space>
                         </Image.PreviewGroup>
                     </Col>
-
-                    {/* Property Details */}
-                    <Col xs={24} md={12}>
-                        <Space
-                            direction="vertical"
-                            size="middle"
-                            style={{ width: "100%" }}
-                        >
-                            <div>
-                                <Text
-                                    type="secondary"
-                                    style={{ fontSize: "16px" }}
-                                >
-                                    <EnvironmentOutlined />{" "}
-                                    {property.address ||
-                                        "Address not specified"}
-                                </Text>
-                                <div style={{ marginTop: 8 }}>
-                                    {getTypeTag(property.type)}
-                                    <Tag
-                                        color={
-                                            property.purpose === "rent"
-                                                ? "geekblue"
-                                                : "volcano"
-                                        }
-                                    >
-                                        {property.purpose === "rent"
-                                            ? "For Rent"
-                                            : "For Sale"}
-                                    </Tag>
-                                </div>
-                            </div>
-
-                            <Divider />
-
-                            <Descriptions bordered column={1}>
-                                <Item label="Price">
-                                    <Text strong>
-                                        ${property.price.toLocaleString()}
-                                        {property.purpose === "rent" &&
-                                            " / month"}
-                                    </Text>
-                                </Item>
-                                {property.area && (
-                                    <Item label="Area">
-                                        {property.area} sq.ft
-                                    </Item>
-                                )}
-                                {property.bedrooms && (
-                                    <Item label="Bedrooms">
-                                        <FaBed /> {property.bedrooms}
-                                    </Item>
-                                )}
-                                {property.bathrooms && (
-                                    <Item label="Bathrooms">
-                                        <FaBath /> {property.bathrooms}
-                                    </Item>
-                                )}
-                                {property.floor && (
-                                    <Item label="Floor">
-                                        <HomeOutlined /> {property.floor}
-                                    </Item>
-                                )}
-                                {property.published_at && (
-                                    <Item label="Published">
-                                        <CalendarOutlined />{" "}
-                                        {dayjs(property.published_at).format(
-                                            "MMMM D, YYYY"
-                                        )}
-                                    </Item>
-                                )}
-                            </Descriptions>
-
-                            <Divider />
-
-                            <Title level={4}>Description</Title>
-                            <Paragraph>{property.description}</Paragraph>
-
-                            {/* {property.features &&
-                                property.features.length > 0 && (
-                                    <>
-                                        <Divider />
-                                        <Title level={4}>Features</Title>
-                                        <Space size={[8, 8]} wrap>
-                                            {property.features.map(
-                                                (feature, index) => (
-                                                    <Tag key={index}>
-                                                        {feature}
-                                                    </Tag>
-                                                )
-                                            )}
-                                        </Space>
-                                    </>
-                                )} */}
-
-                            {property.latitude && property.longitude && (
-                                <>
-                                    <Divider />
-                                    <Title level={4}>Location</Title>
-                                    <div
-                                        style={{
-                                            height: "300px",
-                                            width: "100%",
-                                        }}
-                                    >
-                                        <Map
-                                            latitude={property.latitude}
-                                            longitude={property.longitude}
-                                            address={property.address || ""}
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            <Divider />
-
-                            <Space size="middle">
-                                {user && user.id == property.user_id ? (
-                                    <Button
-                                        type="primary"
-                                        size="large"
-                                        href={route(
-                                            "user.properties.edit",
-                                            property.id
-                                        )}
-                                    >
-                                        Edit
-                                    </Button>
-                                ) : (
-                                    <>
-                                        {property.status === "available" ||
-                                        isLoggedIn ? (
-                                            <>
-                                                <Button
-                                                    type="primary"
-                                                    size="large"
-                                                    onClick={() =>
-                                                        setInquiryModalVisible(
-                                                            true
-                                                        )
-                                                    }
-                                                >
-                                                    Contact Owner
-                                                </Button>
-                                                <Button
-                                                    type="default"
-                                                    size="large"
-                                                    onClick={() =>
-                                                        setReservationModalVisible(
-                                                            true
-                                                        )
-                                                    }
-                                                >
-                                                    {property.purpose === "rent"
-                                                        ? "Rent Now"
-                                                        : "Make Offer"}
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Text>
-                                                    {!isLoggedIn &&
-                                                        "you need to register to make offers and inquires "}
-
-                                                    {
-                                                        // @ts-ignore
-                                                        property.status !==
-                                                            "available" &&
-                                                            "the property isn't available to make offers and inquires"
-                                                    }
-                                                </Text>
-                                            </>
-                                        )}
-                                    </>
-                                )}
-                            </Space>
-                        </Space>
-                    </Col>
                 </Row>
             </Card>
+            <Card style={{ margin: 20 }}>
+                <Col>
+                    <Title level={4}>معلومات المعلن</Title>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        <Text>{property.user.name}</Text>
+                        <Text>
+                            {property.user.role == "agent"
+                                ? " وكبل عقاري"
+                                : property.user.role == "company"
+                                ? "شركة ومطور عقاري"
+                                : "مالك"}
+                        </Text>
+                    </div>
+                </Col>
+                <Row style={{ gap: 10 }}>
+                    <Button
+                        variant="filled"
+                        style={{ flex: 1 }}
+                        type="primary"
+                        onClick={() => {
+                            window.location.href = `tel:${property.user.phone}`; // make sure phone exists
+                        }}
+                    >
+                        <PhoneOutlined />
+                        اتصل الآن
+                    </Button>
 
+                    <Button
+                        onClick={() => setInquiryModalVisible(true)}
+                        style={{ flex: 1 }}
+                    >
+                        <CommentOutlined />
+                        ارسل رسالة
+                    </Button>
+                    <Button
+                        type="primary"
+                        style={{ backgroundColor: "#22C55E", flex: 1 }}
+                        onClick={() => {
+                            const phone = property.user.phone; // e.g., "249912345678"
+                            const message = `مرحباً، أود الاستفسار عن العقار: ${window.location.href}`;
+                            window.open(
+                                `https://wa.me/${phone}?text=${encodeURIComponent(
+                                    message
+                                )}`,
+                                "_blank"
+                            );
+                        }}
+                    >
+                        <WhatsAppOutlined />
+                        تواصل عبر واتساب
+                    </Button>
+                </Row>
+            </Card>
+            <Card style={{ margin: 20 }}>
+                <Title level={4}>مشاركة العقار</Title>
+                <Row style={{ gap: 10 }}>
+                    <Button
+                        variant="filled"
+                        style={{ flex: 1 }}
+                        type="primary"
+                        onClick={handleFacebookShare}
+                    >
+                        <FacebookFilled />
+                        Facebook
+                    </Button>
+                    <Button
+                        type="primary"
+                        style={{ backgroundColor: "#22C55E", flex: 1 }}
+                        onClick={handleWhatsAppShare}
+                    >
+                        <WhatsAppOutlined />
+                        واتساب
+                    </Button>
+                    <Button style={{ flex: 1 }} onClick={handleCopyLink}>
+                        <CopyOutlined />
+                        نسخ
+                    </Button>
+                </Row>
+            </Card>
+            {renderPropertySection(
+                similarProperties,
+                "عقارات مشابهة",
+                <ShopOutlined />
+            )}
             {/* Inquiry Modal */}
             <Modal
                 title="Contact Property Owner"

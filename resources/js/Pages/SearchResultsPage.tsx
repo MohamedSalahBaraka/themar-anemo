@@ -1,5 +1,5 @@
 import React from "react";
-import { usePage, router } from "@inertiajs/react";
+import { usePage, router, Link } from "@inertiajs/react";
 import {
     Card,
     Row,
@@ -17,6 +17,10 @@ import {
     DatePicker,
     Badge,
     message,
+    Empty,
+    Select,
+    Radio,
+    Pagination,
 } from "antd";
 import {
     EnvironmentOutlined,
@@ -25,435 +29,406 @@ import {
     CalendarOutlined,
     HomeOutlined,
     StarOutlined,
+    ArrowsAltOutlined,
+    SearchOutlined,
 } from "@ant-design/icons";
 import Map from "@/Components/Map";
 import dayjs from "dayjs";
 import { PageProps } from "@/types";
-import { Property } from "@/types/property";
+import { Property, PropertyFilter } from "@/types/property";
 import { FaBath, FaBed } from "react-icons/fa";
+import Meta from "antd/es/card/Meta";
+import FrontLayout from "@/Layouts/FrontLayout";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
 const { RangePicker } = DatePicker;
 
 interface PropertyDetailsPageProps extends PageProps {
-    property: Property;
+    properties: Property[];
+    filters: PropertyFilter;
+    meta: {
+        total: number;
+        current_page: number;
+        last_page: number;
+        per_page: number;
+    };
     isLoggedIn: boolean;
 }
-
-interface InquiryFormValues {
-    name: string;
-    email: string;
-    phone: string;
-    message: string;
-}
-
-interface ReservationFormValues {
-    dates?: [dayjs.Dayjs, dayjs.Dayjs];
-    special_requests: string;
-}
-
-const PropertyDetails: React.FC = () => {
+const SearchResultsPage: React.FC = () => (
+    <FrontLayout>
+        <Page />
+    </FrontLayout>
+);
+const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
-    const { property, isLoggedIn } = props;
+    const { properties, filters, meta } = props;
+    const [filter, setFilter] = React.useState<PropertyFilter>(
+        props.filters || {}
+    );
     const user = usePage().props.auth.user;
-    const [inquiryModalVisible, setInquiryModalVisible] = React.useState(false);
-    const [reservationModalVisible, setReservationModalVisible] =
-        React.useState(false);
-    const [inquiryForm] = Form.useForm();
-    const [reservationForm] = Form.useForm();
+    const [loading, setLoading] = React.useState(false);
 
-    const handleInquirySubmit = async (values: InquiryFormValues) => {
-        try {
-            await router.post(
-                route("properties.inquiries.store", property.id),
-                { ...values }
-            );
-            message.success("تم إرسال استفسارك بنجاح!");
-            setInquiryModalVisible(false);
-            inquiryForm.resetFields();
-        } catch (error) {
-            message.error("فشل في إرسال الاستفسار. يرجى المحاولة مرة أخرى.");
-        }
-    };
-
-    const handleReservationSubmit = async (values: ReservationFormValues) => {
-        try {
-            const reservationData: any = {
-                special_requests: values.special_requests || "",
-            };
-
-            if (property.purpose === "rent" && values.dates) {
-                reservationData.start_date =
-                    values.dates[0].format("YYYY-MM-DD");
-                reservationData.end_date = values.dates[1].format("YYYY-MM-DD");
-            }
-
-            await router.post(
-                route("properties.reservations.store", property.id),
-                reservationData
-            );
-
-            message.success(
-                property.purpose === "rent"
-                    ? "تم تقديم طلب الإيجار بنجاح!"
-                    : "تم تقديم عرض الشراء بنجاح!"
-            );
-            setReservationModalVisible(false);
-            reservationForm.resetFields();
-        } catch (error) {
-            message.error("فشل في تقديم الطلب. يرجى المحاولة مرة أخرى.");
-        }
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat("ar-SA", {
+            style: "currency",
+            currency: "SAR",
+            maximumFractionDigits: 0,
+        }).format(price);
     };
 
     type StatusKey = "available" | "sold" | "rented" | "reserved";
-    type TypeKey = "apartment" | "villa" | "land" | "office";
 
     const getStatusTag = (status: string) => {
         const statusMap: Record<StatusKey, { color: string; text: string }> = {
             available: { color: "green", text: "متاح" },
             sold: { color: "red", text: "تم البيع" },
-            rented: { color: "blue", text: "تم التأجير" },
+            rented: { color: "blue", text: "مؤجر" },
             reserved: { color: "orange", text: "محجوز" },
         };
         const key = status as StatusKey;
         return <Tag color={statusMap[key]?.color}>{statusMap[key]?.text}</Tag>;
     };
 
-    const getTypeTag = (type: string) => {
-        const typeMap: Record<TypeKey, { color: string; text: string }> = {
-            apartment: { color: "purple", text: "شقة" },
-            villa: { color: "gold", text: "فيلا" },
-            land: { color: "cyan", text: "أرض" },
-            office: { color: "blue", text: "مكتب" },
-        };
-        const key = type as TypeKey;
-        return <Tag color={typeMap[key]?.color}>{typeMap[key]?.text}</Tag>;
+    const handleSearch = () => {
+        setLoading(true);
+        router.get(
+            route("properties.search"),
+            { ...filter, page: 1 }, // Reset to first page on new search
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setLoading(false),
+            }
+        );
     };
 
-    return (
-        <div
-            className="property-details-page"
-            style={{ padding: "24px", direction: "rtl" }}
+    const handlePageChange = (page: number, pageSize: number) => {
+        setLoading(true);
+        router.get(
+            route("properties.search"),
+            { ...filter, page },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setLoading(false),
+            }
+        );
+    };
+
+    const handleFilterChange = (key: keyof PropertyFilter, value: any) => {
+        setFilter((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const propertyTypes = [
+        { value: "apartment", label: "شقة" },
+        { value: "villa", label: "فيلا" },
+        { value: "office", label: "مكتب" },
+        { value: "land", label: "أرض" },
+        { value: "house", label: "منزل" },
+        { value: "condo", label: "شقة فندقية" },
+    ];
+
+    const renderPropertyCard = (property: Property) => (
+        <Badge.Ribbon
+            text="مميز"
+            color="gold"
+            placement="start"
+            style={{ display: property.is_featured ? "block" : "none" }}
         >
             <Card
-                title={
-                    <Space>
-                        <Title level={3} style={{ margin: 0 }}>
-                            {property.title}
-                        </Title>
-                        {property.is_featured && (
-                            <Badge
-                                count={
-                                    <StarOutlined
-                                        style={{ color: "#fadb14" }}
-                                    />
-                                }
-                            />
-                        )}
-                    </Space>
-                }
-                extra={getStatusTag(property.status)}
-            >
-                <Row gutter={[24, 24]}>
-                    {/* صور العقار */}
-                    <Col xs={24} md={12}>
-                        <Image.PreviewGroup>
-                            <Space
-                                direction="vertical"
-                                size="middle"
-                                style={{ width: "100%" }}
-                            >
-                                <Image
-                                    src={
-                                        property.images?.length
-                                            ? `${window.location.origin}/storage/${property.images[0].image_url}`
-                                            : "/placeholder-property.jpg"
-                                    }
-                                    alt={property.title}
-                                    style={{
-                                        width: "100%",
-                                        borderRadius: "8px",
-                                    }}
-                                />
-                                {property.images &&
-                                    property.images.length > 1 && (
-                                        <Row gutter={[8, 8]}>
-                                            {property.images
-                                                .slice(1)
-                                                .map((img, index) => (
-                                                    <Col key={index} xs={8}>
-                                                        <Image
-                                                            src={`${window.location.origin}/storage/${img.image_url}`}
-                                                            alt={`${
-                                                                property.title
-                                                            } ${index + 1}`}
-                                                            style={{
-                                                                borderRadius:
-                                                                    "8px",
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                ))}
-                                        </Row>
-                                    )}
-                            </Space>
-                        </Image.PreviewGroup>
-                    </Col>
-
-                    {/* تفاصيل العقار */}
-                    <Col xs={24} md={12}>
-                        <Space
-                            direction="vertical"
-                            size="middle"
-                            style={{ width: "100%" }}
+                hoverable
+                cover={
+                    <div className="relative aspect-[4/3]">
+                        <img
+                            alt={property.title}
+                            src={
+                                property.primaryImage
+                                    ? `${window.location.origin}/storage/${property.primaryImage}`
+                                    : "/placeholder-property.jpg"
+                            }
+                            className="w-full h-full object-cover rounded-lg"
+                        />
+                        <span
+                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${
+                                property.purpose === "sale"
+                                    ? "bg-blue-600"
+                                    : "bg-green-600"
+                            }`}
                         >
-                            <div>
-                                <Text
-                                    type="secondary"
-                                    style={{ fontSize: "16px" }}
-                                >
-                                    <EnvironmentOutlined />{" "}
-                                    {property.address || "العنوان غير محدد"}
+                            {property.purpose === "sale" ? "للبيع" : "للإيجار"}
+                        </span>
+                    </div>
+                }
+                className="property-card"
+                onClick={() =>
+                    router.visit(route("properties.show", { id: property.id }))
+                }
+            >
+                <Meta
+                    title={
+                        <>
+                            <Space
+                                style={{ display: "block", marginBottom: 8 }}
+                            >
+                                <Title level={4} style={{ color: "#2563EB" }}>
+                                    {formatPrice(property.price)}
+                                </Title>
+                            </Space>
+                            <Space>
+                                {property.title}
+                                {getStatusTag(property.status)}
+                            </Space>
+                        </>
+                    }
+                    description={
+                        <>
+                            <Space>
+                                <EnvironmentOutlined />
+                                <Text type="secondary">
+                                    {property.address?.split(",")[0] ||
+                                        "الموقع غير محدد"}
                                 </Text>
-                                <div style={{ marginTop: 8 }}>
-                                    {getTypeTag(property.type)}
-                                    <Tag
-                                        color={
-                                            property.purpose === "rent"
-                                                ? "geekblue"
-                                                : "volcano"
-                                        }
-                                    >
-                                        {property.purpose === "rent"
-                                            ? "للإيجار"
-                                            : "للبيع"}
-                                    </Tag>
-                                </div>
-                            </div>
+                            </Space>
+                            <Divider style={{ margin: "8px 0" }} />
+                            <Space size="large">
+                                <Space>
+                                    <HomeOutlined />
+                                    {property.bedrooms || "غير محدد"} غرفة
+                                </Space>
+                                <Space>
+                                    <FaBath />
+                                    {property.bathrooms || "غير محدد"}حمام
+                                </Space>
+                                <Space>
+                                    <ArrowsAltOutlined />
+                                    {property.area
+                                        ? `${property.area} m²`
+                                        : "غير محدد"}
+                                </Space>
+                            </Space>
+                        </>
+                    }
+                />
+            </Card>
+        </Badge.Ribbon>
+    );
 
-                            <Divider />
-
-                            <Descriptions bordered column={1}>
-                                <Item label="السعر">
-                                    <Text strong>
-                                        ${property.price.toLocaleString()}
-                                        {property.purpose === "rent" &&
-                                            " / شهرياً"}
-                                    </Text>
-                                </Item>
-                                {property.area && (
-                                    <Item label="المساحة">
-                                        {property.area} قدم مربع
-                                    </Item>
-                                )}
-                                {property.bedrooms && (
-                                    <Item label="غرف النوم">
-                                        <FaBed /> {property.bedrooms}
-                                    </Item>
-                                )}
-                                {property.bathrooms && (
-                                    <Item label="الحمامات">
-                                        <FaBath /> {property.bathrooms}
-                                    </Item>
-                                )}
-                                {property.floor && (
-                                    <Item label="الطابق">
-                                        <HomeOutlined /> {property.floor}
-                                    </Item>
-                                )}
-                                {property.published_at && (
-                                    <Item label="تاريخ النشر">
-                                        <CalendarOutlined />{" "}
-                                        {dayjs(property.published_at).format(
-                                            "MMMM D, YYYY"
-                                        )}
-                                    </Item>
-                                )}
-                            </Descriptions>
-
-                            <Divider />
-
-                            <Title level={4}>الوصف</Title>
-                            <Paragraph>{property.description}</Paragraph>
-
-                            {property.latitude && property.longitude && (
-                                <>
-                                    <Divider />
-                                    <Title level={4}>الموقع</Title>
-                                    <div
+    return (
+        <section className="section container mx-auto px-4 py-6">
+            <Row style={{ height: "100%" }}>
+                <Col span={24} style={{ textAlign: "center" }}>
+                    <div
+                        className="search-container"
+                        style={{
+                            background: "rgba(255, 255, 255, 0.9)",
+                            padding: "24px",
+                            borderRadius: "8px",
+                            maxWidth: "1200px",
+                            margin: "0 auto",
+                        }}
+                    >
+                        <Row gutter={[24, 24]} justify="center">
+                            {/* Sale/Rent/Offices Toggle */}
+                            <Col span={24}>
+                                <Radio.Group
+                                    size="large"
+                                    value={filter.purpose}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            "purpose",
+                                            e.target.value
+                                        )
+                                    }
+                                    buttonStyle="solid"
+                                    style={{
+                                        display: "flex",
+                                        gap: "1rem",
+                                    }}
+                                >
+                                    <Radio.Button
+                                        value="sale"
                                         style={{
-                                            height: "300px",
-                                            width: "100%",
+                                            padding: "4px 12px",
+                                            border: "none",
+                                            borderBottom:
+                                                filter.purpose === "sale"
+                                                    ? "2px solid #1890ff"
+                                                    : "2px solid transparent",
+                                            color:
+                                                filter.purpose === "sale"
+                                                    ? "#1890ff"
+                                                    : "inherit",
+                                            background: "transparent",
+                                            boxShadow: "none",
+                                            margin: 0,
                                         }}
                                     >
-                                        <Map
-                                            latitude={property.latitude}
-                                            longitude={property.longitude}
-                                            address={property.address || ""}
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            <Divider />
-
-                            <Space size="middle">
-                                {user.id == property.user_id ? (
-                                    <Button
-                                        type="primary"
-                                        size="large"
-                                        href={route(
-                                            "user.properties.edit",
-                                            property.id
-                                        )}
+                                        بيع
+                                    </Radio.Button>
+                                    <Radio.Button
+                                        value="rent"
+                                        style={{
+                                            padding: "4px 12px",
+                                            border: "none",
+                                            borderBottom:
+                                                filter.purpose === "rent"
+                                                    ? "2px solid #1890ff"
+                                                    : "2px solid transparent",
+                                            color:
+                                                filter.purpose === "rent"
+                                                    ? "#1890ff"
+                                                    : "inherit",
+                                            background: "transparent",
+                                            boxShadow: "none",
+                                            margin: 0,
+                                        }}
                                     >
-                                        تعديل
-                                    </Button>
-                                ) : (
-                                    <>
-                                        <Button
-                                            type="primary"
-                                            size="large"
-                                            onClick={() =>
-                                                setInquiryModalVisible(true)
-                                            }
-                                        >
-                                            تواصل مع المالك
-                                        </Button>
-                                        <Button
-                                            type="default"
-                                            size="large"
-                                            onClick={() =>
-                                                setReservationModalVisible(true)
-                                            }
-                                            disabled={
-                                                property.status !==
-                                                    "available" || !isLoggedIn
-                                            }
-                                        >
-                                            {property.purpose === "rent"
-                                                ? "إيجار الآن"
-                                                : "تقديم عرض"}
-                                        </Button>
-                                    </>
-                                )}
-                            </Space>
-                        </Space>
-                    </Col>
-                </Row>
-            </Card>
+                                        إيجار
+                                    </Radio.Button>
+                                </Radio.Group>
+                            </Col>
 
-            {/* نافذة الاستفسار */}
-            <Modal
-                title="تواصل مع مالك العقار"
-                open={inquiryModalVisible}
-                onCancel={() => setInquiryModalVisible(false)}
-                footer={null}
-            >
-                <Form
-                    form={inquiryForm}
-                    layout="vertical"
-                    onFinish={handleInquirySubmit}
-                >
-                    <Form.Item
-                        name="name"
-                        label="اسمك"
-                        rules={[
-                            {
-                                required: true,
-                                message: "الرجاء إدخال اسمك",
-                            },
-                        ]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="email"
-                        label="البريد الإلكتروني"
-                        rules={[
-                            {
-                                required: true,
-                                message: "الرجاء إدخال بريدك الإلكتروني",
-                            },
-                            {
-                                type: "email",
-                                message: "الرجاء إدخال بريد إلكتروني صحيح",
-                            },
-                        ]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="phone" label="رقم الهاتف">
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="message"
-                        label="الرسالة"
-                        rules={[
-                            {
-                                required: true,
-                                message: "الرجاء إدخال رسالتك",
-                            },
-                        ]}
-                    >
-                        <Input.TextArea rows={4} />
-                    </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit">
-                            إرسال الاستفسار
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Modal>
+                            {/* Area and Property Type */}
+                            <Col xs={24} sm={12} md={6}>
+                                <Select
+                                    placeholder="المنطقة"
+                                    style={{ width: "100%" }}
+                                    size="large"
+                                    value={filter.location}
+                                    onChange={(value) =>
+                                        handleFilterChange("location", value)
+                                    }
+                                    options={[
+                                        {
+                                            value: "all",
+                                            label: "جميع المناطق",
+                                        },
+                                        // Add other area options here
+                                    ]}
+                                />
+                            </Col>
+                            <Col xs={24} sm={12} md={6}>
+                                <Select
+                                    placeholder="نوع العقار"
+                                    style={{ width: "100%" }}
+                                    size="large"
+                                    value={filter.type}
+                                    onChange={(value) =>
+                                        handleFilterChange("type", value)
+                                    }
+                                    options={propertyTypes}
+                                />
+                            </Col>
 
-            {/* نافذة الحجز */}
-            <Modal
-                title={
-                    property.purpose === "rent"
-                        ? "إيجار هذا العقار"
-                        : "تقديم عرض شراء"
-                }
-                open={reservationModalVisible}
-                onCancel={() => setReservationModalVisible(false)}
-                footer={null}
+                            {/* Price Range */}
+                            <Col xs={24} sm={12} md={6}>
+                                <Input
+                                    type="number"
+                                    placeholder="أقل سعر"
+                                    size="large"
+                                    value={filter.minPrice}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            "minPrice",
+                                            e.target.value
+                                                ? Number(e.target.value)
+                                                : undefined
+                                        )
+                                    }
+                                    onPressEnter={handleSearch}
+                                    style={{ width: "100%" }}
+                                />
+                            </Col>
+                            <Col xs={24} sm={12} md={6}>
+                                <Input
+                                    type="number"
+                                    placeholder="أعلى سعر"
+                                    size="large"
+                                    value={filter.maxPrice}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            "maxPrice",
+                                            e.target.value
+                                                ? Number(e.target.value)
+                                                : undefined
+                                        )
+                                    }
+                                    onPressEnter={handleSearch}
+                                    style={{ width: "100%" }}
+                                />
+                            </Col>
+                            <Col
+                                xs={24}
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                }}
+                            >
+                                <Button type="default" size="small">
+                                    خيارات متقدمة
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    onClick={handleSearch}
+                                    loading={loading}
+                                    size="small"
+                                    icon={<SearchOutlined />}
+                                >
+                                    بحث
+                                </Button>
+                            </Col>
+                        </Row>
+                    </div>
+                </Col>
+            </Row>
+            <Row
+                className="flex flex-row justify-between"
+                style={{ marginBottom: 20 }}
             >
-                <Form
-                    form={reservationForm}
-                    layout="vertical"
-                    onFinish={handleReservationSubmit}
-                >
-                    {property.purpose === "rent" && (
-                        <Form.Item
-                            name="dates"
-                            label="فترة الإيجار"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "الرجاء تحديد فترة الإيجار",
-                                },
-                            ]}
-                        >
-                            <RangePicker style={{ width: "100%" }} />
-                        </Form.Item>
+                <Title level={3} style={{ marginBottom: 0 }}>
+                    عقارات
+                </Title>
+                {meta && (
+                    <Text type="secondary">
+                        عرض {properties.length} من أصل {meta.total} عقار
+                    </Text>
+                )}
+            </Row>
+            {properties?.length > 0 ? (
+                <>
+                    <Row gutter={[24, 24]}>
+                        {properties.map((property) => (
+                            <Col
+                                key={property.id}
+                                xs={24}
+                                sm={12}
+                                md={8}
+                                lg={6}
+                            >
+                                {renderPropertyCard(property)}
+                            </Col>
+                        ))}
+                    </Row>
+                    {meta && meta.total > meta.per_page && (
+                        <Row justify="center" style={{ marginTop: 24 }}>
+                            <Pagination
+                                current={meta.current_page}
+                                total={meta.total}
+                                pageSize={meta.per_page}
+                                onChange={handlePageChange}
+                                showSizeChanger={false}
+                                showQuickJumper
+                                locale={{ items_per_page: "/ صفحة" }}
+                            />
+                        </Row>
                     )}
-                    <Form.Item name="special_requests" label="طلبات خاصة">
-                        <Input.TextArea
-                            rows={4}
-                            placeholder="أي متطلبات أو ملاحظات خاصة..."
-                        />
-                    </Form.Item>
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit">
-                            {property.purpose === "rent"
-                                ? "تقديم طلب إيجار"
-                                : "تقديم عرض"}
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Modal>
-        </div>
+                </>
+            ) : (
+                <Empty description={`لا توجد عقارات متاحة حالياً`} />
+            )}
+        </section>
     );
 };
 
-export default PropertyDetails;
+export default SearchResultsPage;

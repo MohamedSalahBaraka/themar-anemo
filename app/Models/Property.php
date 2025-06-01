@@ -39,6 +39,17 @@ class Property extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function similarProperties($limit = 5)
+    {
+        return self::where('id', '!=', $this->id)
+            ->where('type', $this->type)
+            ->where('purpose', $this->purpose)
+            ->where('status', 'available')
+            ->where('approved', true)
+            ->orderByRaw('ABS(price - ?) ASC', [$this->price])
+            ->limit($limit)
+            ->get();
+    }
 
     public function images()
     {

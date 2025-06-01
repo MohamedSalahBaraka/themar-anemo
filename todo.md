@@ -32,12 +32,12 @@ Here’s a **backlog checklist** based on the PDF titled "موقع عقارات 
 
 #### 💼 3. Agent/Owner Dashboard
 
-* [ ] Custom dashboard per agent/owner
-* [ ] View stats: views, inquiries, calls
+<!-- * [ ] Custom dashboard per agent/owner -->
+<!-- * [ ] View stats: views, inquiries, calls -->
 * [ ] Financial reports: revenue from ads & subscriptions
 <!-- * [ ] Manage listings: edit, renew, delete -->
 <!-- * [ ] Track ad status (free, paid, reserved, sold) -->
-* [ ] Manage team/user permissions if corporate
+<!-- * [ ] Manage team/user permissions if corporate -->
 
 ---
 

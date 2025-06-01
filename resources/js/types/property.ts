@@ -1,19 +1,16 @@
+import { User } from "./user";
+
 export interface Property {
     id: number;
     user_id: number;
     title: string;
     description: string;
-    type: "apartment" | "villa" | "land" | "office";
-    status:
-        | "available"
-        | "sold"
-        | "rented"
-        | "reserved"
-        | "pending"
-        | "rejected";
+    type: PropertyType;
+    status: PropertyStatus;
     purpose: "sale" | "rent";
     price: number;
     area?: number;
+    user: User;
     bedrooms?: number;
     bathrooms?: number;
     floor?: number;
@@ -35,9 +32,9 @@ export interface Property {
 }
 export type PropertyType = "apartment" | "villa" | "land" | "office";
 export type PropertyStatus =
-    | "available"
     | "sold"
     | "rented"
+    | "available"
     | "reserved"
     | "pending"
     | "rejected";

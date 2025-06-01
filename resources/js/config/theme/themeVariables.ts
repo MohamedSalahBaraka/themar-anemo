@@ -1,6 +1,6 @@
 export const theme = {
     lightMode: {
-        primary: "#8231D3",
+        primary: "#5275B9",
         secondary: "#5840FF",
         info: "#00C3FF",
         success: "#06D6A0",
@@ -16,7 +16,7 @@ export const theme = {
         darkGray: "#4F4F4F", // deeper gray
     },
     darkMode: {
-        primary: "#8231D3",
+        primary: "#5275B9",
         secondary: "#5840FF",
         info: "#00C3FF",
         success: "#06D6A0",

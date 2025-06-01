@@ -338,7 +338,6 @@ class PropertyController extends Controller
     public function show($id)
     {
         $property = Property::with('user')->findOrFail($id);
-
         return Inertia::render('PropertyDetails', [
             'property' => [
                 'id' => $property->id,
@@ -355,12 +354,14 @@ class PropertyController extends Controller
                 'status' => $property->status,
                 'type' => $property->type,
                 'purpose' => $property->purpose,
+                'user' => $property->user,
                 'is_featured' => $property->is_featured,
                 'features' => $property->features,
                 'latitude' => $property->latitude,
                 'longitude' => $property->longitude,
                 'published_at' => $property->created_at,
             ],
+            'similarProperties' => $property->similarProperties(),
             'isLoggedIn' => Auth::check(),
         ]);
     }

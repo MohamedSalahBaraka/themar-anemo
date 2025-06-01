@@ -84,7 +84,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                               <EnvironmentOutlined />{" "}
                               {property.address?.split(",")[0] || "موقع"}
                           </Space>,
-                          <Text strong>{formatPrice(property.price)}</Text>,
+                          <Title level={1} style={{ color: "#5275B9" }}>
+                              {formatPrice(property.price)}
+                          </Title>,
                       ]
                     : undefined
             }

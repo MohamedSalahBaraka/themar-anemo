@@ -27,6 +27,9 @@ import {
     ShoppingCartOutlined,
     InfoCircleOutlined,
     PhoneOutlined,
+    ShopOutlined,
+    GlobalOutlined,
+    BulbOutlined,
 } from "@ant-design/icons";
 import { Link, usePage } from "@inertiajs/react";
 // @ts-ignore
@@ -153,7 +156,17 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
             }}
         />
     );
+    const { url } = usePage();
+    const currentPath = new URL(url, window.location.origin).pathname;
 
+    const pathKeyMap: Record<string, string> = {
+        "/": "home",
+        "/properties/search": "properties",
+        "/pricing": "pricing",
+        "/about-us": "about-us",
+    };
+
+    const selectedKey = pathKeyMap[currentPath] || "home";
     return (
         <ConfigProvider
             theme={currentTheme}
@@ -169,177 +182,6 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
             >
                 <Layout className="min-h-screen font-cairo">
                     {/* Header */}
-                    <Header
-                        className={`sticky top-0 z-50 w-full flex items-center justify-between px-4 ${
-                            darkMode ? "bg-gray-900" : "bg-white"
-                        } shadow-sm`}
-                        style={{
-                            height: 72,
-                            borderBottom: `1px solid ${
-                                darkMode ? "#424242" : "#f0f0f0"
-                            }`,
-                        }}
-                    >
-                        {/* Logo */}
-                        <Link href="/" className="flex items-center">
-                            <img
-                                className="h-10"
-                                src={
-                                    darkMode
-                                        ? appConfigs["app.logo_dark_url"]
-                                        : appConfigs["app.logo_url"]
-                                }
-                                alt="Logo"
-                            />
-                        </Link>
-
-                        {/* Desktop Navigation */}
-                        <div className="hidden lg:flex items-center gap-6">
-                            <Menu
-                                mode="horizontal"
-                                theme={darkMode ? "dark" : "light"}
-                                items={navItems}
-                                className="border-0"
-                                selectedKeys={[]}
-                            />
-
-                            <Space size="middle">
-                                <Button
-                                    type="text"
-                                    icon={
-                                        darkMode ? (
-                                            <SunOutlined />
-                                        ) : (
-                                            <MoonOutlined />
-                                        )
-                                    }
-                                    onClick={toggleDarkMode}
-                                />
-
-                                <Button
-                                    type="text"
-                                    icon={<TranslationOutlined />}
-                                    onClick={() =>
-                                        setLanguage(
-                                            language === "ar" ? "en" : "ar"
-                                        )
-                                    }
-                                >
-                                    {language === "ar" ? "EN" : "العربية"}
-                                </Button>
-
-                                {user ? (
-                                    <Dropdown
-                                        menu={{ items: userMenuItems }}
-                                        placement="bottomRight"
-                                    >
-                                        <Avatar
-                                            icon={<UserOutlined />}
-                                            className="cursor-pointer"
-                                        />
-                                    </Dropdown>
-                                ) : (
-                                    <Space>
-                                        <Button href="/login">
-                                            {t("login")}
-                                        </Button>
-                                        <Button type="primary" href="/register">
-                                            {t("register")}
-                                        </Button>
-                                    </Space>
-                                )}
-                            </Space>
-                        </div>
-
-                        {/* Mobile Menu Button */}
-                        <div className="flex lg:hidden items-center gap-4">
-                            <Button
-                                type="text"
-                                icon={<MenuOutlined />}
-                                onClick={toggleMobileMenu}
-                            />
-                        </div>
-                    </Header>
-
-                    {/* Content */}
-                    <Content className="flex-1">
-                        <div className="container mx-auto px-4 py-6">
-                            {children}
-                        </div>
-                    </Content>
-
-                    {/* Footer */}
-                    <Footer
-                        className={`py-8 ${
-                            darkMode ? "bg-gray-900" : "bg-gray-50"
-                        }`}
-                    >
-                        <div className="container mx-auto px-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">
-                                        {t("about_company")}
-                                    </h3>
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        {appConfigs["app.description"]}
-                                    </p>
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">
-                                        {t("quick_links")}
-                                    </h3>
-                                    <Menu
-                                        mode="vertical"
-                                        theme={darkMode ? "dark" : "light"}
-                                        items={navItems}
-                                        selectedKeys={[]}
-                                        className="border-0"
-                                    />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">
-                                        {t("contact_us")}
-                                    </h3>
-                                    <div className="text-gray-500 dark:text-gray-400">
-                                        <p>{appConfigs["app.address"]}</p>
-                                        <p>{appConfigs["app.phone"]}</p>
-                                        <p>{appConfigs["app.email"]}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">
-                                        {t("newsletter")}
-                                    </h3>
-                                    <div className="flex">
-                                        <Input
-                                            placeholder={t("your_email")}
-                                            className="flex-1"
-                                        />
-                                        <Button type="primary">
-                                            {t("subscribe")}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                            <Divider />
-                            <div className="flex flex-col md:flex-row justify-between items-center">
-                                <span className="text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
-                                    © {new Date().getFullYear()}{" "}
-                                    {appConfigs["app.name"]}.{" "}
-                                    {t("all_rights_reserved")}
-                                </span>
-                                <div className="flex gap-4">
-                                    <Button type="text">
-                                        {t("privacy_policy")}
-                                    </Button>
-                                    <Button type="text">
-                                        {t("terms_of_service")}
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </Footer>
-
                     {/* Mobile Menu Drawer */}
                     <Drawer
                         title={
@@ -371,7 +213,33 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 <Menu
                                     mode="inline"
                                     theme={darkMode ? "dark" : "light"}
-                                    items={navItems}
+                                    items={[
+                                        {
+                                            key: "home",
+                                            label: "الرئيسة",
+                                            icon: <HomeOutlined />,
+                                        },
+                                        {
+                                            key: "properties",
+                                            label: "العقارات",
+                                            icon: <ShopOutlined />,
+                                        },
+                                        {
+                                            key: "languages",
+                                            label: "اللغات",
+                                            icon: <GlobalOutlined />,
+                                        },
+                                        {
+                                            key: "about",
+                                            label: "من نحن",
+                                            icon: <InfoCircleOutlined />,
+                                        },
+                                        {
+                                            key: "contact",
+                                            label: "إضاءة",
+                                            icon: <BulbOutlined />,
+                                        },
+                                    ]}
                                     className="flex-1 border-0"
                                     selectedKeys={[]}
                                 />
@@ -418,21 +286,21 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                                     href="/logout"
                                                     className="text-sm text-gray-500"
                                                 >
-                                                    {t("logout")}
+                                                    تسجيل خروج
                                                 </Link>
                                             </div>
                                         </div>
                                     ) : (
                                         <Space className="w-full">
                                             <Button block href="/login">
-                                                {t("login")}
+                                                السجل الدخول
                                             </Button>
                                             <Button
                                                 block
                                                 type="primary"
                                                 href="/register"
                                             >
-                                                {t("register")}
+                                                إشاء حساب
                                             </Button>
                                         </Space>
                                     )}
@@ -440,6 +308,268 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                             </div>
                         </Scrollbars>
                     </Drawer>
+                    <Header
+                        className={`sticky top-0 z-50 w-full px-6 ${
+                            darkMode ? "bg-gray-900" : "bg-[#F7FAFC]"
+                        } shadow-sm`}
+                        style={{
+                            paddingTop: 12,
+                            paddingBottom: 0,
+                            borderBottom: "none",
+                            height: 150,
+                        }}
+                    >
+                        {/* Top Row */}
+                        <div className="flex items-center justify-between h-12">
+                            {/* Logo */}
+                            <Link href="/" className="flex items-center">
+                                <img
+                                    className="h-10"
+                                    src={
+                                        darkMode
+                                            ? appConfigs["app.logo_dark_url"]
+                                            : appConfigs["app.logo_url"]
+                                    }
+                                    style={{ margin: 5 }}
+                                    alt="Logo"
+                                />
+                                {appConfigs["app.name"]}
+                            </Link>
+
+                            {/* Actions: Login/Register */}
+                            <div className="flex items-center gap-3">
+                                {user ? (
+                                    <Dropdown
+                                        menu={{
+                                            items: [
+                                                {
+                                                    key: "profile",
+                                                    label: "الملف الشخصي",
+                                                },
+                                                {
+                                                    key: "logout",
+                                                    label: "تسجيل خروج",
+                                                },
+                                            ],
+                                        }}
+                                        placement="bottomRight"
+                                    >
+                                        <Avatar
+                                            icon={<UserOutlined />}
+                                            className="cursor-pointer"
+                                        />
+                                    </Dropdown>
+                                ) : (
+                                    <Space>
+                                        <Button
+                                            type="default"
+                                            href="/login"
+                                            className="text-sm font-medium"
+                                        >
+                                            تسجيل الدخول
+                                        </Button>
+                                        <Button
+                                            type="primary"
+                                            href="/register"
+                                            className="text-sm font-medium"
+                                        >
+                                            إنشاء حساب
+                                        </Button>
+                                    </Space>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <hr
+                            className={`my-2 ${
+                                darkMode ? "border-gray-700" : "border-gray-300"
+                            }`}
+                        />
+
+                        {/* Bottom Row */}
+                        <div className="flex items-center justify-between h-12">
+                            {/* Navigation Menu */}
+                            <Menu
+                                mode="horizontal"
+                                theme={darkMode ? "dark" : "light"}
+                                items={[
+                                    {
+                                        key: "home",
+                                        label: <a href="/">الرئيسية</a>,
+                                    },
+                                    {
+                                        key: "properties",
+                                        label: (
+                                            <a href="/properties/search">
+                                                العقارات
+                                            </a>
+                                        ),
+                                    },
+                                    {
+                                        key: "pricing",
+                                        label: <a href="/pricing">الباقات</a>,
+                                    },
+                                    {
+                                        key: "about-us",
+                                        label: <a href="/about-us">من نحن</a>,
+                                    },
+                                ]}
+                                className="border-0 bg-transparent font-medium flex-1"
+                                selectedKeys={[selectedKey]}
+                            />
+
+                            {/* Add Property Link */}
+                            <Link
+                                href={route("user.properties.create")}
+                                className="text-green-600 font-medium text-sm hover:underline"
+                            >
+                                + إضافة عقار
+                            </Link>
+                        </div>
+                    </Header>
+
+                    {/* Content */}
+                    <Content className="flex-1">{children}</Content>
+
+                    {/* Footer */}
+                    <Footer
+                        className={`py-8`}
+                        style={{ backgroundColor: "#1F2937" }}
+                    >
+                        <div className="container mx-auto px-4">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                                {/* About Section */}
+                                <div>
+                                    <h3 className="text-lg text-white font-semibold mb-4">
+                                        عن مسكن
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-400">
+                                        منصة مسكن توفر حلولاً متكاملة لجميع
+                                        احتياجاتك العقارية سواء للشراء أو
+                                        الإيجار.
+                                    </p>
+                                </div>
+
+                                {/* Quick Links Section */}
+                                <div>
+                                    <h3 className="text-lg text-white font-semibold mb-4">
+                                        روابط سريعة
+                                    </h3>
+                                    <ul className="space-y-2">
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                المساعدة
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                سياسة الخصوصية
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                شروط الاستخدام
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                الأسئلة الشائعة
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* Services Section */}
+                                <div>
+                                    <h3 className="text-lg text-white font-semibold mb-4">
+                                        الخدمات
+                                    </h3>
+                                    <ul className="space-y-2">
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                خدمات الشراء
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                خدمات الإيجار
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                خدمات التسويق
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                            >
+                                                التقييم العقاري
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* Contact Section */}
+                                <div>
+                                    <h3 className="text-lg text-white font-semibold mb-4">
+                                        اتصل بنا
+                                    </h3>
+                                    <div className="text-gray-500 dark:text-gray-400 space-y-2">
+                                        <p>الرياض، المملكة العربية السعودية</p>
+                                        <p>+966 12 345 6789</p>
+                                        <p>info@maskan.com</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <img
+                                        width={200}
+                                        src={`${window.location.origin}/Images/footerLogo.png`}
+                                    />
+                                </div>
+                            </div>
+
+                            <Divider className="my-6" />
+
+                            <div className="flex flex-col md:flex-row justify-between items-center">
+                                <span className="text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
+                                    © {new Date().getFullYear()} مسكن. جميع
+                                    الحقوق محفوظة
+                                </span>
+                                <div className="flex gap-4">
+                                    <Button type="text" className="text-white">
+                                        سياسة الخصوصية
+                                    </Button>
+                                    <Button type="text" className="text-white">
+                                        شروط الخدمة
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </Footer>
                 </Layout>
             </ThemeProvider>
         </ConfigProvider>

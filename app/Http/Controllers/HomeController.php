@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Package;
 use App\Models\Property;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -88,6 +89,10 @@ class HomeController extends Controller
             });
 
         return Inertia::render('HomePage', [
+            'packages' => Package::limit(3)->get()->map(function ($pkg) {
+                $pkg['features'] = json_decode($pkg['features']);
+                return $pkg;
+            }),
             'featuredProperties' => $featuredProperties,
             'recentlyViewed' => $recentlyViewed,
             'propertyCounts' => $propertyCounts,
@@ -140,5 +145,18 @@ class HomeController extends Controller
             'created_at' => $property->created_at->format('M d, Y'),
             'updated_at' => $property->updated_at->format('M d, Y'),
         ];
+    }
+    public function pricing()
+    {
+        return Inertia::render('Pricing', [
+            'packages' => Package::limit(3)->get()->map(function ($pkg) {
+                $pkg['features'] = json_decode($pkg['features']);
+                return $pkg;
+            }),
+        ]);
+    }
+    public function AboutUs()
+    {
+        return Inertia::render('AboutUs');
     }
 }

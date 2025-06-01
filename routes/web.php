@@ -32,6 +32,8 @@ use Inertia\Inertia;
 //     return Inertia::render('SearchResultsPage');
 // });
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/pricing', [HomeController::class, 'pricing'])->name('pricing');
+Route::get('/about-us', [HomeController::class, 'AboutUs'])->name('AboutUs');
 // Other routes...
 // Route::get('/dashboard', function () {
 //     return Inertia::render('Dashboard');
