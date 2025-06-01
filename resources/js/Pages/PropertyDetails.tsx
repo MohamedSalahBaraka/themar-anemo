@@ -478,191 +478,196 @@ const Page: React.FC = () => {
                     </Row>
                 </div>
             </div>
-            <Card style={{ margin: 20 }}>
-                <Row gutter={[24, 24]}>
-                    {/* Property Images would go here */}
+            <div className="container mx-auto px-4 py-6">
+                <Card style={{ margin: 20 }}>
+                    <Row gutter={[24, 24]}>
+                        {/* Property Images would go here */}
 
-                    {/* Property Description */}
-                    <Col span={24}>
-                        <Title level={4}>الوصف التفصيلي</Title>
-                        <Paragraph>
-                            شقة مفروشة بالكامل، تقع في منطقة رافية بعمان. تتميز
-                            بإطلالة رائعة على المدينة، وقريبة من جميع الخدمات
-                            الأساسية. الشقة حديثة البناء ومفروشة بالكامل، وتحتوي
-                            على مطبخ مجهز، وغرفة معيشة واسعة، وغرفة نوم رئيسية،
-                            وتكييف مركزي، وموقف سيارات خاص. المبنى مزود بنظام
-                            أمان متطور ومصعد خاص.
-                        </Paragraph>
+                        {/* Property Description */}
+                        <Col span={24}>
+                            <Title level={4}>الوصف التفصيلي</Title>
+                            <Paragraph>
+                                شقة مفروشة بالكامل، تقع في منطقة رافية بعمان.
+                                تتميز بإطلالة رائعة على المدينة، وقريبة من جميع
+                                الخدمات الأساسية. الشقة حديثة البناء ومفروشة
+                                بالكامل، وتحتوي على مطبخ مجهز، وغرفة معيشة
+                                واسعة، وغرفة نوم رئيسية، وتكييف مركزي، وموقف
+                                سيارات خاص. المبنى مزود بنظام أمان متطور ومصعد
+                                خاص.
+                            </Paragraph>
 
-                        <Divider />
+                            <Divider />
 
-                        <Space>
-                            <Text>
-                                <EyeOutlined /> 1243
-                            </Text>
-                            <Text>
-                                <CalendarOutlined /> 15/04/2025
-                            </Text>
-                        </Space>
-
-                        <Divider />
-
-                        <Title level={4}>مميزات العقار</Title>
-                        <Space wrap size="large">
-                            {features.map((item, index) => (
-                                <Space key={index} align="start">
-                                    <DotChartOutlined
-                                        style={{ color: "#52c41a" }}
-                                    />
-                                    <Text>{item}</Text>
-                                </Space>
-                            ))}
-                        </Space>
-                    </Col>
-                </Row>
-            </Card>
-            <Card style={{ margin: 20 }}>
-                <Row gutter={[24, 24]}>
-                    {property.latitude && property.longitude && (
-                        <>
-                            <Title level={4}>الموقع</Title>
-                            <div
-                                style={{
-                                    height: "300px",
-                                    width: "100%",
-                                    zIndex: 1,
-                                }}
-                            >
-                                <Map
-                                    latitude={property.latitude}
-                                    longitude={property.longitude}
-                                    address={property.address || ""}
-                                />
-                            </div>
-                        </>
-                    )}
-                </Row>
-            </Card>
-            <Card style={{ margin: 20 }}>
-                <Row gutter={[24, 24]} id="photos">
-                    <Col xs={24} md={24}>
-                        <Title level={4}>معرض الصور</Title>
-                        <Image.PreviewGroup>
-                            <Space
-                                direction="vertical"
-                                size="middle"
-                                style={{ width: "100%" }}
-                            >
-                                {property.images &&
-                                    property.images.length > 1 && (
-                                        <Row gutter={[8, 8]}>
-                                            {property.images
-                                                .slice(1)
-                                                .map((img, index) => (
-                                                    <Col key={index} xs={6}>
-                                                        <Image
-                                                            src={`${window.location.origin}/storage/${img.image_url}`}
-                                                            alt={`${
-                                                                property.title
-                                                            } ${index + 1}`}
-                                                            style={{
-                                                                borderRadius:
-                                                                    "8px",
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                ))}
-                                        </Row>
-                                    )}
+                            <Space>
+                                <Text>
+                                    <EyeOutlined /> 1243
+                                </Text>
+                                <Text>
+                                    <CalendarOutlined /> 15/04/2025
+                                </Text>
                             </Space>
-                        </Image.PreviewGroup>
-                    </Col>
-                </Row>
-            </Card>
-            <Card style={{ margin: 20 }}>
-                <Col>
-                    <Title level={4}>معلومات المعلن</Title>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                        <Text>{property.user.name}</Text>
-                        <Text>
-                            {property.user.role == "agent"
-                                ? " وكبل عقاري"
-                                : property.user.role == "company"
-                                ? "شركة ومطور عقاري"
-                                : "مالك"}
-                        </Text>
-                    </div>
-                </Col>
-                <Row style={{ gap: 10 }}>
-                    <Button
-                        variant="filled"
-                        style={{ flex: 1 }}
-                        type="primary"
-                        onClick={() => {
-                            window.location.href = `tel:${property.user.phone}`; // make sure phone exists
-                        }}
-                    >
-                        <PhoneOutlined />
-                        اتصل الآن
-                    </Button>
 
-                    <Button
-                        onClick={() => setInquiryModalVisible(true)}
-                        style={{ flex: 1 }}
-                    >
-                        <CommentOutlined />
-                        ارسل رسالة
-                    </Button>
-                    <Button
-                        type="primary"
-                        style={{ backgroundColor: "#22C55E", flex: 1 }}
-                        onClick={() => {
-                            const phone = property.user.phone; // e.g., "249912345678"
-                            const message = `مرحباً، أود الاستفسار عن العقار: ${window.location.href}`;
-                            window.open(
-                                `https://wa.me/${phone}?text=${encodeURIComponent(
-                                    message
-                                )}`,
-                                "_blank"
-                            );
-                        }}
-                    >
-                        <WhatsAppOutlined />
-                        تواصل عبر واتساب
-                    </Button>
-                </Row>
-            </Card>
-            <Card style={{ margin: 20 }}>
-                <Title level={4}>مشاركة العقار</Title>
-                <Row style={{ gap: 10 }}>
-                    <Button
-                        variant="filled"
-                        style={{ flex: 1 }}
-                        type="primary"
-                        onClick={handleFacebookShare}
-                    >
-                        <FacebookFilled />
-                        Facebook
-                    </Button>
-                    <Button
-                        type="primary"
-                        style={{ backgroundColor: "#22C55E", flex: 1 }}
-                        onClick={handleWhatsAppShare}
-                    >
-                        <WhatsAppOutlined />
-                        واتساب
-                    </Button>
-                    <Button style={{ flex: 1 }} onClick={handleCopyLink}>
-                        <CopyOutlined />
-                        نسخ
-                    </Button>
-                </Row>
-            </Card>
-            {renderPropertySection(
-                similarProperties,
-                "عقارات مشابهة",
-                <ShopOutlined />
-            )}
+                            <Divider />
+
+                            <Title level={4}>مميزات العقار</Title>
+                            <Space wrap size="large">
+                                {features.map((item, index) => (
+                                    <Space key={index} align="start">
+                                        <DotChartOutlined
+                                            style={{ color: "#52c41a" }}
+                                        />
+                                        <Text>{item}</Text>
+                                    </Space>
+                                ))}
+                            </Space>
+                        </Col>
+                    </Row>
+                </Card>
+                <Card style={{ margin: 20 }}>
+                    <Row gutter={[24, 24]}>
+                        {property.latitude && property.longitude && (
+                            <>
+                                <Title level={4}>الموقع</Title>
+                                <div
+                                    style={{
+                                        height: "300px",
+                                        width: "100%",
+                                        zIndex: 1,
+                                    }}
+                                >
+                                    <Map
+                                        latitude={property.latitude}
+                                        longitude={property.longitude}
+                                        address={property.address || ""}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </Row>
+                </Card>
+                <Card style={{ margin: 20 }}>
+                    <Row gutter={[24, 24]} id="photos">
+                        <Col xs={24} md={24}>
+                            <Title level={4}>معرض الصور</Title>
+                            <Image.PreviewGroup>
+                                <Space
+                                    direction="vertical"
+                                    size="middle"
+                                    style={{ width: "100%" }}
+                                >
+                                    {property.images &&
+                                        property.images.length > 1 && (
+                                            <Row gutter={[8, 8]}>
+                                                {property.images
+                                                    .slice(1)
+                                                    .map((img, index) => (
+                                                        <Col key={index} xs={6}>
+                                                            <Image
+                                                                src={`${window.location.origin}/storage/${img.image_url}`}
+                                                                alt={`${
+                                                                    property.title
+                                                                } ${index + 1}`}
+                                                                style={{
+                                                                    borderRadius:
+                                                                        "8px",
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                    ))}
+                                            </Row>
+                                        )}
+                                </Space>
+                            </Image.PreviewGroup>
+                        </Col>
+                    </Row>
+                </Card>
+                <Card style={{ margin: 20 }}>
+                    <Col>
+                        <Title level={4}>معلومات المعلن</Title>
+                        <div
+                            style={{ display: "flex", flexDirection: "column" }}
+                        >
+                            <Text>{property.user.name}</Text>
+                            <Text>
+                                {property.user.role == "agent"
+                                    ? " وكبل عقاري"
+                                    : property.user.role == "company"
+                                    ? "شركة ومطور عقاري"
+                                    : "مالك"}
+                            </Text>
+                        </div>
+                    </Col>
+                    <Row style={{ gap: 10 }}>
+                        <Button
+                            variant="filled"
+                            style={{ flex: 1 }}
+                            type="primary"
+                            onClick={() => {
+                                window.location.href = `tel:${property.user.phone}`; // make sure phone exists
+                            }}
+                        >
+                            <PhoneOutlined />
+                            اتصل الآن
+                        </Button>
+
+                        <Button
+                            onClick={() => setInquiryModalVisible(true)}
+                            style={{ flex: 1 }}
+                        >
+                            <CommentOutlined />
+                            ارسل رسالة
+                        </Button>
+                        <Button
+                            type="primary"
+                            style={{ backgroundColor: "#22C55E", flex: 1 }}
+                            onClick={() => {
+                                const phone = property.user.phone; // e.g., "249912345678"
+                                const message = `مرحباً، أود الاستفسار عن العقار: ${window.location.href}`;
+                                window.open(
+                                    `https://wa.me/${phone}?text=${encodeURIComponent(
+                                        message
+                                    )}`,
+                                    "_blank"
+                                );
+                            }}
+                        >
+                            <WhatsAppOutlined />
+                            تواصل عبر واتساب
+                        </Button>
+                    </Row>
+                </Card>
+                <Card style={{ margin: 20 }}>
+                    <Title level={4}>مشاركة العقار</Title>
+                    <Row style={{ gap: 10 }}>
+                        <Button
+                            variant="filled"
+                            style={{ flex: 1 }}
+                            type="primary"
+                            onClick={handleFacebookShare}
+                        >
+                            <FacebookFilled />
+                            Facebook
+                        </Button>
+                        <Button
+                            type="primary"
+                            style={{ backgroundColor: "#22C55E", flex: 1 }}
+                            onClick={handleWhatsAppShare}
+                        >
+                            <WhatsAppOutlined />
+                            واتساب
+                        </Button>
+                        <Button style={{ flex: 1 }} onClick={handleCopyLink}>
+                            <CopyOutlined />
+                            نسخ
+                        </Button>
+                    </Row>
+                </Card>
+                {renderPropertySection(
+                    similarProperties,
+                    "عقارات مشابهة",
+                    <ShopOutlined />
+                )}
+            </div>
             {/* Inquiry Modal */}
             <Modal
                 title="Contact Property Owner"
