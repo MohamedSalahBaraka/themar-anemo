@@ -29,12 +29,15 @@ class Property extends Model
         'longitude',
         'address',
         'published_at',
+        'features',
         'expires_at',
         'is_featured',
         'rejection_reason',
         'approved',
     ];
-
+    protected $casts = [
+        'features' => 'array',
+    ];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

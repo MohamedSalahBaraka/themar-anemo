@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserServiceAttachmentController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Auth\LoginController;
@@ -10,12 +11,20 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\InquiryController;
+use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\ServiceBuilderController;
+use App\Http\Controllers\ServiceCategoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserServiceController;
+use App\Http\Controllers\UserServiceReviewController;
 use App\Http\Controllers\UserSubscriptionController;
+use App\Http\Controllers\UserUserServiceController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,7 +42,14 @@ use Inertia\Inertia;
 // });
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [HomeController::class, 'pricing'])->name('pricing');
+Route::get('/Faq', [HomeController::class, 'Faq'])->name('Faq');
+Route::get('/Page/{key}', [HomeController::class, 'Page'])->name('Page');
 Route::get('/about-us', [HomeController::class, 'AboutUs'])->name('AboutUs');
+Route::get('/services', [PublicServiceController::class, 'index'])->name('public.services.index');
+Route::get('/services/{service}', [PublicServiceController::class, 'show'])->name('public.services.show');
+Route::post('/services/{service}/apply', [PublicServiceController::class, 'apply'])
+    ->name('public.services.apply')
+    ->middleware('auth'); // Adjust middleware as needed
 // Other routes...
 // Route::get('/dashboard', function () {
 //     return Inertia::render('Dashboard');
@@ -55,6 +71,8 @@ Route::post('/admin/properties/{property}/approve', [PropertyController::class, 
     ->name('admin.properties.approve');
 Route::get('/admin/users', [UserController::class, 'index'])
     ->name('admin.users.index');
+Route::put('/admin/about-values', [ConfigController::class, 'updateAboutValues'])
+    ->name('admin.about-values.update');
 
 Route::put('/admin/users/{user}/status', [UserController::class, 'updateStatus'])
     ->name('admin.users.update-status');
@@ -70,9 +88,7 @@ Route::get('/admin/users/{user}', [UserController::class, 'approve'])
     ->name('admin.users.approve');
 Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/packages', [PackageController::class, 'index'])->name('admin.packages.index');
-    Route::post('/packages', [PackageController::class, 'store'])->name('admin.packages.store');
-    Route::put('/packages/{package}', [PackageController::class, 'update'])->name('admin.packages.update');
-    Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('admin.packages.destroy');
+    Route::post('/packages/upsert', [PackageController::class, 'upsert'])->name('admin.packages.upsert');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/revenue-data', [AdminDashboardController::class, 'getRevenueData']);
     Route::get('/dashboard/custom-revenue-data', [AdminDashboardController::class, 'getCustomDateRevenueData']);
@@ -88,6 +104,46 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
         ->name('admin.users.subscriptions.approve');
     Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('admin.properties.update');
     Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->name('admin.properties.destroy');
+    Route::resource('/team-members', TeamMemberController::class,)->names('admin.team-members');
+    Route::resource('/faqs', FaqController::class)->names('admin.faqs');
+    Route::resource('/cities', \App\Http\Controllers\CityController::class)->names('admin.cities');
+    Route::post('/about-values/upload', [ConfigController::class, 'upload'])->name('admin.about-values.upload');
+    Route::post('/faqs/reorder', [FaqController::class, 'reorder'])
+        ->name('faqs.reorder');
+
+    // Services
+
+    Route::resource('service-categories', ServiceCategoryController::class)->except(['show']);
+    Route::get('/user-services', [UserServiceController::class, 'index'])->name('user-services.index');
+    // Route::get('/user-services/{userService}', [UserServiceController::class, 'show'])->name('user-services.show');
+    Route::get('/user-services/{user_service}', [UserServiceController::class, 'show'])
+        ->name('admin.user-services.show');
+    Route::post('user-services/{user_service}/update-fields', [UserServiceController::class, 'updateFields'])
+        ->name('admin.user-services.update-fields');
+    Route::post('user-services/{user_service}/upload', [UserServiceController::class, 'upload'])
+        ->name('admin.user-services.upload');
+    Route::get('/user-services/{userService}/form', [UserServiceController::class, 'showForm'])->name('admin.user-services.form');
+    Route::post('/user-services/{userService}/save-step', [UserServiceController::class, 'saveStep'])->name('admin.user-services.save-step');
+    Route::get('/user-services/{userService}/step/{step}', [UserServiceController::class, 'getStepData'])->name('admin.user-services.step-data');
+    Route::resource('services', ServiceController::class)->except(['show'])->names("admin.services");
+    Route::patch('services/{service}/toggle-status', [ServiceController::class, 'toggleStatus'])
+        ->name('services.toggle-status');
+    Route::post('/user-services/{userService}/review', [UserServiceReviewController::class, 'store'])
+        ->name('admin.user-services.review.store');
+
+    Route::put('/user-services/{userService}/review', [UserServiceReviewController::class, 'update'])
+        ->name('admin.user-services.review.update');
+
+    Route::delete('/user-services/{userService}/review', [UserServiceReviewController::class, 'destroy'])
+        ->name('admin.user-services.review.destroy');
+    Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('admin.reviews.index');
+    Route::get('/reviews/{review}/edit', [\App\Http\Controllers\Admin\ReviewController::class, 'edit'])->name('admin.reviews.edit');
+    Route::put('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'update'])->name('admin.reviews.update');
+    Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('admin.reviews.destroy');
+    Route::post('/reviews/{review}/toggle-visibility', [\App\Http\Controllers\Admin\ReviewController::class, 'toggleVisibility'])->name('admin.reviews.toggle-visibility');
+    Route::post('/attachments', [UserServiceAttachmentController::class, 'store']);
+    Route::delete('/attachments/{attachment}', [UserServiceAttachmentController::class, 'destroy']);
+    Route::get('/user-services/{userService}/attachments', [UserServiceAttachmentController::class, 'index']);
 });
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -132,7 +188,19 @@ Route::middleware(['auth', 'verified'])->prefix('user')->group(function () {
     Route::post('/subscription/subscribe', [SubscriptionController::class, 'subscribe'])->name('user.subscriptions.subscribe');
     Route::get('/invoices/{invoice}', [SubscriptionController::class, 'showInvoice'])->name('user.invoices.show');
 
-    // Other user routes...
+    // Service
+
+    Route::get('/my-services-orders', [UserUserServiceController::class, 'index'])->name('user.user-services.index');
+    Route::get('/my-services-orders/{user_service}', [UserUserServiceController::class, 'show'])->name('user.user-services.show');
+    Route::post('/my-services-orders/{user_service}/submit-rating', [UserUserServiceController::class, 'submitRating'])->name('user.user-services.submit-rating');
+
+    // Service progress
+    // Route::get('/user-services/{userService}', [UserServiceController::class, 'show'])->name('user-services.show');
+    Route::post('/user-services/{userService}/step', [UserServiceController::class, 'updateStep'])->name('user-services.update-step');
+
+    // File attachments (from previous implementation)
+    Route::post('/attachments', [UserServiceAttachmentController::class, 'store']);
+    Route::delete('/attachments/{attachment}', [UserServiceAttachmentController::class, 'destroy']);
 });
 
 

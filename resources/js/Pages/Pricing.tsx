@@ -47,6 +47,7 @@ import { FaBath, FaBed } from "react-icons/fa";
 import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
 import PackageCard, { Package } from "@/Components/PackageCard";
+import { Faq } from "@/types/faq";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -55,6 +56,7 @@ const { Panel } = Collapse;
 
 interface PropertyDetailsPageProps extends PageProps {
     packages: Package[];
+    faqs: Faq[];
 }
 const Pricing: React.FC = () => (
     <FrontLayout>
@@ -64,72 +66,113 @@ const Pricing: React.FC = () => (
 interface PlanFeature {
     key: string;
     name: string;
-    enterprise: string | boolean;
-    premium: string | boolean;
-    basic: string | boolean;
+    company: string | boolean;
+    agent: string | boolean;
+    owner: string | boolean;
 }
 const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
-    const { packages, filters, meta } = props;
-    const [filter, setFilter] = React.useState<PropertyFilter>(
-        props.filters || {}
-    );
+    const appConfigs = usePage().props.appConfigs as Record<string, any>;
+    const { faqs, aboutValues, meta, auth } = props;
+    // Map user_type to column names
+    const userTypeLabelMap: Record<string, "company" | "agent" | "owner"> = {
+        company: "company",
+        agent: "agent",
+        owner: "owner",
+    };
+
     const features: PlanFeature[] = [
         {
             key: "1",
-            name: "عدد الاعلانات",
-            enterprise: "غير محدود",
-            premium: "اعلان",
-            basic: "اعلانات",
+            name: "عدد الإعلانات",
+            company:
+                props.packages.find((pkg) => pkg.user_type === "company")
+                    ?.max_listings === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "company")
+                          ?.max_listings?.toString() ?? "",
+            agent:
+                props.packages.find((pkg) => pkg.user_type === "agent")
+                    ?.max_listings === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "agent")
+                          ?.max_listings?.toString() ?? "",
+            owner:
+                props.packages.find((pkg) => pkg.user_type === "owner")
+                    ?.max_listings === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "owner")
+                          ?.max_listings?.toString() ?? "",
         },
         {
             key: "2",
-            name: "الاعلانات المميزة",
-            enterprise: "30",
-            premium: "10",
-            basic: "1",
+            name: "الإعلانات المميزة",
+            company:
+                props.packages.find((pkg) => pkg.user_type === "company")
+                    ?.max_adds === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "company")
+                          ?.max_adds?.toString() ?? "",
+            agent:
+                props.packages.find((pkg) => pkg.user_type === "agent")
+                    ?.max_adds === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "agent")
+                          ?.max_adds?.toString() ?? "",
+            owner:
+                props.packages.find((pkg) => pkg.user_type === "owner")
+                    ?.max_adds === -1
+                    ? "غير محدود"
+                    : props.packages
+                          .find((pkg) => pkg.user_type === "owner")
+                          ?.max_adds?.toString() ?? "",
         },
         {
             key: "3",
             name: "لوحة تحكم",
-            enterprise: "متقدمة مع تقارير",
-            premium: "متقدمة",
-            basic: "أساسي",
+            company: "متقدمة مع تقارير",
+            agent: "متقدمة",
+            owner: "أساسي",
         },
         {
             key: "4",
             name: "إحصائيات",
-            enterprise: true,
-            premium: true,
-            basic: false,
+            company: true,
+            agent: true,
+            owner: false,
         },
         {
             key: "5",
             name: "ظهور في نتائج البحث",
-            enterprise: true,
-            premium: true,
-            basic: false,
+            company: true,
+            agent: true,
+            owner: false,
         },
         {
             key: "6",
             name: "تقرير مالية",
-            enterprise: true,
-            premium: false,
-            basic: false,
+            company: true,
+            agent: false,
+            owner: false,
         },
         {
             key: "7",
             name: "ربط مع انظمة العقود",
-            enterprise: true,
-            premium: false,
-            basic: false,
+            company: true,
+            agent: false,
+            owner: false,
         },
         {
             key: "8",
             name: "دعم فني",
-            enterprise: "مخصص",
-            premium: "أولوية",
-            basic: "عادي",
+            company: "مخصص",
+            agent: "أولوية",
+            owner: "عادي",
         },
     ];
 
@@ -142,22 +185,22 @@ const Page: React.FC = () => {
         },
         {
             title: "الباقة الأساسية",
-            dataIndex: "basic",
-            key: "basic",
+            dataIndex: "owner",
+            key: "owner",
             render: (value: string | boolean) => renderCell(value),
             align: "center" as const,
         },
         {
             title: "باقة المميزة",
-            dataIndex: "premium",
-            key: "premium",
+            dataIndex: "agent",
+            key: "agent",
             render: (value: string | boolean) => renderCell(value),
             align: "center" as const,
         },
         {
             title: "الشركات",
-            dataIndex: "enterprise",
-            key: "enterprise",
+            dataIndex: "company",
+            key: "company",
             render: (value: string | boolean) => renderCell(value),
             align: "center" as const,
         },
@@ -187,7 +230,7 @@ const Page: React.FC = () => {
                     level={2}
                     style={{ marginBottom: "16px", color: "white" }}
                 >
-                    اختر الباقة المناسبة وإبدأ نشر مقاراتك بكل احترافية
+                    {appConfigs["pricing.catchy_phrase_primary"]}
                 </Title>
                 <Text
                     style={{
@@ -197,8 +240,7 @@ const Page: React.FC = () => {
                         color: "white",
                     }}
                 >
-                    تقدم لك باقات متنوعة لتلبي احتياجاتك سواء كانت قادرًا، وكيلا
-                    عقارياً أو نشاطًا عقاريًا.
+                    {appConfigs["pricing.catchy_phrase_secondary"]}
                 </Text>
             </div>
 
@@ -208,7 +250,7 @@ const Page: React.FC = () => {
                         key={pkg.id}
                         pkg={{
                             ...pkg,
-                            features: Object.values(pkg.features),
+                            features: pkg.features,
                         }}
                         selected={false}
                         onSelect={() => {}}
@@ -221,8 +263,7 @@ const Page: React.FC = () => {
                     مقارنة شاملة بين الباقات
                 </Title>
                 <p style={{ textAlign: "center", marginBottom: 24 }}>
-                    قابل بين الباقات واختر المناسب لانتقلاتك من بين مجموعة
-                    متنوعة من المرازات والخدمات
+                    {appConfigs["pricing.package_comperson"]}
                 </p>
 
                 <Table
@@ -247,7 +288,7 @@ const Page: React.FC = () => {
                     الأسئلة الشائعة
                 </Title>
                 <p style={{ textAlign: "right", marginBottom: "24px" }}>
-                    إجابات على الاستفسارات الأكثر شيوعاً حول باقاتنا.
+                    {appConfigs["pricing.faq"]}
                 </p>
 
                 <Collapse
@@ -258,127 +299,82 @@ const Page: React.FC = () => {
                     )}
                     style={{ background: "#fff" }}
                 >
-                    <Panel
-                        header="هل يمكنك تغيير باقتي بعد الاشتراك؟"
-                        key="1"
-                        style={{
-                            textAlign: "right",
-                            borderBottom: "1px solid #f0f0f0",
-                        }}
-                    >
-                        <p style={{ paddingRight: "16px" }}>
-                            يمكنك ترقية باقتك في أي وقت مع دفع فرق السعر. أما في
-                            حالة التغيير لباقة أقل، فيمكن ذلك عند تجديد
-                            الاشتراك.
-                        </p>
-                    </Panel>
-
-                    <Panel
-                        header="هل هناك قوالب تدريبية مجانية؟"
-                        key="2"
-                        style={{
-                            textAlign: "right",
-                            borderBottom: "1px solid #f0f0f0",
-                        }}
-                    >
-                        <p style={{ paddingRight: "16px" }}>
-                            عند الباقة الأساسية، تحصل على تجربة إصدارات الأساسية
-                            للمنصة قبل الاشتراك.
-                        </p>
-                    </Panel>
-
-                    <Panel
-                        header="ما هي سياسة استرداد الأموال؟"
-                        key="3"
-                        style={{
-                            textAlign: "right",
-                            borderBottom: "1px solid #f0f0f0",
-                        }}
-                    >
-                        <p style={{ paddingRight: "16px" }}>
-                            خلال 7 أيام من بداية الاشتراك إذا لم تكن راضياً عن
-                            الخدمة، شريطة عدم استخدام أكثر من 25% من المصادر
-                            المتاحة.
-                        </p>
-                    </Panel>
-
-                    <Panel
-                        header="كيف يتم احتساب عدد الإعلانات؟"
-                        key="4"
-                        style={{
-                            textAlign: "right",
-                            borderBottom: "1px solid #f0f0f0",
-                        }}
-                    >
-                        <p style={{ paddingRight: "16px" }}>
-                            يتم احتساب الإعلان النشط على أنه واحد من حصتك
-                            الشهرية، عند القيام بنشر هذا الإعلان أو حذفه، لا يتم
-                            استرجاعه إلى حصتك لنفس الشهر.
-                        </p>
-                    </Panel>
+                    {faqs.map((faq) => (
+                        <Panel
+                            header={faq.question}
+                            key={faq.id}
+                            style={{
+                                textAlign: "right",
+                                borderBottom: "1px solid #f0f0f0",
+                            }}
+                        >
+                            <p style={{ paddingRight: "16px" }}>{faq.answer}</p>
+                        </Panel>
+                    ))}
                 </Collapse>
             </Card>
-            <div
-                style={{
-                    background: "linear-gradient(135deg, #7091D2, #5275B9)",
-                    padding: "40px 20px",
-                    textAlign: "center",
-                }}
-            >
+            {!auth.user && (
                 <div
                     style={{
-                        maxWidth: "1200px",
-                        margin: "0 auto",
+                        background: "linear-gradient(135deg, #7091D2, #5275B9)",
+                        padding: "40px 20px",
+                        textAlign: "center",
                     }}
                 >
-                    <Title
-                        level={2}
-                        style={{ color: "white", marginBottom: "24px" }}
-                    >
-                        نبدأ اليوم ونضم إلى آلاف الوكالات والشركات العقارية
-                    </Title>
-
-                    <Paragraph
+                    <div
                         style={{
-                            fontSize: "18px",
-                            color: "#eee",
-                            marginBottom: "32px",
+                            maxWidth: "1200px",
+                            margin: "0 auto",
                         }}
                     >
-                        سواء كنت مالكاً فرداً أو وكيلاً عقارياً أو شركة لدينا
-                        الباقة المثالية لاحتياجاتك
-                    </Paragraph>
+                        <Title
+                            level={2}
+                            style={{ color: "white", marginBottom: "24px" }}
+                        >
+                            {appConfigs["cta.catchy_phrase_primary"]}
+                        </Title>
 
-                    <div>
-                        <Button
-                            type="primary"
-                            size="large"
+                        <Paragraph
                             style={{
-                                margin: "0 8px",
-                                padding: "0 32px",
-                                height: "48px",
-                                fontSize: "16px",
+                                fontSize: "18px",
+                                color: "#eee",
+                                marginBottom: "32px",
                             }}
                         >
-                            تجربة مجانية
-                        </Button>
-                        <Button
-                            size="large"
-                            style={{
-                                margin: "0 8px",
-                                padding: "0 32px",
-                                height: "48px",
-                                fontSize: "16px",
-                                backgroundColor: "#4AB861",
-                                borderColor: "#26913C",
-                                color: "white",
-                            }}
-                        >
-                            احجز باقة الآن
-                        </Button>
+                            {appConfigs["cta.catchy_phrase_secondary"]}
+                        </Paragraph>
+
+                        <div>
+                            <Button
+                                type="primary"
+                                size="large"
+                                style={{
+                                    margin: "0 8px",
+                                    padding: "0 32px",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                }}
+                            >
+                                تجربة مجانية
+                            </Button>
+                            <Button
+                                size="large"
+                                style={{
+                                    margin: "0 8px",
+                                    padding: "0 32px",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                    backgroundColor: "#4AB861",
+                                    borderColor: "#26913C",
+                                    color: "white",
+                                }}
+                            >
+                                احجز باقة الآن
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </section>
     );
 };

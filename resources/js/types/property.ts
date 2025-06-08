@@ -29,6 +29,7 @@ export interface Property {
     // For frontend display (you might add these separately)
     imageUrl?: string;
     images?: { image_url: string }[];
+    features: string[];
 }
 export type PropertyType = "apartment" | "villa" | "land" | "office";
 export type PropertyStatus =

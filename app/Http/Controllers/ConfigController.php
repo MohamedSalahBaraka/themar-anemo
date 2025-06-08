@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\AboutValue;
 use App\Models\Configs;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -15,21 +17,59 @@ class ConfigController extends Controller
      */
     public function index()
     {
-        $configs = Configs::all()
-            ->map(function ($config) {
-                return [
-                    'key' => $config->key,
-                    'value' => $config->value,
-                    'type' => $config->type,
-                    'options' => $config->options ? json_decode($config->options) : [],
-                    'description' => $config->description,
-                    'group' => $config->group,
-                ];
-            });
+        $configs = Configs::all()->map(function ($config) {
+            return [
+                'key' => $config->key,
+                'value' => $config->value,
+                'type' => $config->type,
+                'options' => $config->options ? json_decode($config->options) : [],
+                'description' => $config->description,
+                'group' => $config->group,
+            ];
+        });
+
+        $aboutValues = AboutValue::all();
 
         return Inertia::render('admin/Config', [
             'configs' => $configs,
+            'aboutValues' => $aboutValues,
         ]);
+    }
+    public function updateAboutValues(Request $request)
+    {
+        $values = $request->input('about_values');
+
+        try {
+            DB::transaction(function () use ($values) {
+                AboutValue::query()->delete(); // ✅
+
+
+                foreach ($values as $value) {
+                    AboutValue::create([
+                        'icon' => $value['icon'],
+                        'title' => $value['title'],
+                        'details' => $value['details'],
+                    ]);
+                }
+            });
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            // \Log::error("Update AboutValues failed: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+    public function upload(Request $request)
+    {
+        if ($request->hasFile('icon')) {
+            $path = $request->file('icon')->store('about-icons', 'public');
+
+            return response()->json([
+                'url' => asset('storage/' . $path),
+            ]);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
     }
 
     /**

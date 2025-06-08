@@ -9,6 +9,7 @@ import {
     Button,
     Space,
     Select,
+    Radio,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { router } from "@inertiajs/react";
@@ -22,6 +23,7 @@ interface PackageFormProps {
     onCancel: () => void;
     onSuccess: () => void;
     packageData?: Package | null;
+    userType: string | undefined;
 }
 
 interface FeatureItem {
@@ -35,6 +37,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
     onCancel,
     onSuccess,
     packageData,
+    userType,
 }) => {
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
@@ -44,84 +47,28 @@ const PackageForm: React.FC<PackageFormProps> = ({
             const values = await form.validateFields();
 
             // Convert features array to JSON object
-            if (values.features && Array.isArray(values.features)) {
-                const featuresObj = values.features.reduce(
-                    (acc: Record<string, string>, item: FeatureItem) => {
-                        if (item.key) {
-                            acc[item.key] = item.value || "";
-                        }
-                        return acc;
-                    },
-                    {}
-                );
-                values.features = JSON.stringify(featuresObj);
-            } else {
-                values.features = "{}";
+            if (!values.features || !Array.isArray(values.features)) {
+                values.features = [];
             }
 
             setisLoading(true);
 
-            if (packageData && packageData.id) {
-                router.put(
-                    route("admin.packages.update", packageData.id),
-                    values,
-                    {
-                        onSuccess: () => {
-                            message.success("تم تحديث الباقة بنجاح");
-                        },
-                        onError: (errors) => {
-                            console.error(errors);
-                            messageApi.error("فشل تحديث الباقة");
-                        },
-                        onFinish: () => {
-                            onSuccess();
-                            setisLoading(false);
-                        },
-                    }
-                );
-            } else {
-                router.post(route("admin.packages.store"), values, {
-                    onSuccess: () => {
-                        message.success("تم إنشاء الباقة بنجاح");
-                    },
-                    onError: (errors) => {
-                        console.error(errors);
-                        messageApi.error("فشل إنشاء الباقة");
-                    },
-                    onFinish: () => {
-                        onSuccess();
-                        setisLoading(false);
-                    },
-                });
-            }
+            router.post(route("admin.packages.upsert"), values, {
+                onSuccess: () => {
+                    message.success("تم إنشاء الباقة بنجاح");
+                },
+                onError: (errors) => {
+                    console.error(errors);
+                    messageApi.error("فشل إنشاء الباقة");
+                },
+                onFinish: () => {
+                    onSuccess();
+                    setisLoading(false);
+                },
+            });
         } catch (error) {
             console.error(error);
             setisLoading(false);
-        }
-    };
-
-    // Convert features JSON to array for the form
-    const parseFeatures = (
-        features: string | Record<string, any> | null | undefined
-    ): FeatureItem[] => {
-        try {
-            if (!features) return [{ key: "", value: "" }];
-
-            const featuresObj =
-                typeof features === "string" ? JSON.parse(features) : features;
-
-            if (!featuresObj || typeof featuresObj !== "object") {
-                return [{ key: "", value: "" }];
-            }
-
-            return Object.entries(featuresObj).map(([key, value]) => ({
-                key,
-                value:
-                    typeof value === "string" ? value : JSON.stringify(value),
-            }));
-        } catch (e) {
-            console.error("Error parsing features", e);
-            return [{ key: "", value: "" }];
         }
     };
 
@@ -129,11 +76,12 @@ const PackageForm: React.FC<PackageFormProps> = ({
         if (visible && packageData) {
             form.setFieldsValue({
                 ...packageData,
-                features: parseFeatures(packageData.features),
+                features: packageData.features,
             });
+            if (userType) form.setFieldValue("user_type", userType);
         } else if (visible) {
             form.setFieldsValue({
-                features: [{ key: "", value: "" }],
+                features: [],
             });
         }
     }, [visible, packageData, form]);
@@ -199,16 +147,28 @@ const PackageForm: React.FC<PackageFormProps> = ({
                         },
                     ]}
                 >
-                    <Select placeholder="اختر الدور">
-                        <Option value="owner">مالك</Option>
-                        <Option value="agent">وسيط</Option>
-                        <Option value="company">شركة</Option>
-                    </Select>
+                    <Radio.Group>
+                        <Radio.Button value="owner">مالك</Radio.Button>
+                        <Radio.Button value="agent">وسيط</Radio.Button>
+                        <Radio.Button value="company">شركة</Radio.Button>
+                    </Radio.Group>
                 </Form.Item>
 
                 <Form.Item
                     name="max_listings"
                     label="الحد الأقصى للعروض"
+                    rules={[
+                        {
+                            required: true,
+                            message: "يرجى إدخال الحد الأقصى للعروض",
+                        },
+                    ]}
+                >
+                    <InputNumber min={1} style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item
+                    name="max_adds"
+                    label="الحد الأقصى للعروض المميزة"
                     rules={[
                         {
                             required: true,
@@ -234,31 +194,16 @@ const PackageForm: React.FC<PackageFormProps> = ({
                                     >
                                         <Form.Item
                                             {...restField}
-                                            name={[name, "key"]}
+                                            name={name}
                                             rules={[
                                                 {
                                                     required: true,
-                                                    message: "مطلوب",
+                                                    message:
+                                                        "يرجى إدخال الميزة",
                                                 },
                                             ]}
                                         >
-                                            <Input
-                                                style={{
-                                                    background: "transparent",
-                                                }}
-                                                placeholder="اسم الميزة"
-                                            />
-                                        </Form.Item>
-                                        <Form.Item
-                                            {...restField}
-                                            name={[name, "value"]}
-                                        >
-                                            <Input
-                                                style={{
-                                                    background: "transparent",
-                                                }}
-                                                placeholder="وصف الميزة"
-                                            />
+                                            <Input placeholder="مثال: دعم العملاء على مدار الساعة" />
                                         </Form.Item>
                                         <Button
                                             type="text"

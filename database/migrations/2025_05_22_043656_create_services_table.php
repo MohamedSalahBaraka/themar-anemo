@@ -13,9 +13,13 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->constrained('service_categories')->onDelete('set null')->nullable();
             $table->string('name');
-            $table->decimal('price', 12, 2);
             $table->text('description')->nullable();
+            $table->json('tags')->nullable();
+            $table->decimal('price', 10, 2)->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

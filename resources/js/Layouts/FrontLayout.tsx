@@ -37,6 +37,7 @@ import { Scrollbars } from "@pezhmanparsaee/react-custom-scrollbars";
 import { ThemeProvider } from "styled-components";
 import { theme as themeVariables } from "../config/theme/themeVariables";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
+import { Service } from "@/types/Services";
 
 const { Header, Content, Footer } = Layout;
 
@@ -54,6 +55,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
     const { t, language, direction, antdLocale, setLanguage } = useLanguage();
     const user = usePage().props.auth.user;
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
+    const services = usePage().props.footerServices as Service[];
     const [darkMode, setDarkMode] = useState(() => {
         if (typeof window !== "undefined") {
             const savedMode = localStorage.getItem("darkMode");
@@ -411,6 +413,10 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         label: <a href="/pricing">الباقات</a>,
                                     },
                                     {
+                                        key: "services",
+                                        label: <a href="/services">الخدمات</a>,
+                                    },
+                                    {
                                         key: "about-us",
                                         label: <a href="/about-us">من نحن</a>,
                                     },
@@ -442,12 +448,10 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 {/* About Section */}
                                 <div>
                                     <h3 className="text-lg text-white font-semibold mb-4">
-                                        عن مسكن
+                                        عن {appConfigs["app.name"]}
                                     </h3>
                                     <p className="text-gray-500 dark:text-gray-400">
-                                        منصة مسكن توفر حلولاً متكاملة لجميع
-                                        احتياجاتك العقارية سواء للشراء أو
-                                        الإيجار.
+                                        {appConfigs["about.short"]}
                                     </p>
                                 </div>
 
@@ -459,7 +463,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                     <ul className="space-y-2">
                                         <li>
                                             <a
-                                                href="#"
+                                                href={route("Page", "help")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
                                                 المساعدة
@@ -467,7 +471,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         </li>
                                         <li>
                                             <a
-                                                href="#"
+                                                href={route("Page", "privacy")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
                                                 سياسة الخصوصية
@@ -475,7 +479,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         </li>
                                         <li>
                                             <a
-                                                href="#"
+                                                href={route("Page", "terms")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
                                                 شروط الاستخدام
@@ -483,7 +487,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         </li>
                                         <li>
                                             <a
-                                                href="#"
+                                                href={route("Faq")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
                                                 الأسئلة الشائعة
@@ -498,38 +502,19 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         الخدمات
                                     </h3>
                                     <ul className="space-y-2">
-                                        <li>
-                                            <a
-                                                href="#"
-                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
-                                            >
-                                                خدمات الشراء
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
-                                            >
-                                                خدمات الإيجار
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
-                                            >
-                                                خدمات التسويق
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                className="text-gray-500 dark:text-gray-400 hover:text-primary"
-                                            >
-                                                التقييم العقاري
-                                            </a>
-                                        </li>
+                                        {services.map((service) => (
+                                            <li key={service.id}>
+                                                <a
+                                                    href={route(
+                                                        "public.services.show",
+                                                        service.id
+                                                    )}
+                                                    className="text-gray-500 dark:text-gray-400 hover:text-primary"
+                                                >
+                                                    {service.name}
+                                                </a>
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
 
@@ -539,9 +524,15 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         اتصل بنا
                                     </h3>
                                     <div className="text-gray-500 dark:text-gray-400 space-y-2">
-                                        <p>الرياض، المملكة العربية السعودية</p>
-                                        <p>+966 12 345 6789</p>
-                                        <p>info@maskan.com</p>
+                                        <p>
+                                            {appConfigs["contact_info.address"]}
+                                        </p>
+                                        <p>
+                                            {appConfigs["contact_info.phone"]}
+                                        </p>
+                                        <p>
+                                            {appConfigs["contact_info.email"]}
+                                        </p>
                                     </div>
                                 </div>
                                 <div>
@@ -556,14 +547,22 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
 
                             <div className="flex flex-col md:flex-row justify-between items-center">
                                 <span className="text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
-                                    © {new Date().getFullYear()} مسكن. جميع
-                                    الحقوق محفوظة
+                                    © {new Date().getFullYear()}{" "}
+                                    {appConfigs["app.name"]}. جميع الحقوق محفوظة
                                 </span>
                                 <div className="flex gap-4">
-                                    <Button type="text" className="text-white">
+                                    <Button
+                                        href={route("Page", "privacy")}
+                                        type="text"
+                                        className="text-white"
+                                    >
                                         سياسة الخصوصية
                                     </Button>
-                                    <Button type="text" className="text-white">
+                                    <Button
+                                        href={route("Page", "terms")}
+                                        type="text"
+                                        className="text-white"
+                                    >
                                         شروط الخدمة
                                     </Button>
                                 </div>

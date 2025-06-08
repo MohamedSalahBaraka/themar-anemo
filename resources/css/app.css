@@ -2,3 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* resources/css/app.css */
+.draggable-row {
+    cursor: move;
+}
+
+.draggable-row:hover {
+    background-color: #fafafa;
+}
+
+.ant-table-tbody > tr.draggable-row.drop-over-downward > td {
+    border-bottom: 2px dashed #1890ff;
+}
+
+.ant-table-tbody > tr.draggable-row.drop-over-upward > td {
+    border-top: 2px dashed #1890ff;
+}

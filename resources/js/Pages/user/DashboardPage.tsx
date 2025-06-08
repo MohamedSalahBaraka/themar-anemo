@@ -158,7 +158,7 @@ const DashboardPage: React.FC = () => {
                     style={{ marginBottom: "24px" }}
                     extra={
                         <Space>
-                            {subscription?.status === "active" ? (
+                            {subscription?.status == "active" ? (
                                 <Countdown
                                     title="تنتهي خلال"
                                     value={subscription.expires_at}
@@ -193,7 +193,6 @@ const DashboardPage: React.FC = () => {
                                         </span>
                                     )}
                                 </Title>
-
                                 {subscription ? (
                                     <>
                                         <Text type="secondary">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\configs;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -205,6 +206,20 @@ class PropertyController extends Controller
     public function update(Request $request, Property $property)
     {
         // $this->authorize('update', $property);
+        $maxPhotosConfig = configs::where('key', 'property.max_photos')->first();
+        $maxPhotos = $maxPhotosConfig ? (int) $maxPhotosConfig->value : 10;
+
+        $existingCount = $property->images()->count();
+        $deletedCount = is_array($request->deleted_images) ? count($request->deleted_images) : 0;
+        $newUploads = is_array($request->images) ? count($request->images) : 0;
+
+        $finalCount = $existingCount - $deletedCount + $newUploads;
+
+        if ($finalCount > $maxPhotos) {
+            return redirect()->back()->withErrors([
+                'images' => "You can only upload a maximum of {$maxPhotos} photos."
+            ])->withInput();
+        }
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -220,11 +235,11 @@ class PropertyController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'deleted_images' => 'nullable|array', // Add this for deleted image IDs
-            'deleted_images.*' => 'integer|exists:property_images,id', // Validate the image IDs exist
+            'deleted_images' => 'nullable|array',
+            'deleted_images.*' => 'integer|exists:property_images,id',
+            'features' => 'nullable|array',
         ]);
 
-        // Update basic fields
         $property->update([
             'title' => $request->title,
             'description' => $request->description,
@@ -235,22 +250,20 @@ class PropertyController extends Controller
             'bathrooms' => $request->bathrooms,
             'area' => $request->area,
             'floor' => $request->floor,
+            'features' => $request->features,
             'address' => $request->address,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
         ]);
 
-        // Handle deleted images
         if ($request->has('deleted_images')) {
             $imagesToDelete = $property->images()->whereIn('id', $request->deleted_images)->get();
-
             foreach ($imagesToDelete as $image) {
                 Storage::disk('public')->delete($image->image_url);
                 $image->delete();
             }
         }
 
-        // Handle new images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('properties', 'public');
@@ -260,12 +273,13 @@ class PropertyController extends Controller
 
         return redirect()->back()->with('success', 'Property updated successfully.');
     }
+
     public function store(Request $request)
     {
         $user = User::findOrFail(Auth::id());
-        $subscription = $user->subscription();
+        $subscription = $user->subscription;
 
-        if (!$subscription || !$subscription->is_active) {
+        if (!$subscription || !$subscription->status === 'active') {
             return redirect()->back()->with('error', 'You need an active subscription to create a property listing.');
         }
         // dd($request->images);
@@ -280,10 +294,21 @@ class PropertyController extends Controller
             'area' => 'nullable|numeric|min:0',
             'floor' => 'nullable|integer|min:0',
             'address' => 'required|string|max:255',
+            'features' => 'nullable|array',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5000',
         ]);
+
+        $maxPhotosConfig = configs::where('key', 'property.max_photos')->first();
+        $maxPhotos = $maxPhotosConfig ? (int) $maxPhotosConfig->value : 10;
+        $imageCount = is_array($request->images) ? count($request->images) : 0;
+
+        if ($imageCount > $maxPhotos) {
+            return redirect()->back()->withErrors([
+                'images' => "You can only upload a maximum of {$maxPhotos} photos."
+            ])->withInput();
+        }
 
         if ($user->properties()->count() >= $subscription->package->max_listings) {
             return redirect()->back()->with('error', 'You have reached your maximum listing limit for your current subscription.');
@@ -301,6 +326,7 @@ class PropertyController extends Controller
             'area' => $request->area,
             'floor' => $request->floor,
             'address' => $request->address,
+            'features' => $request->features,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
         ]);

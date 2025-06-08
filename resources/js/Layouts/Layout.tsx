@@ -119,7 +119,11 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
         {
             key: "services",
             icon: <ShoppingCartOutlined />, // More relevant for purchasing services
-            label: <Link href="/user/services">شراء الخدمات</Link>,
+            label: (
+                <Link href={route("user.user-services.index")}>
+                    طلبات الخدمات
+                </Link>
+            ),
         },
         {
             key: "subscription",

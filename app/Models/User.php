@@ -32,6 +32,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Subscription::class);
     }
+    public function createdServices(): HasMany
+    {
+        return $this->hasMany(Service::class, 'created_by');
+    }
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
@@ -39,6 +43,10 @@ class User extends Authenticatable
     public function inquiries(): HasMany
     {
         return $this->hasMany(Inquiry::class);
+    }
+    public function userServices(): HasMany
+    {
+        return $this->hasMany(UserService::class);
     }
     public function reservations(): HasMany
     {

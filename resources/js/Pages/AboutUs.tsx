@@ -49,6 +49,7 @@ import { FaBath, FaBed } from "react-icons/fa";
 import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
 import PackageCard, { Package } from "@/Components/PackageCard";
+import { TeamMember } from "@/types/teamMember";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -57,6 +58,9 @@ const { Panel } = Collapse;
 
 interface PropertyDetailsPageProps extends PageProps {
     packages: Package[];
+    aboutValues: { id: number; icon: string; details: string; title: string }[];
+    teamMembers: TeamMember[];
+    statictis: { cities: number; all: number; active: number };
 }
 const AboutUs: React.FC = () => (
     <FrontLayout>
@@ -65,16 +69,9 @@ const AboutUs: React.FC = () => (
 );
 const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
-    const { packages, filters, meta } = props;
-    const [filter, setFilter] = React.useState<PropertyFilter>(
-        props.filters || {}
-    );
-    const teamMembers = [
-        { name: "نوع الأعداد", position: "مديرة دعم الصناع" },
-        { name: "أحد العلي", position: "مدير تغيير المنتهيات" },
-        { name: "سارة المؤسس", position: "مديرة السوق" },
-        { name: "محمد الأحمد", position: "المؤسس والرئيس التنفيذي" },
-    ];
+    const appConfigs = usePage().props.appConfigs as Record<string, any>;
+    const { teamMembers, aboutValues, meta, auth, statictis } = props;
+
     return (
         <section>
             <div style={{ position: "relative", overflow: "hidden" }}>
@@ -112,9 +109,7 @@ const Page: React.FC = () => {
                                 color: "#eee",
                             }}
                         >
-                            منحة متخصصة في نشر وبيع وكراء العقارات، تجمع بين
-                            البساطة والحترافية، وتربط بين المعانيين والمشترين
-                            بكل شفافية.
+                            {appConfigs["about.short"]}
                         </Paragraph>
                     </Card>
                 </div>
@@ -129,40 +124,8 @@ const Page: React.FC = () => {
                             نبذة عن منصتنا
                         </Title>
 
-                        <Paragraph>
-                            يوجد إحداث الفاءل نوعية في مجال التسويق المطبوع
-                            الرقمي في العظم العربي لمن يتعين بأن تجربة البحث عن
-                            العظم المناسب يجب أن تختبر سواء ومصلحة، وأن عملية
-                            يوم أو تأثير الطفل يجب أن يتم بسرعة ومخالية.
-                        </Paragraph>
-
-                        <Paragraph>
-                            من خلال ملمتنا المخفيف للهم طبقا موضوعات جميع الظروف
-                            في السوق المطبوعي، كما من الأفراد الذين ينتجون من
-                            خلال أخصائص وحفظ إلى القضوس المطبوعي مطبوعات
-                            الخارجي.
-                        </Paragraph>
-
-                        <Paragraph>
-                            في قلب عطلًا لكم الشفائية والصدقائية خوفاً. أساسية،
-                            يفضل على توفير معلومات متابعة، وواضح أهمية تصميمات
-                            استخدامها على اتخاذ فورات مديرية بشأن استثماراتهم
-                            المقارنة.
-                        </Paragraph>
+                        <Paragraph>{appConfigs["about.detailed"]}</Paragraph>
                     </Typography>
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            margin: 20,
-                        }}
-                    >
-                        <Image
-                            src="/about-us.png"
-                            preview={false}
-                            style={{ margin: "auto" }}
-                        />
-                    </div>
                 </Card>
             </div>
             <div
@@ -237,11 +200,7 @@ const Page: React.FC = () => {
                                 textAlign: "right",
                             }}
                         >
-                            تقديم خدمة موثوقة وسوفا لعرض العقارات والوصول إلى
-                            آخر عدد من الموثقين داخل السوق، نسعى بتربية متكاملة
-                            تحقق المعنيين من عرض عقاراتهم بأفضل صورة ممكنة.
-                            وتساعد العشائرين والمستأردين على العقار المناسب
-                            بسهولة وسرعة.
+                            {appConfigs["about.vision"]}
                         </Paragraph>
                     </Card>
 
@@ -289,11 +248,7 @@ const Page: React.FC = () => {
                                 textAlign: "right",
                             }}
                         >
-                            أن تكون الخيار الأول للتجارة والشركات في مجال
-                            التسويق العقاري الرقمي في العالم العربي، تطمح بناء
-                            أكبر مجتمع عقاري رقمي يجمع بين البنكار والثقة، ونسعى
-                            إحداث تغيرياتها في كيفية تعامل الناس مع عمليات بيع
-                            وشراء رواجر العقارات.
+                            {appConfigs["about.mission"]}
                         </Paragraph>
                     </Card>
                 </div>
@@ -320,7 +275,9 @@ const Page: React.FC = () => {
                                 color: "white",
                             }}
                         >
-                            <Title style={{ color: "white" }}>50.000+</Title>
+                            <Title style={{ color: "white" }}>
+                                {statictis.all}+
+                            </Title>
 
                             <Text style={{ color: "#ccc" }}>اعلان عقاري</Text>
                         </Col>
@@ -332,7 +289,9 @@ const Page: React.FC = () => {
                                 color: "white",
                             }}
                         >
-                            <Title style={{ color: "white" }}>50.000+</Title>
+                            <Title style={{ color: "white" }}>
+                                {statictis.active}
+                            </Title>
 
                             <Text style={{ color: "#ccc" }}>عمل نشط</Text>
                         </Col>
@@ -344,7 +303,9 @@ const Page: React.FC = () => {
                                 color: "white",
                             }}
                         >
-                            <Title style={{ color: "white" }}>50+</Title>
+                            <Title style={{ color: "white" }}>
+                                {statictis.cities}+
+                            </Title>
 
                             <Text style={{ color: "#ccc" }}>مدينة</Text>
                         </Col>
@@ -356,7 +317,9 @@ const Page: React.FC = () => {
                                 color: "white",
                             }}
                         >
-                            <Title style={{ color: "white" }}>5+</Title>
+                            <Title style={{ color: "white" }}>
+                                {appConfigs["about.statictis_experiance"]}
+                            </Title>
 
                             <Text style={{ color: "#ccc" }}>سنوات خبرة</Text>
                         </Col>
@@ -366,204 +329,39 @@ const Page: React.FC = () => {
             <div style={{ padding: "24px" }}>
                 <Card>
                     <Paragraph>
-                        <Text strong>
-                            تشغل هذه القيم جوهر للفائلا الحاسوبية وترجى كل
-                            مزاولنا وتحاسباتنا
-                        </Text>
+                        <Text strong>{appConfigs["about.values_intro"]}</Text>
                     </Paragraph>
 
                     <Divider />
                     <Row style={{ gap: 10, justifyContent: "space-around" }}>
-                        <Col
-                            sm={11}
-                            style={{
-                                textAlign: "center",
-                                borderColor: "#7091D2",
-                                borderLeftWidth: 3,
-                                borderRightWidth: 3,
-                                borderRadius: 10,
-                            }}
-                        >
-                            <div
-                                style={{ margin: "auto", width: "fit-content" }}
+                        {aboutValues.map((value) => (
+                            <Col
+                                key={value.id}
+                                sm={11}
+                                style={{
+                                    textAlign: "center",
+                                    borderColor: "#7091D2",
+                                    borderLeftWidth: 3,
+                                    borderRightWidth: 3,
+                                    borderRadius: 10,
+                                }}
                             >
-                                <svg
-                                    width="24"
-                                    height="25"
-                                    viewBox="0 0 24 25"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
+                                <div
+                                    style={{
+                                        margin: "auto",
+                                        width: "fit-content",
+                                    }}
                                 >
-                                    <path
-                                        d="M11.9997 22.5083C17.5203 22.5083 21.9956 18.033 21.9956 12.5124C21.9956 6.99189 17.5203 2.5166 11.9997 2.5166C6.47919 2.5166 2.00391 6.99189 2.00391 12.5124C2.00391 18.033 6.47919 22.5083 11.9997 22.5083Z"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
+                                    <img
+                                        width={100}
+                                        height={100}
+                                        src={`${window.location.origin}/storage/${value.icon}`}
                                     />
-                                    <path
-                                        d="M11.9995 18.51C15.3118 18.51 17.997 15.8248 17.997 12.5125C17.997 9.20019 15.3118 6.51501 11.9995 6.51501C8.68713 6.51501 6.00195 9.20019 6.00195 12.5125C6.00195 15.8248 8.68713 18.51 11.9995 18.51Z"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M12.0004 14.5122C13.1047 14.5122 13.9998 13.617 13.9998 12.5127C13.9998 11.4085 13.1047 10.5133 12.0004 10.5133C10.8961 10.5133 10.001 11.4085 10.001 12.5127C10.001 13.617 10.8961 14.5122 12.0004 14.5122Z"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </div>
-                            <Title level={3}>الابتكار</Title>
-                            <Paragraph>
-                                نسعى دائمًا لظهور طولنا وتقديم أهكار إبداعية لكي
-                                احتياجات السوق.
-                            </Paragraph>
-                        </Col>
-                        <Col
-                            sm={11}
-                            style={{
-                                textAlign: "center",
-                                borderColor: "#7091D2",
-                                borderLeftWidth: 3,
-                                borderRightWidth: 3,
-                                borderRadius: 10,
-                            }}
-                        >
-                            <div
-                                style={{ margin: "auto", width: "fit-content" }}
-                            >
-                                <svg
-                                    width="24"
-                                    height="25"
-                                    viewBox="0 0 24 25"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M15.4752 13.4021L16.9895 21.9245C17.0065 22.0249 16.9924 22.128 16.9492 22.2202C16.9059 22.3123 16.8356 22.389 16.7476 22.4401C16.6595 22.4912 16.558 22.5142 16.4566 22.506C16.3551 22.4978 16.2586 22.4589 16.1799 22.3944L12.6014 19.7085C12.4286 19.5794 12.2188 19.5097 12.0031 19.5097C11.7875 19.5097 11.5776 19.5794 11.4049 19.7085L7.82036 22.3934C7.74172 22.4578 7.6453 22.4967 7.54397 22.5048C7.44265 22.513 7.34124 22.4901 7.25326 22.4392C7.16529 22.3883 7.09494 22.3117 7.0516 22.2198C7.00826 22.1278 6.994 22.0248 7.0107 21.9245L8.52407 13.4021"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M11.9995 14.5116C15.3118 14.5116 17.997 11.8264 17.997 8.5141C17.997 5.20177 15.3118 2.5166 11.9995 2.5166C8.68713 2.5166 6.00195 5.20177 6.00195 8.5141C6.00195 11.8264 8.68713 14.5116 11.9995 14.5116Z"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </div>
-                            <Title level={3}>الاحترافية</Title>
-                            <Paragraph>
-                                لتأثري أعلى معايير الدورة والدقة في كل ما نقدمه
-                                من خدمات وحلول.
-                            </Paragraph>
-                        </Col>
-
-                        <Col
-                            sm={11}
-                            style={{
-                                textAlign: "center",
-                                borderColor: "#7091D2",
-                                borderLeftWidth: 3,
-                                borderRightWidth: 3,
-                                borderRadius: 10,
-                            }}
-                        >
-                            <div
-                                style={{ margin: "auto", width: "fit-content" }}
-                            >
-                                <svg
-                                    width="24"
-                                    height="25"
-                                    viewBox="0 0 24 25"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M21.9956 11.5928V12.5124C21.9943 14.6679 21.2964 16.7653 20.0057 18.4918C18.7151 20.2182 16.901 21.4812 14.8339 22.0923C12.7669 22.7035 10.5576 22.6301 8.53565 21.8831C6.51371 21.1361 4.7874 19.7555 3.6142 17.9472C2.44099 16.1389 1.88375 13.9999 2.02557 11.849C2.1674 9.69816 3.0007 7.65077 4.40119 6.0122C5.80168 4.37363 7.69432 3.23167 9.79685 2.75663C11.8994 2.28159 14.0991 2.49893 16.0681 3.37623"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M9.00098 11.5128L11.9997 14.5116L21.9956 4.51575"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </div>
-                            <Title level={3}>الشفافية</Title>
-                            <Paragraph>
-                                نوعي أهمية الوضوح والحدق في تعاملنا مع الصناع
-                                والمتركاء.
-                            </Paragraph>
-                        </Col>
-                        <Col
-                            sm={11}
-                            style={{
-                                textAlign: "center",
-                                borderColor: "#7091D2",
-                                borderLeftWidth: 3,
-                                borderRightWidth: 3,
-                                borderRadius: 10,
-                            }}
-                        >
-                            <div
-                                style={{ margin: "auto", width: "fit-content" }}
-                            >
-                                <svg
-                                    width="24"
-                                    height="25"
-                                    viewBox="0 0 24 25"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M15.9981 21.2862V19.287C15.9981 18.2266 15.5768 17.2096 14.827 16.4598C14.0772 15.7099 13.0602 15.2887 11.9997 15.2887H6.00224C4.94182 15.2887 3.92482 15.7099 3.17499 16.4598C2.42516 17.2096 2.00391 18.2266 2.00391 19.287V21.2862"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M9.00126 11.2904C11.2095 11.2904 12.9996 9.50025 12.9996 7.29203C12.9996 5.08382 11.2095 3.2937 9.00126 3.2937C6.79304 3.2937 5.00293 5.08382 5.00293 7.29203C5.00293 9.50025 6.79304 11.2904 9.00126 11.2904Z"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M21.9962 21.2869V19.2875C21.9955 18.4014 21.7006 17.5407 21.1578 16.8405C20.615 16.1402 19.855 15.6401 18.9971 15.4186"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                    <path
-                                        d="M15.998 3.42358C16.8581 3.64379 17.6204 4.14398 18.1648 4.8453C18.7092 5.54662 19.0046 6.40917 19.0046 7.29697C19.0046 8.18477 18.7092 9.04732 18.1648 9.74864C17.6204 10.45 16.8581 10.9501 15.998 11.1704"
-                                        stroke="#5275B9"
-                                        stroke-width="1.99943"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </div>
-                            <Title level={3}>رضا العملاء</Title>
-                            <Paragraph>
-                                نتجها رضا الصناع في مقصة أولوائنا ونحمل على
-                                تحقيق توقعاتهم وتجاوزها.
-                            </Paragraph>
-                        </Col>
+                                </div>
+                                <Title level={3}>{value.title}</Title>
+                                <Paragraph>{value.details}</Paragraph>
+                            </Col>
+                        ))}
                     </Row>
                 </Card>
             </div>
@@ -571,8 +369,7 @@ const Page: React.FC = () => {
                 <Card style={{ textAlign: "center" }}>
                     <Title level={3}>فريق العمل</Title>
                     <Paragraph>
-                        لهذا يشراكنا الطمير الذي ينتج بين النهج فإنناك يؤكل عفت
-                        يساهم بميزاته الفريدة في تحقيق بفئنا الصناع.
+                        {appConfigs["about.team_catchy_phrase"]}
                     </Paragraph>
                     <Row gutter={[16, 16]}>
                         {teamMembers.map((member, index) => (
@@ -581,7 +378,7 @@ const Page: React.FC = () => {
                                     <Row>
                                         <Col>
                                             <Avatar
-                                                src={`${window.location.origin}/`}
+                                                src={`${window.location.origin}/storage/${member.photo}`}
                                                 icon={<UserOutlined />}
                                                 style={{
                                                     backgroundColor: "#777",
@@ -592,8 +389,12 @@ const Page: React.FC = () => {
                                             <Text strong>{member.name}</Text>
                                             <br />
                                             <Text type="secondary">
-                                                {member.position}
+                                                {member.title}
                                             </Text>
+                                            <br />
+                                            <Paragraph type="secondary">
+                                                {member.bio}
+                                            </Paragraph>
                                         </Col>
                                     </Row>
                                 </Card>
@@ -602,67 +403,68 @@ const Page: React.FC = () => {
                     </Row>
                 </Card>
             </div>
-            <div
-                style={{
-                    background: "linear-gradient(135deg, #7091D2, #5275B9)",
-                    padding: "40px 20px",
-                    textAlign: "center",
-                }}
-            >
+            {!auth.user && (
                 <div
                     style={{
-                        maxWidth: "1200px",
-                        margin: "0 auto",
+                        background: "linear-gradient(135deg, #7091D2, #5275B9)",
+                        padding: "40px 20px",
+                        textAlign: "center",
                     }}
                 >
-                    <Title
-                        level={2}
-                        style={{ color: "white", marginBottom: "24px" }}
-                    >
-                        نبدأ اليوم ونضم إلى آلاف الوكالات والشركات العقارية
-                    </Title>
-
-                    <Paragraph
+                    <div
                         style={{
-                            fontSize: "18px",
-                            color: "#eee",
-                            marginBottom: "32px",
+                            maxWidth: "1200px",
+                            margin: "0 auto",
                         }}
                     >
-                        سواء كنت مالكاً فرداً أو وكيلاً عقارياً أو شركة لدينا
-                        الباقة المثالية لاحتياجاتك
-                    </Paragraph>
+                        <Title
+                            level={2}
+                            style={{ color: "white", marginBottom: "24px" }}
+                        >
+                            {appConfigs["cta.catchy_phrase_primary"]}
+                        </Title>
 
-                    <div>
-                        <Button
-                            type="primary"
-                            size="large"
+                        <Paragraph
                             style={{
-                                margin: "0 8px",
-                                padding: "0 32px",
-                                height: "48px",
-                                fontSize: "16px",
+                                fontSize: "18px",
+                                color: "#eee",
+                                marginBottom: "32px",
                             }}
                         >
-                            تجربة مجانية
-                        </Button>
-                        <Button
-                            size="large"
-                            style={{
-                                margin: "0 8px",
-                                padding: "0 32px",
-                                height: "48px",
-                                fontSize: "16px",
-                                backgroundColor: "#4AB861",
-                                borderColor: "#26913C",
-                                color: "white",
-                            }}
-                        >
-                            احجز باقة الآن
-                        </Button>
+                            {appConfigs["cta.catchy_phrase_secondary"]}
+                        </Paragraph>
+
+                        <div>
+                            <Button
+                                type="primary"
+                                size="large"
+                                style={{
+                                    margin: "0 8px",
+                                    padding: "0 32px",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                }}
+                            >
+                                تجربة مجانية
+                            </Button>
+                            <Button
+                                size="large"
+                                style={{
+                                    margin: "0 8px",
+                                    padding: "0 32px",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                    backgroundColor: "#4AB861",
+                                    borderColor: "#26913C",
+                                    color: "white",
+                                }}
+                            >
+                                احجز باقة الآن
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </section>
     );
 };

@@ -295,14 +295,6 @@ const Page: React.FC = () => {
         return <Tag color={typeMap[key]?.color}>{typeMap[key]?.text}</Tag>;
     };
 
-    const features = [
-        "إطلالة على المدينة",
-        "قريب من الخدمات",
-        "نظام أمان",
-        "موقف سيارات خاص",
-        "تكييف مركزي",
-        "مطبخ مجهز",
-    ];
     const handleFacebookShare = () => {
         const url = encodeURIComponent(window.location.href); // or your property URL
         window.open(
@@ -486,15 +478,7 @@ const Page: React.FC = () => {
                         {/* Property Description */}
                         <Col span={24}>
                             <Title level={4}>الوصف التفصيلي</Title>
-                            <Paragraph>
-                                شقة مفروشة بالكامل، تقع في منطقة رافية بعمان.
-                                تتميز بإطلالة رائعة على المدينة، وقريبة من جميع
-                                الخدمات الأساسية. الشقة حديثة البناء ومفروشة
-                                بالكامل، وتحتوي على مطبخ مجهز، وغرفة معيشة
-                                واسعة، وغرفة نوم رئيسية، وتكييف مركزي، وموقف
-                                سيارات خاص. المبنى مزود بنظام أمان متطور ومصعد
-                                خاص.
-                            </Paragraph>
+                            <Paragraph>{property.description}</Paragraph>
 
                             <Divider />
 
@@ -511,7 +495,7 @@ const Page: React.FC = () => {
 
                             <Title level={4}>مميزات العقار</Title>
                             <Space wrap size="large">
-                                {features.map((item, index) => (
+                                {property.features?.map((item, index) => (
                                     <Space key={index} align="start">
                                         <DotChartOutlined
                                             style={{ color: "#52c41a" }}

@@ -15,6 +15,8 @@ import {
     SettingOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
+    QuestionCircleOutlined,
+    EnvironmentOutlined,
 } from "@ant-design/icons";
 import { Link, usePage } from "@inertiajs/react";
 // @ts-ignore
@@ -114,9 +116,45 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
             ),
         },
         {
-            key: "services",
+            key: "user_management",
             icon: <UserOutlined />,
             label: <Link href="/admin/users">{t("user_management")}</Link>,
+        },
+        {
+            key: "servicesCategory",
+            icon: <UserOutlined />,
+            label: (
+                <Link href="/admin/service-categories">
+                    {t("servicesCategory")}
+                </Link>
+            ),
+        },
+        {
+            key: "services",
+            icon: <UserOutlined />,
+            label: <Link href="/admin/services">{t("services")}</Link>,
+        },
+        {
+            key: "Service Orders",
+            icon: <UserOutlined />,
+            label: (
+                <Link href="/admin/user-services">{t("Service Orders")}</Link>
+            ),
+        },
+        {
+            key: "team-members",
+            icon: <TeamOutlined />,
+            label: <Link href="/admin/team-members">{t("team_members")}</Link>,
+        },
+        {
+            key: "cities",
+            icon: <EnvironmentOutlined />,
+            label: <Link href="/admin/cities">{t("cities")}</Link>,
+        },
+        {
+            key: "faqs",
+            icon: <QuestionCircleOutlined />,
+            label: <Link href="/admin/faqs">{t("faqs")}</Link>,
         },
         {
             key: "SettingsPage",

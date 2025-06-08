@@ -7,49 +7,33 @@ import {
     Card,
     Typography,
     Divider,
-    Radio,
     Row,
     Col,
     Space,
-    List,
-    Avatar,
-    Tag,
     Alert,
-    Tabs,
-    Badge,
 } from "antd";
 import {
     UserOutlined,
     MailOutlined,
     LockOutlined,
     PhoneOutlined,
-    HomeOutlined,
-    ShopOutlined,
-    TeamOutlined,
     InfoCircleOutlined,
-    CheckOutlined,
 } from "@ant-design/icons";
 import { PageProps } from "@/types";
 import Checkbox from "@/Components/Checkbox";
 import PackageCard, { Package } from "@/Components/PackageCard";
+import FrontLayout from "@/Layouts/FrontLayout";
 
 const { Title, Text } = Typography;
 const { Item } = Form;
-const { TabPane } = Tabs;
 
 interface PageData extends PageProps {
     packages: Package[];
-}
-
-interface PackageCardProps {
-    pkg: Package;
-    selected: boolean;
-    onSelect: (id: number, frequency: "monthly" | "yearly") => void;
-    selectedFrequency: "monthly" | "yearly";
+    preselectedPackageId?: number; // Add this to your page props
 }
 
 const Register: React.FC = () => {
-    const { packages } = usePage<PageData>().props;
+    const { packages, preselectedPackageId } = usePage<PageData>().props;
     const [selectedFrequency, setSelectedFrequency] = React.useState<
         "monthly" | "yearly"
     >("monthly");
@@ -60,7 +44,6 @@ const Register: React.FC = () => {
         password: string;
         password_confirmation: string;
         phone: string;
-        role: string;
         package_id: number | null;
         billing_frequency: "monthly" | "yearly";
         terms: boolean;
@@ -70,11 +53,17 @@ const Register: React.FC = () => {
         password: "",
         password_confirmation: "",
         phone: "",
-        role: "buyer",
-        package_id: null,
+        package_id: parseInt(`${preselectedPackageId}`) || null, // Set preselected package if available
         billing_frequency: "monthly",
         terms: false,
     });
+
+    // Auto-advance to registration if package is preselected
+    React.useEffect(() => {
+        if (preselectedPackageId && packages.length > 0) {
+            setStep(2);
+        }
+    }, [preselectedPackageId, packages]);
 
     const [step, setStep] = React.useState<number>(1);
 
@@ -83,18 +72,13 @@ const Register: React.FC = () => {
             onSuccess: () => {
                 // Handle successful registration
             },
-            onError: () => {
+            onError: (e) => {
+                console.log(e);
+
                 // Errors are automatically handled by Inertia
             },
         });
     };
-
-    const filteredPackages = packages.filter((pkg) => {
-        if (data.role === "owner") return pkg.user_type === "owner";
-        if (data.role === "agent") return pkg.user_type === "agent";
-        if (data.role === "company") return pkg.user_type === "company";
-        return false;
-    });
 
     const handlePackageSelect = (
         id: number,
@@ -108,165 +92,98 @@ const Register: React.FC = () => {
         setSelectedFrequency(frequency);
     };
 
-    const renderRoleSelection = () => (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-            <Title level={4} style={{ textAlign: "center" }}>
-                اختر دورك
-            </Title>
+    const renderPackageSelection = () => {
+        // Find the preselected package if it exists
+        const preselectedPackage = preselectedPackageId
+            ? packages.find((pkg) => pkg.id === preselectedPackageId)
+            : null;
 
-            <Radio.Group
-                onChange={(e) => setData("role", e.target.value)}
-                value={data.role}
+        return (
+            <Space
+                direction="vertical"
+                size="large"
+                align="center"
                 style={{ width: "100%" }}
             >
-                <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={12}>
-                        <Radio.Button
-                            value="buyer"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                padding: "16px",
-                            }}
-                        >
-                            <Space direction="vertical" align="center">
-                                <UserOutlined style={{ fontSize: "24px" }} />
-                                <Text strong>مشتري</Text>
-                                <Text type="secondary">
-                                    تبحث عن عقار للشراء أو الإيجار
-                                </Text>
-                            </Space>
-                        </Radio.Button>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                        <Radio.Button
-                            value="owner"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                padding: "16px",
-                            }}
-                        >
-                            <Space direction="vertical" align="center">
-                                <HomeOutlined style={{ fontSize: "24px" }} />
-                                <Text strong>مالك</Text>
-                                <Text type="secondary">
-                                    لدي عقارات أرغب في عرضها
-                                </Text>
-                            </Space>
-                        </Radio.Button>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                        <Radio.Button
-                            value="agent"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                padding: "16px",
-                            }}
-                        >
-                            <Space direction="vertical" align="center">
-                                <TeamOutlined style={{ fontSize: "24px" }} />
-                                <Text strong>وسيط عقاري</Text>
-                                <Text type="secondary">
-                                    محترف في مجال العقارات
-                                </Text>
-                            </Space>
-                        </Radio.Button>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                        <Radio.Button
-                            value="company"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                padding: "16px",
-                            }}
-                        >
-                            <Space direction="vertical" align="center">
-                                <ShopOutlined style={{ fontSize: "24px" }} />
-                                <Text strong>شركة</Text>
-                                <Text type="secondary">شركة عقارية</Text>
-                            </Space>
-                        </Radio.Button>
-                    </Col>
-                </Row>
-            </Radio.Group>
+                <Title level={4} style={{ textAlign: "center" }}>
+                    اختر باقة
+                </Title>
 
-            <Button
-                type="primary"
-                block
-                onClick={() => setStep(2)}
-                disabled={!data.role}
-            >
-                متابعة
-            </Button>
-        </Space>
-    );
+                {preselectedPackage && (
+                    <Alert
+                        message="الباقة المحددة مسبقاً"
+                        description={`لقد تم تحديد باقة "${preselectedPackage.name}" لك مسبقاً. يمكنك اختيار باقة مختلفة إذا أردت.`}
+                        type="info"
+                        showIcon
+                        style={{ marginBottom: 16 }}
+                    />
+                )}
 
-    const renderPackageSelection = () => (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-            <Title level={4} style={{ textAlign: "center" }}>
-                اختر باقة
-            </Title>
+                {packages.length > 0 ? (
+                    <Row gutter={[16, 16]}>
+                        {packages.map((pkg) => (
+                            <PackageCard
+                                key={pkg.id}
+                                pkg={{
+                                    ...pkg,
+                                    features: Object.values(pkg.features),
+                                }}
+                                selected={data.package_id === pkg.id}
+                                onSelect={handlePackageSelect}
+                                selectedFrequency={selectedFrequency}
+                            />
+                        ))}
+                    </Row>
+                ) : (
+                    <Alert
+                        message="لا توجد باقات متاحة حالياً"
+                        description="يرجى الاتصال بالدعم لمعرفة المزيد عن الباقات المتاحة."
+                        type="warning"
+                        showIcon
+                    />
+                )}
 
-            {data.role === "buyer" ? (
-                <Alert
-                    message="لا تحتاج المشترين إلى باقة"
-                    description="يمكنك تخطي هذه الخطوة حيث أن الباقات مطلوبة فقط لعرض العقارات."
-                    type="info"
-                    showIcon
-                    icon={<InfoCircleOutlined />}
-                    style={{ marginBottom: 24 }}
-                />
-            ) : filteredPackages.length > 0 ? (
-                <Row>
-                    {filteredPackages.map((pkg) => (
-                        <PackageCard
-                            key={pkg.id}
-                            pkg={{
-                                ...pkg,
-                                features: Object.values(pkg.features),
-                            }}
-                            selected={data.package_id === pkg.id}
-                            onSelect={handlePackageSelect}
-                            selectedFrequency={selectedFrequency}
-                        />
-                    ))}
-                </Row>
-            ) : (
-                <Alert
-                    message="لا توجد باقات متاحة لدورك"
-                    description="يرجى الاتصال بالدعم حيث لا توجد باقات متاحة حالياً لدورك."
-                    type="warning"
-                    showIcon
-                />
-            )}
-
-            <Button
-                type="default"
-                block
-                onClick={() => setStep(1)}
-                style={{ marginBottom: 16 }}
-            >
-                رجوع
-            </Button>
-            <Button
-                type="primary"
-                block
-                onClick={() => setStep(3)}
-                disabled={!data.package_id && data.role !== "buyer"}
-            >
-                متابعة
-            </Button>
-        </Space>
-    );
+                <Button
+                    type="primary"
+                    block
+                    onClick={() => setStep(2)}
+                    disabled={!data.package_id && packages.length > 0}
+                >
+                    {preselectedPackageId ? "تأكيد الباقة والمتابعة" : "متابعة"}
+                </Button>
+                <Button
+                    // type="primary"
+                    block
+                    onClick={() => setStep(2)}
+                    // disabled={!data.package_id && packages.length > 0}
+                >
+                    تخطي
+                </Button>
+            </Space>
+        );
+    };
 
     const renderRegistrationForm = () => (
         <Form layout="vertical">
             <Title level={4} style={{ textAlign: "center", marginBottom: 24 }}>
                 إنشاء حسابك
             </Title>
+
+            {/* Show selected package info if available */}
+            {data.package_id && (
+                <div style={{ marginBottom: 24, textAlign: "center" }}>
+                    <Text strong>الباقة المختارة: </Text>
+                    {packages.find((p) => p.id === data.package_id)?.name}
+                    <Button
+                        type="link"
+                        onClick={() => setStep(1)}
+                        style={{ padding: "0 4px" }}
+                    >
+                        (تغيير)
+                    </Button>
+                </div>
+            )}
+
             <Item
                 label="الاسم الكامل"
                 validateStatus={errors.name ? "error" : ""}
@@ -345,25 +262,28 @@ const Register: React.FC = () => {
                 />
                 أوافق على <a href="#">الشروط والأحكام</a>
             </Item>
-            <Item>
+
+            {packages.length > 0 && (
                 <Button
                     type="default"
                     block
-                    onClick={() => setStep(2)}
+                    onClick={() => setStep(1)}
                     style={{ marginBottom: 16 }}
                     disabled={processing}
                 >
-                    رجوع
+                    رجوع لاختيار الباقة
                 </Button>
-                <Button
-                    type="primary"
-                    onClick={onFinish}
-                    loading={processing}
-                    block
-                >
-                    إتمام التسجيل
-                </Button>
-            </Item>
+            )}
+
+            <Button
+                type="primary"
+                onClick={onFinish}
+                loading={processing}
+                block
+            >
+                إتمام التسجيل
+            </Button>
+
             <Divider>أو</Divider>
             <div style={{ textAlign: "center" }}>
                 <Text>لديك حساب بالفعل؟ </Text>
@@ -377,15 +297,19 @@ const Register: React.FC = () => {
     );
 
     return (
-        <Row justify="center" align="middle" style={{ minHeight: "100vh" }}>
-            <Col xs={24} sm={22} md={20} lg={18} xl={16}>
-                <Card>
-                    {step === 1 && renderRoleSelection()}
-                    {step === 2 && renderPackageSelection()}
-                    {step === 3 && renderRegistrationForm()}
-                </Card>
-            </Col>
-        </Row>
+        <FrontLayout>
+            <Row justify="center" align="middle" style={{ minHeight: "100vh" }}>
+                <Col xs={24} sm={22} md={20} lg={18} xl={16}>
+                    <Card>
+                        {step === 1 &&
+                            packages.length > 0 &&
+                            renderPackageSelection()}
+                        {step === 2 && renderRegistrationForm()}
+                        {packages.length === 0 && renderRegistrationForm()}
+                    </Card>
+                </Col>
+            </Row>
+        </FrontLayout>
     );
 };
 

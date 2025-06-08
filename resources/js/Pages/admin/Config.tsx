@@ -11,16 +11,17 @@ import {
     Button,
     Divider,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { PageProps } from "@/types";
 import { theme } from "@/config/theme/themeVariables";
 import { useLanguage } from "@/contexts/LanguageContext";
+import TiptapEditor from "@/Components/TiptapEditor";
 
 interface ConfigItem {
     key: string;
     value: string;
-    type: "boolean" | "text" | "link" | "enum" | "number";
+    type: "boolean" | "text" | "link" | "enum" | "number" | "textarea";
     options?: string[];
     description?: string;
     group: string;
@@ -28,6 +29,7 @@ interface ConfigItem {
 
 interface Props extends PageProps {
     configs: ConfigItem[];
+    aboutValues: { id: number; icon: string; details: string; title: string }[];
 }
 const ConfigIndex: React.FC = () => (
     <AdminLayout>
@@ -37,6 +39,59 @@ const ConfigIndex: React.FC = () => (
 const Page = () => {
     const { props } = usePage<Props>();
     const { configs } = props;
+    const [aboutValues, setAboutValues] = useState(props.aboutValues || []);
+    const updateValue = (
+        index: number,
+        field: "icon" | "title" | "details",
+        value: string
+    ) => {
+        const updated = [...aboutValues];
+        updated[index][field] = value;
+        setAboutValues(updated);
+    };
+
+    const handleAddNewValue = () => {
+        setAboutValues([
+            ...aboutValues,
+            { icon: "", title: "", details: "", id: 0 },
+        ]);
+    };
+    const handleAboutValuesSubmit = async () => {
+        try {
+            const csrf = (
+                document.querySelector(
+                    'meta[name="csrf-token"]'
+                ) as HTMLMetaElement
+            )?.content;
+
+            const response = await fetch(route("admin.about-values.update"), {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrf,
+                },
+                body: JSON.stringify({ about_values: aboutValues }),
+            });
+            console.log(response);
+
+            if (response.ok) {
+                message.success("About Us values updated");
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            console.log(e);
+
+            message.error("Failed to update About Us values");
+        }
+    };
+
+    const handleRemoveValue = (index: number) => {
+        const updated = [...aboutValues];
+        updated.splice(index, 1);
+        setAboutValues(updated);
+    };
+
     const [logoUploading, setLogoUploading] = useState(false);
     const grouped = configs.reduce((acc, item) => {
         acc[item.group] = acc[item.group] || [];
@@ -143,6 +198,16 @@ const Page = () => {
                                     />
                                 );
                                 break;
+                            case "textarea":
+                                input = (
+                                    <TiptapEditor
+                                        value={data[item.key] as string}
+                                        onChange={(value) =>
+                                            setData(item.key, value)
+                                        }
+                                    />
+                                );
+                                break;
                             case "link":
                             case "text":
                             default:
@@ -244,6 +309,77 @@ const Page = () => {
                     })}
                 </Card>
             ))}
+            <Card title="About Us Values">
+                {aboutValues.map((value, idx) => (
+                    <div
+                        key={idx}
+                        className="mb-4 border p-4 rounded space-y-2"
+                    >
+                        <Upload
+                            name="icon"
+                            listType="picture-card"
+                            showUploadList={false}
+                            action={route("admin.about-values.upload")} // We'll create this in Laravel
+                            onChange={(info) => {
+                                if (info.file.status === "done") {
+                                    const url = info.file.response?.url; // Laravel will return the uploaded path
+                                    updateValue(idx, "icon", url);
+                                    message.success(
+                                        "Icon uploaded successfully"
+                                    );
+                                } else if (info.file.status === "error") {
+                                    message.error("Icon upload failed");
+                                }
+                            }}
+                        >
+                            {value.icon ? (
+                                <img
+                                    src={value.icon}
+                                    alt="icon"
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                    }}
+                                />
+                            ) : (
+                                <div>
+                                    <PlusOutlined />
+                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                </div>
+                            )}
+                        </Upload>
+
+                        <Input
+                            placeholder="Title"
+                            value={value.title}
+                            onChange={(e) =>
+                                updateValue(idx, "title", e.target.value)
+                            }
+                        />
+                        <Input.TextArea
+                            placeholder="Details"
+                            value={value.details}
+                            onChange={(e) =>
+                                updateValue(idx, "details", e.target.value)
+                            }
+                        />
+                        <Button danger onClick={() => handleRemoveValue(idx)}>
+                            Remove
+                        </Button>
+                    </div>
+                ))}
+
+                <Button onClick={handleAddNewValue} className="mt-2">
+                    Add New Value
+                </Button>
+
+                <Divider />
+
+                <Button type="primary" onClick={handleAboutValuesSubmit}>
+                    Save About Us Values
+                </Button>
+            </Card>
 
             <Divider />
             <Button type="primary" onClick={handleSubmit} loading={processing}>

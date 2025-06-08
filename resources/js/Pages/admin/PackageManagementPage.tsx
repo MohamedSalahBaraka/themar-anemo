@@ -31,21 +31,10 @@ const Page: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = React.useState<boolean>(false);
     const { packages } = props;
 
-    const handleEdit = (pkg: Package) => {
+    const handleEdit = (userType: string) => {
+        const pkg = packages.find((p) => p.user_type === userType) || null;
         setEditingPackage(pkg);
         setIsModalVisible(true);
-    };
-
-    const handleDelete = async (id: number) => {
-        try {
-            router.delete(route("admin.packages.destroy", id), {
-                onSuccess: () => {
-                    message.success("تم حذف الباقة بنجاح");
-                },
-            });
-        } catch (error) {
-            message.error("فشل حذف الباقة");
-        }
     };
 
     const handleCancel = () => {
@@ -58,95 +47,86 @@ const Page: React.FC = () => {
         setEditingPackage(null);
     };
 
-    const columns = [
-        {
-            title: "الاسم",
-            dataIndex: "name",
-            key: "name",
-        },
-        {
-            title: "الوصف",
-            dataIndex: "description",
-            key: "description",
-        },
-        {
-            title: "السعر الشهري",
-            dataIndex: "price",
-            key: "price",
-            render: (price: number) => `$${parseInt(`${price}`).toFixed(2)}`,
-        },
-        {
-            title: "السعر السنوي",
-            dataIndex: "yearly_price",
-            key: "yearly_price",
-            render: (price: number) => `$${parseInt(`${price}`).toFixed(2)}`,
-        },
-        {
-            title: "دور المستخدم",
-            dataIndex: "user_type",
-            key: "user_type",
-            render: (userType: string) => {
-                switch (userType) {
-                    case "owner":
-                        return "مالك";
-                    case "agent":
-                        return "وسيط";
-                    case "company":
-                        return "شركة";
-                    default:
-                        return "غير محدد";
-                }
-            },
-        },
-        {
-            title: "الحالة",
-            dataIndex: "isActive",
-            key: "isActive",
-            render: (isActive: boolean) => (isActive ? "نشط" : "غير نشط"),
-        },
-        {
-            title: "الإجراءات",
-            key: "actions",
-            render: (_: any, record: Package) => (
-                <Space size="middle">
-                    <Button type="link" onClick={() => handleEdit(record)}>
-                        تعديل
-                    </Button>
-                    <Popconfirm
-                        title="هل أنت متأكد من حذف هذه الباقة؟"
-                        onConfirm={() => handleDelete(record.id!)}
-                        okText="نعم"
-                        cancelText="لا"
-                    >
-                        <Button type="link" danger>
-                            حذف
-                        </Button>
-                    </Popconfirm>
-                </Space>
-            ),
-        },
-    ];
     return (
         <div className="px-6 py-4">
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                 <Typography.Title level={2}>إدارة الباقات</Typography.Title>
                 <Typography.Text type="secondary">
-                    إنشاء وإدارة الباقات
+                    إدارة الباقات حسب نوع المستخدم
                 </Typography.Text>
                 <Divider />
                 <div>
-                    <div style={{ marginBottom: 16 }}>
-                        <Button
-                            type="primary"
-                            onClick={() => setIsModalVisible(true)}
-                        >
-                            إضافة باقة
-                        </Button>
+                    <div className="flex gap-2 mb-4">
+                        {["owner", "agent", "company"].map((type) => (
+                            <Button
+                                key={type}
+                                type="primary"
+                                onClick={() => handleEdit(type)}
+                            >
+                                {`تعديل باقة ${
+                                    type === "owner"
+                                        ? "المالك"
+                                        : type === "agent"
+                                        ? "الوسيط"
+                                        : "الشركة"
+                                }`}
+                            </Button>
+                        ))}
                     </div>
                     <Table
-                        columns={columns}
+                        columns={[
+                            {
+                                title: "الاسم",
+                                dataIndex: "name",
+                                key: "name",
+                            },
+                            {
+                                title: "الوصف",
+                                dataIndex: "description",
+                                key: "description",
+                            },
+                            {
+                                title: "السعر الشهري",
+                                dataIndex: "price",
+                                key: "price",
+                                render: (price: number) =>
+                                    `$${parseInt(`${price}`).toFixed(2)}`,
+                            },
+                            {
+                                title: "السعر السنوي",
+                                dataIndex: "yearly_price",
+                                key: "yearly_price",
+                                render: (price: number) =>
+                                    `$${parseInt(`${price}`).toFixed(2)}`,
+                            },
+                            {
+                                title: "دور المستخدم",
+                                dataIndex: "user_type",
+                                key: "user_type",
+                                render: (userType: string) => {
+                                    switch (userType) {
+                                        case "owner":
+                                            return "مالك";
+                                        case "agent":
+                                            return "وسيط";
+                                        case "company":
+                                            return "شركة";
+                                        default:
+                                            return "غير محدد";
+                                    }
+                                },
+                            },
+                            {
+                                title: "الحالة",
+                                dataIndex: "isActive",
+                                key: "isActive",
+                                render: (isActive: boolean) =>
+                                    isActive ? "نشط" : "غير نشط",
+                            },
+                        ]}
                         dataSource={packages}
                         rowKey="id"
+                        pagination={false}
                         loading={!packages}
                     />
                     <PackageForm
@@ -154,6 +134,7 @@ const Page: React.FC = () => {
                         onCancel={handleCancel}
                         onSuccess={handleSuccess}
                         packageData={editingPackage}
+                        userType={editingPackage?.user_type} // pass down the type
                     />
                 </div>
             </Space>

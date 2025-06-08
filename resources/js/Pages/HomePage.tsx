@@ -74,6 +74,7 @@ const Page: React.FC = () => {
     );
     const [loading, setLoading] = React.useState(false);
     const [favorites, setFavorites] = React.useState<Set<number>>(new Set());
+    const appConfigs = usePage().props.appConfigs as Record<string, any>;
 
     const handleSearch = () => {
         setLoading(true);
@@ -315,7 +316,7 @@ const Page: React.FC = () => {
                 style={{ zIndex: 1, margin: 50 }}
             >
                 <Title level={1} style={{ color: "white" }}>
-                    مستعد للعثور على منزل أحلامك؟
+                    {appConfigs["landing.catchy_phrase_primary"]}
                 </Title>
                 <Title
                     level={2}
@@ -326,8 +327,7 @@ const Page: React.FC = () => {
                         zIndex: 1,
                     }}
                 >
-                    انضم إلى الآلاف من الملاك السعداء الذين وجدوا عقارهم المثالي
-                    من خلالنا
+                    {appConfigs["landing.catchy_phrase_secondary"]}
                 </Title>
             </Col>
 

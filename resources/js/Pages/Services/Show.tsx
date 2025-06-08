@@ -1,0 +1,331 @@
+// صفحات/الخدمات/Show.tsx
+import React, { useState } from "react";
+import { router, usePage } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import {
+    Card,
+    Row,
+    Col,
+    Button,
+    Tag,
+    Divider,
+    List,
+    Typography,
+    Space,
+    Modal,
+    Form,
+    Input,
+    Select,
+    DatePicker,
+    Upload,
+    Checkbox,
+    Radio,
+    message,
+} from "antd";
+import { ArrowLeftOutlined, UploadOutlined } from "@ant-design/icons";
+import { Service } from "@/types/Services";
+import { PageProps } from "@/types";
+import FrontLayout from "@/Layouts/FrontLayout";
+import axios from "axios";
+
+const { Title, Text, Paragraph } = Typography;
+const { Meta } = Card;
+const { TextArea } = Input;
+
+interface prop extends PageProps {
+    service: Service;
+    relatedServices: Service[];
+}
+
+const ServiceShow: React.FC = () => (
+    <FrontLayout>
+        <Page />
+    </FrontLayout>
+);
+
+const Page: React.FC = () => {
+    const { service, relatedServices, auth } = usePage<prop>().props;
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [form] = Form.useForm();
+
+    const showModal = () => {
+        if (!auth.user) return router.get(route("register"));
+        setIsModalVisible(true);
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+        form.resetFields();
+    };
+
+    // تحديث دالة handleSubmit في ملف Show.tsx
+    const handleSubmit = async (values: any) => {
+        try {
+            const formData = new FormData();
+
+            // إضافة معلومات أساسية لطلب الخدمة
+            formData.append("service_id", service.id.toString());
+
+            // إضافة قيم الحقول مع معرفاتها
+            creationFields.forEach((field) => {
+                const value = values[field.label];
+
+                // التعامل مع أنواع الحقول المختلفة
+                if (field.field_type === "file" && value) {
+                    // لرفع الملفات، نضيف كل ملف
+                    value.fileList.forEach((file: any) => {
+                        formData.append(`${field.id}`, file.originFileObj);
+                    });
+                } else if (
+                    field.field_type === "checkbox" ||
+                    field.field_type === "multiselect"
+                ) {
+                    // للمصفوفات (مجموعات الاختيارات، الاختيار المتعدد)
+                    if (Array.isArray(value)) {
+                        formData.append(
+                            `fields[${field.id}]`,
+                            JSON.stringify(value)
+                        );
+                    }
+                } else {
+                    // لجميع أنواع الحقول الأخرى
+                    if (value !== undefined && value !== null) {
+                        formData.append(`fields[${field.id}]`, value);
+                    }
+                }
+            });
+
+            // الإرسال إلى الخلفية
+            const response = await axios.post(
+                route("public.services.apply", service.id),
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            message.success("تم تقديم الطلب بنجاح!");
+            setIsModalVisible(false);
+            form.resetFields();
+        } catch (error) {
+            message.error("فشل في تقديم الطلب. يرجى المحاولة مرة أخرى.");
+            console.error("خطأ في الإرسال:", error);
+        }
+    };
+    const renderField = (field: any) => {
+        const rules = [
+            { required: field.required, message: `${field.label} مطلوب` },
+        ];
+
+        switch (field.field_type) {
+            case "text":
+                return <Input placeholder={`أدخل ${field.label}`} />;
+            case "textarea":
+                return (
+                    <TextArea rows={4} placeholder={`أدخل ${field.label}`} />
+                );
+            case "email":
+                return (
+                    <Input type="email" placeholder={`أدخل ${field.label}`} />
+                );
+            case "number":
+                return (
+                    <Input type="number" placeholder={`أدخل ${field.label}`} />
+                );
+            case "select":
+                return (
+                    <Select placeholder={`اختر ${field.label}`}>
+                        {field.options?.map((option: string) => (
+                            <Select.Option key={option} value={option}>
+                                {option}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                );
+            case "checkbox":
+                return <Checkbox.Group options={field.options} />;
+            case "multiselect":
+                return (
+                    <Select mode="multiple" placeholder={`اختر ${field.label}`}>
+                        {field.options?.map((option: string) => (
+                            <Select.Option key={option} value={option}>
+                                {option}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                );
+            case "radio":
+                return <Radio.Group options={field.options} />;
+            case "date":
+                return <DatePicker style={{ width: "100%" }} />;
+            case "file":
+                return (
+                    <Upload beforeUpload={() => false}>
+                        <Button icon={<UploadOutlined />}>انقر للرفع</Button>
+                    </Upload>
+                );
+            default:
+                return <Input placeholder={`أدخل ${field.label}`} />;
+        }
+    };
+
+    // تصفية الحقول التي يجب عرضها عند الإنشاء
+    const creationFields =
+        service.fields?.filter((field) => field.show_on_creation) || [];
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => window.history.back()}
+                className="mb-4"
+            >
+                العودة إلى الخدمات
+            </Button>
+
+            <Row gutter={[24, 24]}>
+                <Col xs={24} lg={16}>
+                    <Card>
+                        <div className="mb-6">
+                            <Title level={2}>{service.name}</Title>
+                            <Space size="middle">
+                                <Tag color="blue">{service.category.name}</Tag>
+                                {service.tags?.map((tag) => (
+                                    <Tag key={tag}>{tag}</Tag>
+                                ))}
+                            </Space>
+                        </div>
+                        <img
+                            alt={service.name}
+                            className="h-64 bg-gray-100 flex items-center justify-center mb-6 rounded"
+                            src={`${window.location.origin}/storage/${service.photo}`}
+                            style={{
+                                objectFit: "cover",
+                            }}
+                        />
+
+                        <div
+                            className="text-lg mb-6"
+                            dangerouslySetInnerHTML={{
+                                __html: service.description || "",
+                            }}
+                        />
+
+                        <Divider />
+
+                        <Title level={4} className="mb-4">
+                            التسعير
+                        </Title>
+                        <Text strong className="text-2xl">
+                            {service.price}
+                        </Text>
+
+                        <Divider />
+
+                        <Button
+                            type="primary"
+                            size="large"
+                            block
+                            onClick={showModal}
+                        >
+                            {auth.user
+                                ? " تقديم طلب الآن"
+                                : "سجل أولاً لتقديم الطلب"}
+                        </Button>
+                    </Card>
+                </Col>
+
+                <Col xs={24} lg={8}>
+                    <Card title="خدمات ذات صلة">
+                        <List
+                            itemLayout="horizontal"
+                            dataSource={relatedServices}
+                            renderItem={(item) => (
+                                <List.Item>
+                                    <Link
+                                        href={route(
+                                            "public.services.show",
+                                            item.id
+                                        )}
+                                    >
+                                        <Card
+                                            hoverable
+                                            size="small"
+                                            style={{ width: "100%" }}
+                                        >
+                                            <Meta
+                                                title={item.name}
+                                                description={
+                                                    <>
+                                                        <Text>
+                                                            {item.price}
+                                                        </Text>
+                                                        <div className="mt-1">
+                                                            {item.tags
+                                                                ?.slice(0, 2)
+                                                                .map((tag) => (
+                                                                    <Tag
+                                                                        key={
+                                                                            tag
+                                                                        }
+                                                                    >
+                                                                        {tag}
+                                                                    </Tag>
+                                                                ))}
+                                                        </div>
+                                                    </>
+                                                }
+                                            />
+                                        </Card>
+                                    </Link>
+                                </List.Item>
+                            )}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+
+            <Modal
+                title={`تقديم طلب لـ ${service.name}`}
+                visible={isModalVisible}
+                onCancel={handleCancel}
+                footer={[
+                    <Button key="back" onClick={handleCancel}>
+                        إلغاء
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        onClick={() => form.submit()}
+                    >
+                        تقديم الطلب
+                    </Button>,
+                ]}
+                width={800}
+            >
+                <Form form={form} layout="vertical" onFinish={handleSubmit}>
+                    {creationFields.map((field) => (
+                        <Form.Item
+                            key={field.id}
+                            label={field.label}
+                            name={field.label}
+                            rules={[
+                                {
+                                    required: field.required,
+                                    message: `${field.label} مطلوب`,
+                                },
+                            ]}
+                        >
+                            {renderField(field)}
+                        </Form.Item>
+                    ))}
+                </Form>
+            </Modal>
+        </div>
+    );
+};
+
+export default ServiceShow;

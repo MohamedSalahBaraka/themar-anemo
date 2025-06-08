@@ -26,7 +26,7 @@ class DashboardController extends Controller
             'subscription' => $subscription ? [
                 'id' => $subscription->id,
                 'plan_name' => $subscription->package->name,
-                'status' => $subscription->is_active ? 'active' : 'inactive',
+                'status' => $subscription->status,
                 'start_date' => $subscription->started_at,
                 'expires_at' => $subscription->expires_at,
                 'features' => $subscription->package->features,

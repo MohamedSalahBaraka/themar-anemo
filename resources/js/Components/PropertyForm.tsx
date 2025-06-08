@@ -14,8 +14,13 @@ import {
     Row,
     Col,
 } from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+    DeleteOutlined,
+    PlusOutlined,
+    UploadOutlined,
+} from "@ant-design/icons";
 import { Property } from "@/types/property";
+import MapPicker from "./MapPicker";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -36,15 +41,30 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 }) => {
     const [form] = Form.useForm();
     const [deletedImages, setDeletedImages] = useState<number[]>([]);
+    const [location, setLocation] = useState<
+        { lat: number; lng: number } | undefined
+    >(
+        initialValues?.latitude && initialValues?.longitude
+            ? { lat: initialValues.latitude, lng: initialValues.longitude }
+            : undefined
+    );
 
     React.useEffect(() => {
+        if (initialValues?.latitude && initialValues?.longitude) {
+            setLocation({
+                lat: initialValues.latitude,
+                lng: initialValues.longitude,
+            });
+        }
         form.setFieldsValue(initialValues);
     }, [initialValues, form]);
 
     const onFinish = (values: any) => {
         onSubmit({
             ...values,
-            deletedImages: deletedImages,
+            latitude: location?.lat,
+            longitude: location?.lng,
+            deletedImages,
         });
     };
 
@@ -190,6 +210,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             </Row>
 
             <Row gutter={16}>
+                <Col span={24}>
+                    <MapPicker
+                        value={location}
+                        onChange={(coords) => {
+                            setLocation(coords);
+                            form.setFieldsValue({
+                                latitude: coords.lat,
+                                longitude: coords.lng,
+                            });
+                        }}
+                    />
+                </Col>
+            </Row>
+            <Row gutter={16}>
                 <Col xs={24} md={12}>
                     <Form.Item name="latitude" label="خط العرض">
                         <InputNumber style={{ width: "100%" }} />
@@ -224,7 +258,53 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     </div>
                 </Upload>
             </Form.Item>
-
+            <Form.Item label="الميزات">
+                <Form.List name="features">
+                    {(fields, { add, remove }) => (
+                        <>
+                            {fields.map(({ key, name, ...restField }) => (
+                                <Space
+                                    key={key}
+                                    style={{
+                                        display: "flex",
+                                        marginBottom: 8,
+                                    }}
+                                    align="baseline"
+                                >
+                                    <Form.Item
+                                        {...restField}
+                                        name={name}
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: "يرجى إدخال الميزة",
+                                            },
+                                        ]}
+                                    >
+                                        <Input placeholder="مثال: دعم العملاء على مدار الساعة" />
+                                    </Form.Item>
+                                    <Button
+                                        type="text"
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={() => remove(name)}
+                                    />
+                                </Space>
+                            ))}
+                            <Form.Item>
+                                <Button
+                                    type="dashed"
+                                    onClick={() => add()}
+                                    block
+                                    icon={<PlusOutlined />}
+                                >
+                                    إضافة ميزة
+                                </Button>
+                            </Form.Item>
+                        </>
+                    )}
+                </Form.List>
+            </Form.Item>
             <Form.Item>
                 <Space>
                     <Button type="primary" htmlType="submit" loading={loading}>

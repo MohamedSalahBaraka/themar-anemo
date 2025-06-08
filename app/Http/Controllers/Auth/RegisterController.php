@@ -12,23 +12,35 @@ use Inertia\Inertia;
 
 class RegisterController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
+        $query = \App\Models\Package::where('isActive', true);
+
+        // Check for preselected package in query params
+        $preselectedPackageId = $request->query('package');
+
+        // Validate if the preselected package exists and is active
+        if ($preselectedPackageId) {
+            $packageExists = $query->clone()->where('id', $preselectedPackageId)->exists();
+            if (!$packageExists) {
+                $preselectedPackageId = null;
+            }
+        }
+
         return Inertia::render('Auth/Register', [
-            'packages' => \App\Models\Package::orderBy('price')
-                ->where('isActive', true)
-                ->get()
+            'packages' => $query->get()
                 ->map(fn($package) => [
                     'id' => $package->id,
                     'name' => $package->name,
-                    'price' => $package->price,
+                    // 'price' => $package->price,
                     'description' => $package->description,
                     'max_listings' => $package->max_listings,
                     'user_type' => $package->user_type,
-                    'monthly_price' => $package->price,
-                    'yearly_price' =>  $package->yearly_price, // 10% discount for yearly
-                    'features' => json_decode($package->features),
+                    'price' => $package->price,
+                    'yearly_price' => $package->yearly_price,
+                    'features' => $package->features,
                 ]),
+            'preselectedPackageId' => $preselectedPackageId,
         ]);
     }
 
@@ -39,7 +51,7 @@ class RegisterController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:buyer,owner,agent,company',
+            // 'role' => 'required|in:buyer,owner,agent,company',
             'package_id' => 'nullable|exists:packages,id',
             'billing_frequency' => 'nullable|in:monthly,yearly',
         ]);
@@ -49,12 +61,12 @@ class RegisterController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
-            'role' => $request->role,
+            // 'role' => $request->role,
         ]);
 
-        if ($request->package_id && $request->role !== 'buyer') {
+        if ($request->package_id) {
             $package = Package::findOrFail($request->package_id);
-
+            $user->update(['role', $package->user_type]);
             // Calculate duration based on billing frequency
             $duration = $request->billing_frequency === 'yearly' ? 365 : 30;
 

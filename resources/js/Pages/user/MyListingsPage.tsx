@@ -73,6 +73,10 @@ const MyListingsPage: React.FC = () => {
                         formData.append("images[]", fileWrapper.originFileObj);
                     }
                 });
+            } else if (key === "features" && Array.isArray(val)) {
+                val.forEach((data: string) => {
+                    formData.append("features[]", data);
+                });
             } else if (val !== null && val !== undefined) {
                 // @ts-ignore
                 formData.append(key, val);
@@ -166,6 +170,10 @@ const MyListingsPage: React.FC = () => {
                     if (fileWrapper.originFileObj instanceof File) {
                         formData.append("images[]", fileWrapper.originFileObj);
                     }
+                });
+            } else if (key === "features" && Array.isArray(val)) {
+                val.forEach((data: string) => {
+                    formData.append("features[]", data);
                 });
             } else if (key === "deletedImages" && Array.isArray(val)) {
                 val.forEach((id: number) => {

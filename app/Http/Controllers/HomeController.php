@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\AboutValue;
+use App\Models\City;
+use App\Models\configs;
+use App\Models\Faq;
 use App\Models\Package;
 use App\Models\Property;
+use App\Models\TeamMember;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -89,10 +94,7 @@ class HomeController extends Controller
             });
 
         return Inertia::render('HomePage', [
-            'packages' => Package::limit(3)->get()->map(function ($pkg) {
-                $pkg['features'] = json_decode($pkg['features']);
-                return $pkg;
-            }),
+            'packages' => Package::limit(3)->get(),
             'featuredProperties' => $featuredProperties,
             'recentlyViewed' => $recentlyViewed,
             'propertyCounts' => $propertyCounts,
@@ -149,14 +151,29 @@ class HomeController extends Controller
     public function pricing()
     {
         return Inertia::render('Pricing', [
-            'packages' => Package::limit(3)->get()->map(function ($pkg) {
-                $pkg['features'] = json_decode($pkg['features'] ?? '[]') ?: [];
-                return $pkg;
-            }),
+            'packages' => Package::limit(3)->get(),
+            'faqs' => Faq::orderBy('order')->get(),
+            'statictis' => ['cities' => City::count(), 'active' => Property::where('status', 'available')->count(), 'all' => Property::count()]
+        ]);
+    }
+    public function Faq()
+    {
+        return Inertia::render('Faq', [
+            'faqs' => Faq::orderBy('order')->get(),
+        ]);
+    }
+    public function Page($key)
+    {
+        $page = configs::where('key', 'page.' . $key)->first();
+        if (!$page) abort(404);
+        return Inertia::render('page', [
+            'page' => $page->value,
         ]);
     }
     public function AboutUs()
     {
-        return Inertia::render('AboutUs');
+        $aboutValues = AboutValue::all();
+        $teamMembers = TeamMember::all();
+        return Inertia::render('AboutUs', ['aboutValues' => $aboutValues, 'teamMembers' => $teamMembers]);
     }
 }
