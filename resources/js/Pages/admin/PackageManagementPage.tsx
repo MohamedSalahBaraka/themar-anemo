@@ -8,7 +8,6 @@ import {
     Table,
     message,
 } from "antd";
-import PackageList from "@/Components/PackageList";
 import { router, usePage } from "@inertiajs/react";
 import { PageProps } from "@/types";
 import AdminLayout from "@/Layouts/AdminLayout";
