@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\AboutValue;
-use App\Models\Configs;
+use App\Models\configs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +17,7 @@ class ConfigController extends Controller
      */
     public function index()
     {
-        $configs = Configs::all()->map(function ($config) {
+        $configs = configs::all()->map(function ($config) {
             return [
                 'key' => $config->key,
                 'value' => $config->value,
@@ -80,7 +80,7 @@ class ConfigController extends Controller
         $input = $request->all();
 
         foreach ($input as $key => $value) {
-            $config = Configs::where('key', $key)->first();
+            $config = configs::where('key', $key)->first();
             if (!$config) {
                 continue;
             }
@@ -112,7 +112,7 @@ class ConfigController extends Controller
 
         $key = $request->type === 'dark' ? 'app.logo_dark_url' : 'app.logo_url';
 
-        Configs::updateOrCreate(
+        configs::updateOrCreate(
             ['key' => $key],
             [
                 'type' => 'link',
