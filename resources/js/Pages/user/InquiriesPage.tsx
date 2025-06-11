@@ -33,6 +33,7 @@ import dayjs from "dayjs";
 import { PageProps } from "@/types";
 import AppLayout from "@/Layouts/Layout";
 import SimpleComment from "@/Components/SimpleComment";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -70,8 +71,14 @@ interface InquiriesPageProps extends PageProps {
     sentInquiries: Inquiry[];
     errors?: Record<string, string>;
 }
+const InquiriesPage: React.FC = () => (
+    <AppLayout>
+        <Page />
+    </AppLayout>
+);
 
-const InquiriesPage: React.FC = () => {
+const Page: React.FC = () => {
+    const { t } = useLanguage();
     const { props } = usePage<InquiriesPageProps>();
     const { receivedInquiries, sentInquiries, errors } = props;
     const [activeTab, setActiveTab] = React.useState<string>("received");
@@ -190,27 +197,24 @@ const InquiriesPage: React.FC = () => {
         }
     };
 
-    // Ant Design v5+ removed the Comment component. We'll create a simple replacement:
-    interface SimpleCommentProps {
-        author: React.ReactNode;
-        avatar?: React.ReactNode;
-        content: React.ReactNode;
-        datetime?: React.ReactNode;
-        style?: React.CSSProperties;
-    }
-
-    // Replace usages of <Comment ... /> with <SimpleComment ... />
-
     const getStatusTag = (status: string) => {
         const statusMap: Record<
             string,
             { color: string; text: string; icon: React.ReactNode }
         > = {
-            unread: { color: "blue", text: "جديد", icon: <MailOutlined /> },
-            read: { color: "default", text: "مقروء", icon: <InboxOutlined /> },
+            unread: {
+                color: "blue",
+                text: t("unread"),
+                icon: <MailOutlined />,
+            },
+            read: {
+                color: "default",
+                text: t("read"),
+                icon: <InboxOutlined />,
+            },
             replied: {
                 color: "green",
-                text: "تم الرد",
+                text: t("replied"),
                 icon: <MessageOutlined />,
             },
         };
@@ -223,7 +227,7 @@ const InquiriesPage: React.FC = () => {
 
     const columns = [
         {
-            title: "العقار",
+            title: t("property"),
             dataIndex: "property_title",
             key: "property",
             render: (text: string, record: Inquiry) => (
@@ -244,7 +248,7 @@ const InquiriesPage: React.FC = () => {
             ),
         },
         {
-            title: "جهة الاتصال",
+            title: t("contact"),
             dataIndex: "sender_name",
             key: "contact",
             render: (text: string, record: Inquiry) => (
@@ -268,7 +272,7 @@ const InquiriesPage: React.FC = () => {
             ),
         },
         {
-            title: "الرسالة",
+            title: t("message"),
             dataIndex: "message",
             key: "message",
             render: (text: string) => (
@@ -281,20 +285,24 @@ const InquiriesPage: React.FC = () => {
             ),
         },
         {
-            title: "التاريخ",
+            title: t("date"),
             dataIndex: "created_at",
             key: "date",
             render: (date: string) => dayjs(date).format("DD/MM/YYYY hh:mm A"),
         },
         {
-            title: "الحالة",
+            title: t("status"),
             dataIndex: "status",
             key: "status",
             render: (status: string, record: Inquiry) =>
-                record.is_sent_by_me ? <Tag>مرسل</Tag> : getStatusTag(status),
+                record.is_sent_by_me ? (
+                    <Tag>{t("sent")}</Tag>
+                ) : (
+                    getStatusTag(status)
+                ),
         },
         {
-            title: "الإجراءات",
+            title: t("actions"),
             key: "actions",
             render: (_: any, record: Inquiry) => (
                 <Space>
@@ -304,7 +312,7 @@ const InquiriesPage: React.FC = () => {
                             onClick={() => markAsRead(record.id)}
                             loading={processingIds.includes(record.id)}
                         >
-                            تمييز كمقروء
+                            {t("mark_as_read")}
                         </Button>
                     )}
                     <Button
@@ -313,7 +321,7 @@ const InquiriesPage: React.FC = () => {
                         onClick={() => openReplyModal(record)}
                         loading={processingIds.length > 0}
                     >
-                        {record.is_sent_by_me ? "عرض" : "رد"}
+                        {record.is_sent_by_me ? t("view") : t("reply")}
                     </Button>
                 </Space>
             ),
@@ -321,264 +329,257 @@ const InquiriesPage: React.FC = () => {
     ];
 
     return (
-        <AppLayout>
-            <div className="inquiries-page" style={{ padding: "24px" }}>
-                <Title level={2}>الاستفسارات</Title>
-                <Text type="secondary">إدارة استفسارات العقارات</Text>
+        <div className="inquiries-page" style={{ padding: "24px" }}>
+            <Title level={2}>{t("inquiries")}</Title>
+            <Text type="secondary">{t("manage_property_inquiries")}</Text>
 
-                <Divider />
+            <Divider />
 
-                {errors && Object.keys(errors).length > 0 && (
-                    <Alert
-                        message="خطأ"
-                        description={
-                            <ul>
-                                {Object.values(errors).map((error, index) => (
-                                    <li key={index}>{error}</li>
-                                ))}
-                            </ul>
-                        }
-                        type="error"
-                        showIcon
-                        closable
-                        style={{ marginBottom: 24 }}
-                    />
-                )}
-
-                <Spin spinning={processingIds.length > 0}>
-                    <Card>
-                        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-                            <TabPane
-                                tab={
-                                    <Badge
-                                        count={
-                                            receivedInquiries?.filter(
-                                                (i) => i.status === "unread"
-                                            )?.length || 0
-                                        }
-                                    >
-                                        <span>
-                                            <InboxOutlined /> الواردة
-                                        </span>
-                                    </Badge>
-                                }
-                                key="received"
-                            >
-                                {!receivedInquiries ? (
-                                    <Spin tip="جاري تحميل الاستفسارات..." />
-                                ) : receivedInquiries.length === 0 ? (
-                                    <Empty
-                                        description={
-                                            <Text type="secondary">
-                                                لم تتلق أي استفسارات بعد
-                                            </Text>
-                                        }
-                                        style={{ padding: "40px" }}
-                                    />
-                                ) : (
-                                    <Table
-                                        columns={columns}
-                                        dataSource={receivedInquiries}
-                                        rowKey="id"
-                                        pagination={{ pageSize: 10 }}
-                                        scroll={{ x: true }}
-                                        loading={processingIds.length > 0}
-                                    />
-                                )}
-                            </TabPane>
-                            <TabPane
-                                tab={
-                                    <span>
-                                        <MailOutlined /> المرسلة
-                                    </span>
-                                }
-                                key="sent"
-                            >
-                                {!sentInquiries ? (
-                                    <Spin tip="جاري تحميل الاستفسارات..." />
-                                ) : sentInquiries.length === 0 ? (
-                                    <Empty
-                                        description={
-                                            <Text type="secondary">
-                                                لم ترسل أي استفسارات بعد
-                                            </Text>
-                                        }
-                                        style={{ padding: "40px" }}
-                                    />
-                                ) : (
-                                    <Table
-                                        columns={columns}
-                                        dataSource={sentInquiries}
-                                        rowKey="id"
-                                        pagination={{ pageSize: 10 }}
-                                        scroll={{ x: true }}
-                                        loading={processingIds.length > 0}
-                                    />
-                                )}
-                            </TabPane>
-                        </Tabs>
-                    </Card>
-                </Spin>
-
-                {/* Reply Modal */}
-                <Modal
-                    title={
-                        <Space>
-                            <MessageOutlined />
-                            <span>رد على الاستفسار</span>
-                            {currentInquiry && (
-                                <Tag>{currentInquiry.property_title}</Tag>
-                            )}
-                        </Space>
+            {errors && Object.keys(errors).length > 0 && (
+                <Alert
+                    message={t("error")}
+                    description={
+                        <ul>
+                            {Object.values(errors).map((error, index) => (
+                                <li key={index}>{error}</li>
+                            ))}
+                        </ul>
                     }
-                    visible={replyModalVisible}
-                    onCancel={() => setReplyModalVisible(false)}
-                    footer={null}
-                    width={800}
-                    destroyOnClose
-                >
-                    {currentInquiry && (
-                        <>
-                            <div style={{ marginBottom: 24 }}>
-                                <SimpleComment
-                                    author={
-                                        <Space>
-                                            <span>
-                                                {currentInquiry.sender_name}
-                                            </span>
-                                            <Tag color="blue">المرسل</Tag>
-                                        </Space>
+                    type="error"
+                    showIcon
+                    closable
+                    style={{ marginBottom: 24 }}
+                />
+            )}
+
+            <Spin spinning={processingIds.length > 0}>
+                <Card>
+                    <Tabs activeKey={activeTab} onChange={setActiveTab}>
+                        <TabPane
+                            tab={
+                                <Badge
+                                    count={
+                                        receivedInquiries?.filter(
+                                            (i) => i.status === "unread"
+                                        )?.length || 0
                                     }
-                                    avatar={
-                                        <Avatar
-                                            src={currentInquiry.sender_avatar}
-                                            icon={<UserOutlined />}
-                                        />
+                                >
+                                    <span>
+                                        <InboxOutlined /> {t("received")}
+                                    </span>
+                                </Badge>
+                            }
+                            key="received"
+                        >
+                            {!receivedInquiries ? (
+                                <Spin tip={t("loading_inquiries")} />
+                            ) : receivedInquiries.length === 0 ? (
+                                <Empty
+                                    description={
+                                        <Text type="secondary">
+                                            {t("no_received_inquiries")}
+                                        </Text>
                                     }
-                                    content={<p>{currentInquiry.message}</p>}
-                                    datetime={currentInquiry.created_at}
+                                    style={{ padding: "40px" }}
                                 />
-                            </div>
-
-                            <Divider orientation="left">
-                                <Space>
-                                    <span>الردود</span>
-                                    <Badge
-                                        count={
-                                            currentInquiry.replies?.filter(
-                                                (r) =>
-                                                    !r.is_read &&
-                                                    r.sender_id !==
-                                                        props.auth.user.id
-                                            ).length
-                                        }
-                                        offset={[5, 0]}
-                                    />
-                                </Space>
-                            </Divider>
-
-                            {loadingReplies ? (
-                                <Spin tip="جاري تحميل الردود..." />
                             ) : (
-                                <List
-                                    dataSource={currentInquiry.replies || []}
-                                    itemLayout="horizontal"
-                                    renderItem={(reply) => (
-                                        <SimpleComment
-                                            author={
-                                                <Space>
-                                                    <span>
-                                                        {reply.sender_name}
-                                                    </span>
-                                                    {reply.sender_id ===
-                                                    props.auth.user.id ? (
-                                                        <Tag color="green">
-                                                            أنت
-                                                        </Tag>
-                                                    ) : (
-                                                        !reply.is_read && (
-                                                            <Tag color="blue">
-                                                                جديد
-                                                            </Tag>
-                                                        )
-                                                    )}
-                                                </Space>
-                                            }
-                                            avatar={
-                                                <Avatar
-                                                    src={reply.sender_avatar}
-                                                    icon={<UserOutlined />}
-                                                />
-                                            }
-                                            content={<p>{reply.message}</p>}
-                                            datetime={reply.created_at}
-                                            style={{
-                                                backgroundColor:
-                                                    !reply.is_read &&
-                                                    reply.sender_id !==
-                                                        props.auth.user.id
-                                                        ? "#f6ffed"
-                                                        : "transparent",
-                                                padding: "8px 12px",
-                                                borderRadius: 4,
-                                            }}
-                                        />
-                                    )}
-                                    locale={{
-                                        emptyText: (
-                                            <Empty
-                                                description="لا توجد ردود بعد"
-                                                image={
-                                                    Empty.PRESENTED_IMAGE_SIMPLE
-                                                }
-                                            />
-                                        ),
-                                    }}
+                                <Table
+                                    columns={columns}
+                                    dataSource={receivedInquiries}
+                                    rowKey="id"
+                                    pagination={{ pageSize: 10 }}
+                                    scroll={{ x: true }}
+                                    loading={processingIds.length > 0}
                                 />
                             )}
+                        </TabPane>
+                        <TabPane
+                            tab={
+                                <span>
+                                    <MailOutlined /> {t("sent")}
+                                </span>
+                            }
+                            key="sent"
+                        >
+                            {!sentInquiries ? (
+                                <Spin tip={t("loading_inquiries")} />
+                            ) : sentInquiries.length === 0 ? (
+                                <Empty
+                                    description={
+                                        <Text type="secondary">
+                                            {t("no_sent_inquiries")}
+                                        </Text>
+                                    }
+                                    style={{ padding: "40px" }}
+                                />
+                            ) : (
+                                <Table
+                                    columns={columns}
+                                    dataSource={sentInquiries}
+                                    rowKey="id"
+                                    pagination={{ pageSize: 10 }}
+                                    scroll={{ x: true }}
+                                    loading={processingIds.length > 0}
+                                />
+                            )}
+                        </TabPane>
+                    </Tabs>
+                </Card>
+            </Spin>
 
-                            <Divider />
-
-                            <Form form={replyForm} onFinish={handleReplySubmit}>
-                                <Form.Item
-                                    name="message"
-                                    rules={[
-                                        {
-                                            required: true,
-                                            message: "الرجاء إدخال رسالة الرد",
-                                        },
-                                        {
-                                            max: 1000,
-                                            message:
-                                                "يجب ألا تتجاوز الرسالة 1000 حرف",
-                                        },
-                                    ]}
-                                >
-                                    <TextArea
-                                        rows={4}
-                                        placeholder="اكتب ردك هنا..."
-                                        maxLength={1000}
-                                        showCount
+            {/* Reply Modal */}
+            <Modal
+                title={
+                    <Space>
+                        <MessageOutlined />
+                        <span>{t("reply_to_inquiry")}</span>
+                        {currentInquiry && (
+                            <Tag>{currentInquiry.property_title}</Tag>
+                        )}
+                    </Space>
+                }
+                visible={replyModalVisible}
+                onCancel={() => setReplyModalVisible(false)}
+                footer={null}
+                width={800}
+                destroyOnClose
+            >
+                {currentInquiry && (
+                    <>
+                        <div style={{ marginBottom: 24 }}>
+                            <SimpleComment
+                                author={
+                                    <Space>
+                                        <span>
+                                            {currentInquiry.sender_name}
+                                        </span>
+                                        <Tag color="blue">{t("sender")}</Tag>
+                                    </Space>
+                                }
+                                avatar={
+                                    <Avatar
+                                        src={currentInquiry.sender_avatar}
+                                        icon={<UserOutlined />}
                                     />
-                                </Form.Item>
-                                <Form.Item>
-                                    <Button
-                                        type="primary"
-                                        htmlType="submit"
-                                        icon={<SendOutlined />}
-                                        loading={processingIds.includes(
-                                            currentInquiry.id
-                                        )}
-                                    >
-                                        إرسال الرد
-                                    </Button>
-                                </Form.Item>
-                            </Form>
-                        </>
-                    )}
-                </Modal>
-            </div>
-        </AppLayout>
+                                }
+                                content={<p>{currentInquiry.message}</p>}
+                                datetime={currentInquiry.created_at}
+                            />
+                        </div>
+
+                        <Divider orientation="left">
+                            <Space>
+                                <span>{t("replies")}</span>
+                                <Badge
+                                    count={
+                                        currentInquiry.replies?.filter(
+                                            (r) =>
+                                                !r.is_read &&
+                                                r.sender_id !==
+                                                    props.auth.user.id
+                                        ).length
+                                    }
+                                    offset={[5, 0]}
+                                />
+                            </Space>
+                        </Divider>
+
+                        {loadingReplies ? (
+                            <Spin tip={t("loading_replies")} />
+                        ) : (
+                            <List
+                                dataSource={currentInquiry.replies || []}
+                                itemLayout="horizontal"
+                                renderItem={(reply) => (
+                                    <SimpleComment
+                                        author={
+                                            <Space>
+                                                <span>{reply.sender_name}</span>
+                                                {reply.sender_id ===
+                                                props.auth.user.id ? (
+                                                    <Tag color="green">
+                                                        {t("you")}
+                                                    </Tag>
+                                                ) : (
+                                                    !reply.is_read && (
+                                                        <Tag color="blue">
+                                                            {t("new")}
+                                                        </Tag>
+                                                    )
+                                                )}
+                                            </Space>
+                                        }
+                                        avatar={
+                                            <Avatar
+                                                src={reply.sender_avatar}
+                                                icon={<UserOutlined />}
+                                            />
+                                        }
+                                        content={<p>{reply.message}</p>}
+                                        datetime={reply.created_at}
+                                        style={{
+                                            backgroundColor:
+                                                !reply.is_read &&
+                                                reply.sender_id !==
+                                                    props.auth.user.id
+                                                    ? "#f6ffed"
+                                                    : "transparent",
+                                            padding: "8px 12px",
+                                            borderRadius: 4,
+                                        }}
+                                    />
+                                )}
+                                locale={{
+                                    emptyText: (
+                                        <Empty
+                                            description={t("no_replies_yet")}
+                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                        />
+                                    ),
+                                }}
+                            />
+                        )}
+
+                        <Divider />
+
+                        <Form form={replyForm} onFinish={handleReplySubmit}>
+                            <Form.Item
+                                name="message"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: t("reply_message_required"),
+                                    },
+                                    {
+                                        max: 1000,
+                                        message: t("reply_message_max_length"),
+                                    },
+                                ]}
+                            >
+                                <TextArea
+                                    rows={4}
+                                    placeholder={t("write_your_reply_here")}
+                                    maxLength={1000}
+                                    showCount
+                                />
+                            </Form.Item>
+                            <Form.Item>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    icon={<SendOutlined />}
+                                    loading={processingIds.includes(
+                                        currentInquiry.id
+                                    )}
+                                >
+                                    {t("send_reply")}
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </>
+                )}
+            </Modal>
+        </div>
     );
 };
 

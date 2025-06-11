@@ -1,55 +1,23 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 import {
     Card,
     Row,
     Col,
-    Image,
     Typography,
     Divider,
     Button,
-    Space,
     Descriptions,
-    Modal,
-    Form,
-    Input,
-    Tag,
     DatePicker,
-    Badge,
-    message,
-    Empty,
-    Select,
-    Radio,
-    Pagination,
-    Table,
     Collapse,
-    List,
     Avatar,
 } from "antd";
-import {
-    EnvironmentOutlined,
-    PhoneOutlined,
-    MailOutlined,
-    CalendarOutlined,
-    HomeOutlined,
-    StarOutlined,
-    ArrowsAltOutlined,
-    SearchOutlined,
-    CheckCircleOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CaretRightOutlined,
-    UserOutlined,
-} from "@ant-design/icons";
-import Map from "@/Components/Map";
-import dayjs from "dayjs";
+import { UserOutlined } from "@ant-design/icons";
 import { PageProps } from "@/types";
-import { Property, PropertyFilter } from "@/types/property";
-import { FaBath, FaBed } from "react-icons/fa";
-import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
-import PackageCard, { Package } from "@/Components/PackageCard";
+import { Package } from "@/Components/PackageCard";
 import { TeamMember } from "@/types/teamMember";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -72,6 +40,7 @@ const Page: React.FC = () => {
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
     const { teamMembers, aboutValues, meta, auth, statictis } = props;
 
+    const { t } = useLanguage();
     return (
         <section>
             <div style={{ position: "relative", overflow: "hidden" }}>
@@ -99,7 +68,7 @@ const Page: React.FC = () => {
                                 fontWeight: "bold",
                             }}
                         >
-                            من نحن
+                            {t("about_us")}
                         </Title>
 
                         <Paragraph
@@ -121,7 +90,7 @@ const Page: React.FC = () => {
                 <Card style={{ textAlign: "right" }}>
                     <Typography>
                         <Title level={4} style={{ textAlign: "right" }}>
-                            نبذة عن منصتنا
+                            {t("about_our_platform")}
                         </Title>
 
                         <Paragraph>{appConfigs["about.detailed"]}</Paragraph>
@@ -139,7 +108,7 @@ const Page: React.FC = () => {
                     level={2}
                     style={{ textAlign: "center", marginBottom: "40px" }}
                 >
-                    من نحن
+                    {t("about_us")}
                 </Title>
 
                 <div
@@ -190,7 +159,7 @@ const Page: React.FC = () => {
                                     marginBottom: "16px",
                                 }}
                             >
-                                رسالتنا
+                                {t("our_mission")}
                             </Title>
                         </Row>
                         <Paragraph
@@ -238,7 +207,7 @@ const Page: React.FC = () => {
                                     marginBottom: "16px",
                                 }}
                             >
-                                رؤيتنا
+                                {t("our_vision")}
                             </Title>
                         </Row>
                         <Paragraph
@@ -279,7 +248,9 @@ const Page: React.FC = () => {
                                 {statictis.all}+
                             </Title>
 
-                            <Text style={{ color: "#ccc" }}>اعلان عقاري</Text>
+                            <Text style={{ color: "#ccc" }}>
+                                {t("property_listings")}
+                            </Text>
                         </Col>
                         <Col
                             sm={12}
@@ -293,7 +264,9 @@ const Page: React.FC = () => {
                                 {statictis.active}
                             </Title>
 
-                            <Text style={{ color: "#ccc" }}>عمل نشط</Text>
+                            <Text style={{ color: "#ccc" }}>
+                                {t("active_work")}
+                            </Text>
                         </Col>
                         <Col
                             sm={12}
@@ -307,7 +280,7 @@ const Page: React.FC = () => {
                                 {statictis.cities}+
                             </Title>
 
-                            <Text style={{ color: "#ccc" }}>مدينة</Text>
+                            <Text style={{ color: "#ccc" }}>{t("cities")}</Text>
                         </Col>
                         <Col
                             sm={12}
@@ -321,7 +294,9 @@ const Page: React.FC = () => {
                                 {appConfigs["about.statictis_experiance"]}
                             </Title>
 
-                            <Text style={{ color: "#ccc" }}>سنوات خبرة</Text>
+                            <Text style={{ color: "#ccc" }}>
+                                {t("years_experience")}
+                            </Text>
                         </Col>
                     </Row>
                 </div>
@@ -356,6 +331,7 @@ const Page: React.FC = () => {
                                         width={100}
                                         height={100}
                                         src={`${window.location.origin}/storage/${value.icon}`}
+                                        alt={value.title}
                                     />
                                 </div>
                                 <Title level={3}>{value.title}</Title>
@@ -367,7 +343,7 @@ const Page: React.FC = () => {
             </div>
             <div style={{ padding: "24px" }}>
                 <Card style={{ textAlign: "center" }}>
-                    <Title level={3}>فريق العمل</Title>
+                    <Title level={3}>{t("our_team")}</Title>
                     <Paragraph>
                         {appConfigs["about.team_catchy_phrase"]}
                     </Paragraph>
@@ -445,7 +421,7 @@ const Page: React.FC = () => {
                                     fontSize: "16px",
                                 }}
                             >
-                                تجربة مجانية
+                                {t("free_trial")}
                             </Button>
                             <Button
                                 size="large"
@@ -459,7 +435,7 @@ const Page: React.FC = () => {
                                     color: "white",
                                 }}
                             >
-                                احجز باقة الآن
+                                {t("book_package_now")}
                             </Button>
                         </div>
                     </div>

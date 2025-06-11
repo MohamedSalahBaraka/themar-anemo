@@ -1,191 +1,182 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
 class SubscriptionController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $user = $request->user();
-        $subscription = $user->subscription();
+        $user = Auth::user();
 
         return response()->json([
-            'data' => [
-                'packages' => Package::active()->get()->map(function ($package) {
-                    return [
-                        'id' => $package->id,
-                        'name' => $package->name,
-                        'price' => (int) $package->price,
-                        'billing_frequency' => $package->billing_frequency,
-                        'description' => $package->description,
-                        'max_listings' => $package->max_listings,
-                        'features' => $package->features ?? [],
-                        'is_active' => $package->is_active,
-                        'subscribe_url' => url("/api/subscriptions/subscribe/{$package->id}"),
-                    ];
-                }),
-                'current_subscription' => $subscription ? [
-                    'id' => $subscription->id,
-                    'package_id' => $subscription->package_id,
-                    'started_at' => $subscription->started_at->toIso8601String(),
-                    'expires_at' => $subscription->expires_at->toIso8601String(),
-                    'is_active' => $subscription->is_active,
-                    'days_remaining' => now()->diffInDays($subscription->expires_at, false),
-                    'package' => [
-                        'id' => $subscription->package->id,
-                        'name' => $subscription->package->name,
-                        'price' => $subscription->package->price,
-                        'billing_frequency' => $subscription->package->billing_frequency,
-                        'max_listings' => $subscription->package->max_listings,
-                        'features' => $subscription->package->features ?? [],
-                    ]
-                ] : null,
-                'transactions' => $user->transactions()
-                    ->with('invoice')
-                    ->latest()
-                    ->get()
-                    ->map(function ($transaction) {
-                        return [
-                            'id' => $transaction->id,
-                            'type' => $transaction->type,
-                            'amount' => $transaction->amount,
-                            'method' => $transaction->method,
-                            'status' => $transaction->status,
-                            'reference' => $transaction->reference,
-                            'paid_at' => $transaction->paid_at?->toIso8601String(),
-                            'created_at' => $transaction->created_at->toIso8601String(),
-                            'invoice' => $transaction->invoice ? [
-                                'invoice_number' => $transaction->invoice->invoice_number,
-                                'invoice_pdf_url' => $transaction->invoice->invoice_pdf_url,
-                                'issue_date' => $transaction->invoice->created_at->toDateString(),
-                                'due_date' => $transaction->invoice->created_at->addDays(30)->toDateString(),
-                                'download_url' => url("/api/invoices/{$transaction->invoice->id}/download"),
-                            ] : null
-                        ];
-                    }),
-            ],
-            'meta' => [
-                'can_subscribe' => !$subscription || $subscription->expires_at < now()->addDays(7),
-                'active_listings_count' => $user->properties()->count(),
-                'max_listings' => $subscription ? $subscription->package->max_listings : 0,
-            ]
-        ], Response::HTTP_OK);
+            'packages' => Package::where('isActive', true)->get()->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'name' => $package->name,
+                    'price' => (int)$package->price,
+                    'yearly_price' => (int)$package->yearly_price,
+                    'duration' => $package->duration,
+                    'description' => $package->description,
+                    'max_listings' => $package->max_listings,
+                    'user_type' => $package->user_type,
+                    'features' => $package->features ?? [],
+                    'is_active' => $package->is_active,
+                ];
+            }),
+            'current_subscription' => $user->subscription ? [
+                'id' => $user->subscription->id,
+                'package_id' => $user->subscription->package_id,
+                'started_at' => $user->subscription->started_at?->toISOString(),
+                'expires_at' => $user->subscription->expires_at?->toISOString(),
+                'status' => $user->subscription->status,
+                'billing_frequency' => $user->subscription->billing_frequency,
+                'days_remaining' => now()->diffInDays($user->subscription->expires_at, false),
+                'package' => [
+                    'id' => $user->subscription->package->id,
+                    'name' => $user->subscription->package->name,
+                    'price' => $user->subscription->package->price,
+                    'yearly_price' => $user->subscription->package->yearly_price,
+                    'duration' => $user->subscription->package->duration,
+                    'max_listings' => $user->subscription->package->max_listings,
+                    'features' => $user->subscription->package->features ?? [],
+                ]
+            ] : null,
+            // 'transactions' => $user->transactions()
+            // ->with('invoice')
+            // ->latest()
+            // ->get()
+            // ->map(function ($transaction) {
+            //     return [
+            //         'id' => $transaction->id,
+            //         'type' => $transaction->type,
+            //         'amount' => $transaction->amount,
+            //         'method' => $transaction->method,
+            //         'status' => $transaction->status,
+            //         'reference' => $transaction->reference,
+            //         'paid_at' => $transaction->paid_at?->toISOString(),
+            //         'created_at' => $transaction->created_at->toISOString(),
+            //         'invoice' => $transaction->invoice ? [
+            //             'id' => $transaction->invoice->id,
+            //             'invoice_number' => $transaction->invoice->invoice_number,
+            //             'invoice_pdf_url' => $transaction->invoice->invoice_pdf_url,
+            //             'amount' => $transaction->invoice->amount,
+            //             'tax' => $transaction->invoice->tax,
+            //             'total_amount' => $transaction->invoice->total_amount,
+            //             'issue_date' => $transaction->invoice->created_at->toDateString(),
+            //             'due_date' => $transaction->invoice->created_at->addDays(30)->toDateString(),
+            //         ] : null
+            //     ];
+            // }),
+        ]);
     }
 
-    public function subscribe(Request $request, Package $package)
+    public function subscribe(Request $request)
     {
-        $user = $request->user();
-        $subscription = $user->subscription();
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'billing_frequency' => 'required|in:monthly,yearly',
+            'payment_method_id' => 'required_if:method,card|string', // For Stripe
+            'method' => 'required|in:card,paypal,bank_transfer',
+        ]);
 
-        // Check if user has an active subscription that hasn't expired
-        if ($subscription && $subscription->expires_at > now()) {
+        $user = $request->user();
+        $package = Package::findOrFail($request->package_id);
+
+        // Check if user already has an active subscription
+        if ($user->subscription && !$user->subscription->isExpired()) {
             return response()->json([
                 'message' => 'You already have an active subscription',
                 'current_subscription' => [
-                    'expires_at' => $subscription->expires_at->toIso8601String(),
-                    'days_remaining' => now()->diffInDays($subscription->expires_at, false),
+                    'expires_at' => $user->subscription->expires_at->toISOString(),
+                    'days_remaining' => now()->diffInDays($user->subscription->expires_at, false)
                 ]
-            ], Response::HTTP_CONFLICT);
+            ], 422);
         }
 
-        // Process payment (would integrate with payment gateway in real app)
-        // $payment = $this->processPayment($user, $package->price);
+        // Process payment
+        try {
+            $subscription = $user->subscribeToPackage(
+                $package,
+                $request->billing_frequency,
+                $request->method,
+                $request->payment_method_id ?? null
+            );
 
-        // Create subscription
-        $package = Package::findOrFail($request->package_id);
-        $duration = $package->billing_frequency === 'yearly' ? 365 : 30;
-
-        $subscription =  $user->subscriptions()->create([
-            'package_id' => $package->id,
-            'expires_at' => now()->addDays($duration),
-            'billing_frequency' => $request->billing_frequency ?? 'monthly',
-            'cancel_at' => null, // Explicitly set to null for new subscriptions
-            'is_active' => true,
-        ]);
-
-        // Create transaction record
-        $transaction = Transaction::create([
-            'user_id' => $user->id,
-            'subscription_id' => $subscription->id,
-            'amount' => $package->price,
-            'type' => 'subscription',
-            'status' => 'completed',
-            'method' => 'stripe', // or whatever payment method
-        ]);
-
-        return response()->json([
-            'message' => 'Subscription created successfully',
-            'data' => [
+            return response()->json([
+                'message' => 'Subscription created successfully',
                 'subscription' => [
                     'id' => $subscription->id,
-                    'package_id' => $package->id,
-                    'package_name' => $package->name,
-                    'started_at' => $subscription->started_at->toIso8601String(),
-                    'expires_at' => $subscription->expires_at->toIso8601String(),
-                    'max_listings' => $package->max_listings,
+                    'package_id' => $subscription->package_id,
+                    'expires_at' => $subscription->expires_at->toISOString(),
+                    'billing_frequency' => $subscription->billing_frequency,
+                    'status' => $subscription->status,
                 ],
                 'transaction' => [
-                    'id' => $transaction->id,
-                    'amount' => $transaction->amount,
-                    'reference' => $transaction->reference,
+                    'id' => $subscription->transaction->id,
+                    'amount' => $subscription->transaction->amount,
+                    'status' => $subscription->transaction->status,
+                    'invoice_url' => $subscription->transaction->invoice->invoice_pdf_url ?? null,
                 ]
-            ],
-            'links' => [
-                'view_subscription' => url('/api/subscriptions/current'),
-                'view_invoice' => url("/api/invoices/{$transaction->id}"),
-            ]
-        ], Response::HTTP_CREATED);
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Payment failed: ' . $e->getMessage()
+            ], 400);
+        }
     }
 
-    public function showInvoice($invoiceId)
-    {
-        $invoice = Transaction::findOrFail($invoiceId)->invoice;
-
-        return response()->json([
-            'data' => [
-                'invoice_number' => $invoice->invoice_number,
-                'issue_date' => $invoice->created_at->toDateString(),
-                'due_date' => $invoice->due_date?->toDateString(),
-                'amount' => $invoice->amount,
-                'tax' => $invoice->tax,
-                'total_amount' => $invoice->total_amount,
-                'pdf_url' => $invoice->invoice_pdf_url,
-                'download_url' => url("/api/invoices/{$invoice->id}/download"),
-            ]
-        ], Response::HTTP_OK);
-    }
-
-    public function cancel(Request $request)
+    public function cancelSubscription(Request $request)
     {
         $user = $request->user();
-        $subscription = $user->subscription();
 
-        if (!$subscription) {
+        if (!$user->subscription) {
             return response()->json([
                 'message' => 'No active subscription found'
-            ], Response::HTTP_NOT_FOUND);
+            ], 404);
         }
 
-        // Implement cancellation logic
-        $subscription->update([
-            'is_active' => false,
-            'cancelled_at' => now()
+        $user->subscription->update([
+            'cancel_at' => now(),
+            'status' => 'cancelled'
         ]);
 
         return response()->json([
             'message' => 'Subscription cancelled successfully',
-            'data' => [
-                'cancelled_at' => now()->toIso8601String(),
-                'expires_at' => $subscription->expires_at->toIso8601String(),
-                'refund_eligible' => $subscription->expires_at > now()->addDays(7),
+            'subscription' => [
+                'id' => $user->subscription->id,
+                'status' => $user->subscription->status,
+                'expires_at' => $user->subscription->expires_at->toISOString(),
+                'days_remaining' => now()->diffInDays($user->subscription->expires_at, false)
             ]
-        ], Response::HTTP_OK);
+        ]);
+    }
+
+    public function getInvoice($invoiceId)
+    {
+        $invoice = Transaction::with('invoice')
+            ->where('user_id', Auth::id())
+            ->findOrFail($invoiceId)
+            ->invoice;
+
+        return response()->json([
+            'invoice' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_pdf_url' => $invoice->invoice_pdf_url,
+                'amount' => $invoice->amount,
+                'tax' => $invoice->tax,
+                'total_amount' => $invoice->total_amount,
+                'issue_date' => $invoice->created_at->toDateString(),
+                'due_date' => $invoice->created_at->addDays(30)->toDateString(),
+                'status' => $invoice->status,
+            ]
+        ]);
     }
 }

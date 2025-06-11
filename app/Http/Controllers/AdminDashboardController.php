@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Property;
+use App\Models\Subscription;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 
@@ -24,14 +25,14 @@ class AdminDashboardController extends Controller
             'users_count' => User::count(),
             'properties_count' => Property::count(),
             'active_listings' => Property::where('status', 'available')->count(),
-            'revenue_30days' => Transaction::where('created_at', '>=', now()->subDays(30))
-                ->sum('amount'),
+            'revenue_30days' => Subscription::where('created_at', '>=', now()->subDays(30))
+                ->sum('price'),
         ];
 
         // Revenue data for the chart (last 7 days by default)
-        $revenueData = Transaction::select(
+        $revenueData = Subscription::select(
             DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(amount) as total')
+            DB::raw('SUM(price) as total')
         )
             ->where('created_at', '>=', now()->subDays(7))
             ->groupBy('date')
@@ -43,10 +44,27 @@ class AdminDashboardController extends Controller
                     'total' => (float) $item->total,
                 ];
             });
+        $userGrowthData = User::select(
+            DB::raw('MONTH(created_at) as month'),
+            DB::raw('COUNT(*) as total')
+        )
+            ->whereYear('created_at', now()->year)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [(int) $item->month => (int) $item->total];
+            });
 
+        // Fill in missing months with 0
+        $monthlyUsers = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyUsers[] = $userGrowthData[$i] ?? 0;
+        }
         return Inertia::render('admin/Dashboard', [
             'stats' => $stats,
             'revenueData' => $revenueData,
+            'userGrowth' => $monthlyUsers,
         ]);
     }
 
@@ -68,9 +86,9 @@ class AdminDashboardController extends Controller
             '90days' => 90,
         };
 
-        $revenueData = Transaction::select(
+        $revenueData = Subscription::select(
             DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(amount) as total')
+            DB::raw('SUM(price) as total')
         )
             ->where('created_at', '>=', now()->subDays($days))
             ->groupBy('date')
@@ -99,9 +117,9 @@ class AdminDashboardController extends Controller
             'endDate' => 'required|date|after_or_equal:startDate',
         ]);
 
-        $revenueData = Transaction::select(
+        $revenueData = Subscription::select(
             DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(amount) as total')
+            DB::raw('SUM(price) as total')
         )
             ->whereBetween('created_at', [
                 $validated['startDate'],

@@ -1,14 +1,9 @@
 // resources/js/Pages/Admin/Reviews/Index.jsx
 
 import { Table, Space, Switch, Tag, Button, message, Popconfirm } from "antd";
-import AdminLayout from "@/Layouts/AdminLayout";
 import { Link, usePage, router } from "@inertiajs/react";
-import { RouteParams } from "../../../../../vendor/tightenco/ziggy/src/js";
-import {
-    GenericRouteParamsObject,
-    GenericRouteParamsArray,
-} from "../../../../../vendor/tightenco/ziggy/src/js";
 import { PageProps } from "@/types";
+import AdminLayout from "@/Layouts/AdminLayout";
 
 interface ReviewRecord {
     id: number;
@@ -31,8 +26,12 @@ interface ReviewsPagination extends PageProps {
         links: { url: string | null }[];
     };
 }
-
-const ReviewIndex = () => {
+const ReviewIndex: React.FC = () => (
+    <AdminLayout>
+        <Page />
+    </AdminLayout>
+);
+const Page = () => {
     const { reviews } = usePage<ReviewsPagination>().props;
 
     const handleToggleVisibility = (review: { id: number }) => {

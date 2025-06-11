@@ -5,14 +5,20 @@ import { EditOutlined } from "@ant-design/icons";
 import PropertyForm from "@/Components/PropertyForm";
 import AppLayout from "@/Layouts/Layout";
 import { PageProps } from "@/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text } = Typography;
 
 interface UpdatePropertyPageProps extends PageProps {
     property: any;
 }
-
-const UpdatePropertyPage: React.FC = () => {
+const UpdatePropertyPage: React.FC = () => (
+    <AppLayout>
+        <Page />
+    </AppLayout>
+);
+const Page: React.FC = () => {
+    const { t } = useLanguage();
     const [messageApi, contextHolder] = message.useMessage();
     const { props } = usePage<UpdatePropertyPageProps>();
 
@@ -65,12 +71,14 @@ const UpdatePropertyPage: React.FC = () => {
             {
                 forceFormData: true,
                 onSuccess: () => {
-                    messageApi.success("تم تحديث العقار بنجاح");
+                    messageApi.success(
+                        t("property have been updated successfully")
+                    );
                     router.visit(route("user.properties.index"));
                 },
                 onError: (errors) => {
                     console.error(errors);
-                    messageApi.error("فشل تحديث العقار");
+                    messageApi.error("Error Updating Property");
                 },
             }
         );
@@ -81,9 +89,11 @@ const UpdatePropertyPage: React.FC = () => {
             <AppLayout>
                 <div style={{ padding: "24px" }}>
                     <Card>
-                        <Title level={4}>العقار غير موجود</Title>
+                        <Title level={4}>{t("property Not Found")}</Title>
                         <Text>
-                            هذا العقار غير موجود أو ليس لديك صلاحية لتعديله.
+                            {t(
+                                "this Property Doesn't Exist or u don't have permssion to update it"
+                            )}
                         </Text>
                     </Card>
                 </div>
@@ -92,27 +102,26 @@ const UpdatePropertyPage: React.FC = () => {
     }
 
     return (
-        <AppLayout>
-            <div style={{ padding: "24px" }}>
-                {contextHolder}
-                <Card>
-                    <Title level={2}>
-                        <EditOutlined /> تعديل العقار
-                    </Title>
-                    <Text type="secondary">قم بتحديث تفاصيل عقارك</Text>
+        <div style={{ padding: "24px" }}>
+            {contextHolder}
+            <Card>
+                <Title level={2}>
+                    <EditOutlined />
+                    {t("Edit Property")}
+                </Title>
+                <Text type="secondary">{t("Update your Property")}</Text>
 
-                    <div style={{ marginTop: 24 }}>
-                        <PropertyForm
-                            initialValues={initialValues}
-                            onSubmit={handleSubmit}
-                            onCancel={() =>
-                                router.visit(route("user.properties.index"))
-                            }
-                        />
-                    </div>
-                </Card>
-            </div>
-        </AppLayout>
+                <div style={{ marginTop: 24 }}>
+                    <PropertyForm
+                        initialValues={initialValues}
+                        onSubmit={handleSubmit}
+                        onCancel={() =>
+                            router.visit(route("user.properties.index"))
+                        }
+                    />
+                </div>
+            </Card>
+        </div>
     );
 };
 

@@ -37,7 +37,7 @@ interface AdminLayoutProps {
 }
 
 type DirectionType = ConfigProviderProps["direction"];
-const AdminLayout = ({ children }: AdminLayoutProps) => (
+const AppLayout = ({ children }: AdminLayoutProps) => (
     <LanguageProvider>
         <MainLayout>{children}</MainLayout>
     </LanguageProvider>
@@ -98,42 +98,42 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
     const MenuItems = [
         {
             key: "dashboard",
-            icon: <HomeOutlined />, // More intuitive for "Home/Dashboard"
-            label: <Link href="/user/dashboard">الرئيسية</Link>,
+            icon: <HomeOutlined />,
+            label: <Link href="/user/dashboard">{t("dashboard")}</Link>,
         },
         {
             key: "inquiries",
-            icon: <SearchOutlined />, // Better for "Inquiries/Search"
-            label: <Link href="/user/inquiries">الاستعلامات</Link>,
+            icon: <SearchOutlined />,
+            label: <Link href="/user/inquiries">{t("inquiries")}</Link>,
         },
         {
             key: "reservations",
-            icon: <SearchOutlined />, // Better for "Inquiries/Search"
-            label: <Link href="/user/reservations">الحجوزات</Link>,
+            icon: <SearchOutlined />,
+            label: <Link href="/user/reservations">{t("reservations")}</Link>,
         },
         {
             key: "MyListingsPage",
-            icon: <ShopOutlined />, // Better for properties/listings
-            label: <Link href="/user/properties">عروضي</Link>,
+            icon: <ShopOutlined />,
+            label: <Link href="/user/properties">{t("my_listings")}</Link>,
         },
         {
             key: "services",
-            icon: <ShoppingCartOutlined />, // More relevant for purchasing services
+            icon: <ShoppingCartOutlined />,
             label: (
                 <Link href={route("user.user-services.index")}>
-                    طلبات الخدمات
+                    {t("service_requests")}
                 </Link>
             ),
         },
         {
             key: "subscription",
-            icon: <CreditCardOutlined />, // Represents payments/subscriptions
-            label: <Link href="/user/subscription">الاشتراك</Link>,
+            icon: <CreditCardOutlined />,
+            label: <Link href="/user/subscription">{t("subscription")}</Link>,
         },
         {
             key: "SettingsPage",
-            icon: <SettingOutlined />, // This one is perfect as-is
-            label: <Link href="/user/SettingsPage">الاعدادات</Link>,
+            icon: <SettingOutlined />,
+            label: <Link href="/user/SettingsPage">{t("settings")}</Link>,
         },
     ];
 
@@ -326,4 +326,4 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
     );
 };
 
-export default AdminLayout;
+export default AppLayout;

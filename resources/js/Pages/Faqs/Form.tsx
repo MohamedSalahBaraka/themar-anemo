@@ -1,4 +1,3 @@
-// resources/js/Pages/Faqs/Form.tsx
 import React from "react";
 import {
     Form,
@@ -16,12 +15,18 @@ import Layout from "../../Layouts/Layout";
 import { Faq } from "../../types/faq";
 import { PageProps } from "@/types";
 import { Head, Link, router, useForm } from "@inertiajs/react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import AdminLayout from "@/Layouts/AdminLayout";
 
 interface FaqFormProps extends PageProps {
     faq?: Faq;
 }
-
-const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
+const FaqForm: React.FC<FaqFormProps> = ({ faq, auth }) => (
+    <AdminLayout>
+        <Page faq={faq} auth={auth} />
+    </AdminLayout>
+);
+const Page: React.FC<FaqFormProps> = ({ faq }) => {
     const { data, setData, post, put, processing, errors } = useForm({
         question: faq?.question || "",
         answer: faq?.answer || "",
@@ -29,38 +34,38 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
         order: faq?.order || 0,
         is_active: faq?.is_active || true,
     });
+    const { t } = useLanguage();
 
     const onFinish = (values: any) => {
         if (faq) {
-            console.log(values);
             router.put(route("admin.faqs.update", faq.id), values, {
-                onSuccess: () => message.success("Faq updated successfully"),
+                onSuccess: () => message.success(t("faq_updated_successfully")),
                 onError: (e) => {
                     console.log(e);
-                    message.error("Error updating Faq");
+                    message.error(t("faq_update_failed"));
                 },
             });
         } else {
-            console.log(values);
-
             router.post(route("admin.faqs.store"), values, {
-                onSuccess: () => message.success("Faq created successfully"),
+                onSuccess: () => message.success(t("faq_created_successfully")),
                 onError: (e) => {
                     console.log(e);
-                    message.error("Error creating Faq");
+                    message.error(t("faq_creation_failed"));
                 },
             });
         }
     };
 
     return (
-        <Layout>
-            <Head title={faq ? "Edit FAQ" : "Create FAQ"} />
+        <div>
+            <Head title={faq ? t("edit_faq") : t("create_faq")} />
             <Card
-                title={faq ? "Edit FAQ" : "Create FAQ"}
+                title={faq ? t("edit_faq") : t("create_faq")}
                 extra={
                     <Link href="/faqs">
-                        <Button icon={<ArrowLeftOutlined />}>Back</Button>
+                        <Button icon={<ArrowLeftOutlined />}>
+                            {t("back")}
+                        </Button>
                     </Link>
                 }
             >
@@ -73,14 +78,14 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
                     <Row gutter={16}>
                         <Col span={24}>
                             <Form.Item
-                                label="Question"
+                                label={t("question")}
                                 name="question"
                                 validateStatus={errors.question ? "error" : ""}
                                 help={errors.question}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "Please enter the question",
+                                        message: t("question_required_message"),
                                     },
                                 ]}
                             >
@@ -90,14 +95,14 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
 
                         <Col span={24}>
                             <Form.Item
-                                label="Answer"
+                                label={t("answer")}
                                 name="answer"
                                 validateStatus={errors.answer ? "error" : ""}
                                 help={errors.answer}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "Please enter the answer",
+                                        message: t("answer_required_message"),
                                     },
                                 ]}
                             >
@@ -107,7 +112,7 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
 
                         <Col span={12}>
                             <Form.Item
-                                label="Category"
+                                label={t("category")}
                                 name="category"
                                 validateStatus={errors.category ? "error" : ""}
                                 help={errors.category}
@@ -118,14 +123,14 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
 
                         <Col span={6}>
                             <Form.Item
-                                label="Order"
+                                label={t("order")}
                                 name="order"
                                 validateStatus={errors.order ? "error" : ""}
                                 help={errors.order}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "Please enter the order",
+                                        message: t("order_required_message"),
                                     },
                                 ]}
                             >
@@ -138,7 +143,7 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
 
                         <Col span={6}>
                             <Form.Item
-                                label="Active"
+                                label={t("active")}
                                 name="is_active"
                                 valuePropName="checked"
                                 validateStatus={errors.is_active ? "error" : ""}
@@ -156,14 +161,14 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
                                     loading={processing}
                                     icon={<SaveOutlined />}
                                 >
-                                    {faq ? "Update" : "Create"}
+                                    {faq ? t("update") : t("create")}
                                 </Button>
                             </Form.Item>
                         </Col>
                     </Row>
                 </Form>
             </Card>
-        </Layout>
+        </div>
     );
 };
 

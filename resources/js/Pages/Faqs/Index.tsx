@@ -1,4 +1,3 @@
-// resources/js/Pages/Faqs/Index.tsx
 import React, { useState } from "react";
 import {
     Table,
@@ -31,13 +30,21 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableRow } from "./SortableRow";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PageProps extends BasePageProps {
     faqs: Faq[];
 }
 
-const FaqIndex: React.FC<PageProps> = () => {
+const FaqIndex: React.FC<PageProps> = ({ faqs, auth }) => (
+    <AdminLayout>
+        <Page faqs={faqs} auth={auth} />
+    </AdminLayout>
+);
+
+const Page: React.FC<PageProps> = () => {
     const { faqs } = usePage<PageProps>().props;
+    const { t } = useLanguage();
     const [searchText, setSearchText] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(
         null
@@ -74,9 +81,9 @@ const FaqIndex: React.FC<PageProps> = () => {
                 await axios.post("admin/faqs/reorder", {
                     order: newItems.map((item) => item.id),
                 });
-                message.success("FAQ order updated successfully");
+                message.success(t("faq_order_updated"));
             } catch (error) {
-                message.error("Failed to update FAQ order");
+                message.error(t("faq_order_update_failed"));
                 setItems(faqs); // Revert if API call fails
             } finally {
                 setLoading(false);
@@ -86,34 +93,34 @@ const FaqIndex: React.FC<PageProps> = () => {
 
     const columns = [
         {
-            title: "Question",
+            title: t("question"),
             dataIndex: "question",
             key: "question",
         },
         {
-            title: "Category",
+            title: t("category"),
             dataIndex: "category",
             key: "category",
             render: (category: string | null) => category || "-",
         },
         {
-            title: "Order",
+            title: t("order"),
             dataIndex: "order",
             key: "order",
             sorter: (a: Faq, b: Faq) => a.order - b.order,
         },
         {
-            title: "Status",
+            title: t("status"),
             dataIndex: "is_active",
             key: "is_active",
             render: (isActive: boolean) => (
                 <Tag color={isActive ? "green" : "red"}>
-                    {isActive ? "Active" : "Inactive"}
+                    {isActive ? t("active") : t("inactive")}
                 </Tag>
             ),
         },
         {
-            title: "Actions",
+            title: t("actions"),
             key: "actions",
             render: (_: any, record: Faq) => (
                 <Space size="middle">
@@ -125,9 +132,7 @@ const FaqIndex: React.FC<PageProps> = () => {
                         method="delete"
                         as="button"
                         type="button"
-                        onBefore={() =>
-                            confirm("Are you sure you want to delete this FAQ?")
-                        }
+                        onBefore={() => confirm(t("confirm_delete_faq"))}
                     >
                         <Button danger icon={<DeleteOutlined />} />
                     </Link>
@@ -138,13 +143,13 @@ const FaqIndex: React.FC<PageProps> = () => {
 
     return (
         <AdminLayout>
-            <Head title="FAQs" />
+            <Head title={t("faqs")} />
             <Card
-                title="Frequently Asked Questions"
+                title={t("frequently_asked_questions")}
                 extra={
                     <Link href="/admin/faqs/create">
                         <Button type="primary" icon={<PlusOutlined />}>
-                            Add FAQ
+                            {t("add_faq")}
                         </Button>
                     </Link>
                 }
@@ -152,7 +157,7 @@ const FaqIndex: React.FC<PageProps> = () => {
                 <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                     <Col span={8}>
                         <Input
-                            placeholder="Search FAQs..."
+                            placeholder={t("search_faqs_placeholder")}
                             prefix={<SearchOutlined />}
                             allowClear
                             onChange={(e) => setSearchText(e.target.value)}
@@ -161,7 +166,7 @@ const FaqIndex: React.FC<PageProps> = () => {
                     </Col>
                     <Col span={8}>
                         <Select
-                            placeholder="Filter by category"
+                            placeholder={t("filter_by_category")}
                             allowClear
                             style={{ width: "100%" }}
                             onChange={setSelectedCategory}

@@ -1,53 +1,19 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 import {
     Card,
-    Row,
-    Col,
-    Image,
     Typography,
-    Divider,
     Button,
-    Space,
     Descriptions,
-    Modal,
-    Form,
-    Input,
-    Tag,
     DatePicker,
-    Badge,
-    message,
-    Empty,
-    Select,
-    Radio,
-    Pagination,
-    Table,
     Collapse,
-    List,
 } from "antd";
-import {
-    EnvironmentOutlined,
-    PhoneOutlined,
-    MailOutlined,
-    CalendarOutlined,
-    HomeOutlined,
-    StarOutlined,
-    ArrowsAltOutlined,
-    SearchOutlined,
-    CheckCircleOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CaretRightOutlined,
-} from "@ant-design/icons";
-import Map from "@/Components/Map";
-import dayjs from "dayjs";
+import { CaretRightOutlined } from "@ant-design/icons";
 import { PageProps } from "@/types";
-import { Property, PropertyFilter } from "@/types/property";
-import { FaBath, FaBed } from "react-icons/fa";
-import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
-import PackageCard, { Package } from "@/Components/PackageCard";
+import { Package } from "@/Components/PackageCard";
 import { Faq } from "@/types/faq";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -58,11 +24,13 @@ interface PropertyDetailsPageProps extends PageProps {
     packages: Package[];
     faqs: Faq[];
 }
+
 const Pricing: React.FC = () => (
     <FrontLayout>
         <Page />
     </FrontLayout>
 );
+
 interface PlanFeature {
     key: string;
     name: string;
@@ -70,10 +38,12 @@ interface PlanFeature {
     agent: string | boolean;
     owner: string | boolean;
 }
+
 const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
     const { faqs, auth } = props;
+    const { t } = useLanguage();
 
     return (
         <section>
@@ -88,7 +58,7 @@ const Page: React.FC = () => {
                     level={2}
                     style={{ textAlign: "right", marginBottom: "24px" }}
                 >
-                    الأسئلة الشائعة
+                    {t("frequently_asked_questions")}
                 </Title>
                 <p style={{ textAlign: "right", marginBottom: "24px" }}>
                     {appConfigs["pricing.faq"]}
@@ -158,7 +128,7 @@ const Page: React.FC = () => {
                                     fontSize: "16px",
                                 }}
                             >
-                                تجربة مجانية
+                                {t("free_trial")}
                             </Button>
                             <Button
                                 size="large"
@@ -172,7 +142,7 @@ const Page: React.FC = () => {
                                     color: "white",
                                 }}
                             >
-                                احجز باقة الآن
+                                {t("book_package_now")}
                             </Button>
                         </div>
                     </div>

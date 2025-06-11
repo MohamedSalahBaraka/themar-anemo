@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Filters\PropertyFilter;
+use App\Models\City;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ class SearchController extends Controller
         $filters = $request->only([
             'type',
             'purpose',
-            'location',
+            'city',
             'minPrice',
             'maxPrice',
             'bedrooms',
@@ -32,6 +33,7 @@ class SearchController extends Controller
             ->paginate($filters['per_page'] ?? 12)
             ->withQueryString(); // Preserve filters in pagination linkss
         return Inertia::render('SearchResultsPage', [
+            'cities' => City::all(),
             'properties' => $properties->map(function ($property) {
                 return [
                     'id' => $property->id,

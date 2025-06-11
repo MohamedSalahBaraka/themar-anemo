@@ -13,6 +13,7 @@ import { PageProps } from "@/types";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Package } from "@/types/user";
 import PackageForm from "@/Components/PackageForm";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PackagePageProps extends PageProps {
     packages: any[];
@@ -24,6 +25,7 @@ const PackageManagementPage: React.FC = () => (
 );
 const Page: React.FC = () => {
     const { props } = usePage<PackagePageProps>();
+    const { t } = useLanguage();
     const [editingPackage, setEditingPackage] = React.useState<Package | null>(
         null
     );
@@ -44,14 +46,17 @@ const Page: React.FC = () => {
     const handleSuccess = () => {
         setIsModalVisible(false);
         setEditingPackage(null);
+        message.success(t("package_updated_successfully"));
     };
 
     return (
         <div className="px-6 py-4">
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                <Typography.Title level={2}>إدارة الباقات</Typography.Title>
+                <Typography.Title level={2}>
+                    {t("package_management")}
+                </Typography.Title>
                 <Typography.Text type="secondary">
-                    إدارة الباقات حسب نوع المستخدم
+                    {t("manage_packages_by_user_type")}
                 </Typography.Text>
                 <Divider />
                 <div>
@@ -62,65 +67,56 @@ const Page: React.FC = () => {
                                 type="primary"
                                 onClick={() => handleEdit(type)}
                             >
-                                {`تعديل باقة ${
-                                    type === "owner"
-                                        ? "المالك"
-                                        : type === "agent"
-                                        ? "الوسيط"
-                                        : "الشركة"
-                                }`}
+                                {t("edit_package_for", {
+                                    role: t(
+                                        type === "owner"
+                                            ? "owner"
+                                            : type === "agent"
+                                            ? "agent"
+                                            : "company"
+                                    ),
+                                })}
                             </Button>
                         ))}
                     </div>
                     <Table
                         columns={[
                             {
-                                title: "الاسم",
+                                title: t("name"),
                                 dataIndex: "name",
                                 key: "name",
                             },
                             {
-                                title: "الوصف",
+                                title: t("description"),
                                 dataIndex: "description",
                                 key: "description",
                             },
                             {
-                                title: "السعر الشهري",
+                                title: t("monthly_price"),
                                 dataIndex: "price",
                                 key: "price",
                                 render: (price: number) =>
                                     `$${parseInt(`${price}`).toFixed(2)}`,
                             },
                             {
-                                title: "السعر السنوي",
+                                title: t("yearly_price"),
                                 dataIndex: "yearly_price",
                                 key: "yearly_price",
                                 render: (price: number) =>
                                     `$${parseInt(`${price}`).toFixed(2)}`,
                             },
                             {
-                                title: "دور المستخدم",
+                                title: t("user_role"),
                                 dataIndex: "user_type",
                                 key: "user_type",
-                                render: (userType: string) => {
-                                    switch (userType) {
-                                        case "owner":
-                                            return "مالك";
-                                        case "agent":
-                                            return "وسيط";
-                                        case "company":
-                                            return "شركة";
-                                        default:
-                                            return "غير محدد";
-                                    }
-                                },
+                                render: (userType: string) => t(userType),
                             },
                             {
-                                title: "الحالة",
+                                title: t("status"),
                                 dataIndex: "isActive",
                                 key: "isActive",
                                 render: (isActive: boolean) =>
-                                    isActive ? "نشط" : "غير نشط",
+                                    isActive ? t("active") : t("inactive"),
                             },
                         ]}
                         dataSource={packages}
@@ -133,7 +129,7 @@ const Page: React.FC = () => {
                         onCancel={handleCancel}
                         onSuccess={handleSuccess}
                         packageData={editingPackage}
-                        userType={editingPackage?.user_type} // pass down the type
+                        userType={editingPackage?.user_type}
                     />
                 </div>
             </Space>

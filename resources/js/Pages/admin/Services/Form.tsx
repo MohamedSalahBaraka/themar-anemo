@@ -40,6 +40,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TiptapEditor from "@/Components/TiptapEditor";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -135,8 +136,12 @@ const SortableItem = ({
         </div>
     );
 };
-
-const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
+const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => (
+    <AdminLayout>
+        <Page categories={categories} service={service} />
+    </AdminLayout>
+);
+const Page: React.FC<ServiceFormProps> = ({ service, categories }) => {
     // @ts-ignore
     const { data, setData, post, put, processing, errors } = useForm<Service>({
         name: service?.name || "",
@@ -151,33 +156,31 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         fields:
             service?.fields.map((field) => ({
                 ...field,
-                show_on_creation: !field.step_id, // This sets show_on_creation based on step_id
+                show_on_creation: !field.step_id,
             })) || [],
     });
 
+    const { t } = useLanguage();
     const [activePanels, setActivePanels] = useState<string[]>(["1", "2"]);
+
     const prepareSubmitData = (): FormData => {
         const formData = new FormData();
 
-        // Handle basic fields
         formData.append("name", data.name);
         if (data.category_id)
             formData.append("category_id", data.category_id.toString());
         if (data.description) formData.append("description", data.description);
         if (data.price) formData.append("price", data.price.toString());
 
-        // Proper boolean handling
         formData.append("is_active", data.is_active ? "1" : "0");
         console.log(data.photo);
 
-        // Handle photo upload
         if (data.photo instanceof File) {
             formData.append("photo", data.photo);
         } else if (typeof data.photo === "string") {
             formData.append("photo_url", data.photo);
         }
 
-        // Handle tags
         const tagsArray =
             typeof data.tags === "string"
                 ? data.tags.split(",").map((tag) => tag.trim())
@@ -189,7 +192,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
             formData.append(`tags[${index}]`, tag);
         });
 
-        // Handle steps
         data.steps.forEach((step, index) => {
             formData.append(`steps[${index}][title]`, step.title);
             if (step.description)
@@ -202,12 +204,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                 formData.append(`steps[${index}][id]`, step.id.toString());
         });
 
-        // Handle fields with proper boolean conversion
         data.fields.forEach((field, index) => {
             formData.append(`fields[${index}][label]`, field.label);
             formData.append(`fields[${index}][field_type]`, field.field_type);
-
-            // Convert booleans to '1'/'0' strings
             formData.append(
                 `fields[${index}][required]`,
                 field.required ? "1" : "0"
@@ -249,20 +248,18 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         if (service?.id) {
             formData.append("_method", "PUT");
             router.post(route("admin.services.update", service.id), formData, {
-                onSuccess: () =>
-                    message.success("Service updated successfully"),
+                onSuccess: () => message.success(t("service_updated")),
                 onError: (errors) => {
                     console.error(errors);
-                    message.error("Error updating service");
+                    message.error(t("update_error"));
                 },
             });
         } else {
             router.post(route("admin.services.store"), formData, {
-                onSuccess: () =>
-                    message.success("Service created successfully"),
+                onSuccess: () => message.success(t("service_created")),
                 onError: (errors) => {
                     console.error(errors);
-                    message.error("Error creating service");
+                    message.error(t("create_error"));
                 },
             });
         }
@@ -287,7 +284,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         const newSteps = [...data.steps];
         newSteps.splice(index, 1);
 
-        // Reorder remaining steps
         const reorderedSteps = newSteps.map((step, i) => ({
             ...step,
             order: i + 1,
@@ -295,7 +291,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
 
         setData("steps", reorderedSteps);
 
-        // Update fields that were assigned to this step
         const updatedFields = data.fields.map((field) => ({
             ...field,
             step_id: field.step_id === index + 1 ? null : field.step_id,
@@ -309,7 +304,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         const [removed] = newSteps.splice(fromIndex, 1);
         newSteps.splice(toIndex, 0, removed);
 
-        // Update orders
         const reorderedSteps = newSteps.map((step, index) => ({
             ...step,
             order: index + 1,
@@ -329,7 +323,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                 data.fields.filter((f) =>
                     stepId ? f.step_id === stepId : !f.step_id
                 ).length + 1,
-            show_on_creation: !stepId, // Consistent with initialization
+            show_on_creation: !stepId,
             step_order: stepId
                 ? data.fields.filter((f) => f.step_id === stepId).length + 1
                 : 0,
@@ -374,9 +368,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         if (["select", "radio", "multiselect"].includes(field.field_type)) {
             return (
                 <Form.Item
-                    label="Options"
+                    label={t("options")}
                     name={["fields", index, "options"]}
-                    extra="Comma separated options"
+                    extra={t("comma_separated")}
                 >
                     <Input
                         value={field.options}
@@ -439,7 +433,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
             case "file":
                 return (
                     <Upload>
-                        <Button icon={<UploadOutlined />}>Upload File</Button>
+                        <Button icon={<UploadOutlined />}>
+                            {t("upload_file")}
+                        </Button>
                     </Upload>
                 );
             default:
@@ -467,8 +463,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
         setData("photo", info.fileList[0].originFileObj);
     };
     return (
-        <AdminLayout>
-            <Head title={service ? "Edit Service" : "Create Service"} />
+        <div>
+            <Head title={service ? t("edit_service") : t("create_service")} />
 
             <Form
                 layout="vertical"
@@ -476,11 +472,13 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                 initialValues={data}
             >
                 <Card
-                    title={service ? "Edit Service" : "Create New Service"}
+                    title={service ? t("edit_service") : t("create_service")}
                     extra={
                         <Space>
                             <Link href={route("admin.services.index")}>
-                                <Button icon={<CloseOutlined />}>Cancel</Button>
+                                <Button icon={<CloseOutlined />}>
+                                    {t("cancel")}
+                                </Button>
                             </Link>
                             <Button
                                 type="primary"
@@ -488,7 +486,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                 icon={<SaveOutlined />}
                                 loading={processing}
                             >
-                                Save
+                                {t("save")}
                             </Button>
                         </Space>
                     }
@@ -496,14 +494,14 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                label="Service Name"
+                                label={t("service_name")}
                                 name="name"
                                 validateStatus={errors.name ? "error" : ""}
                                 help={errors.name}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "Please input service name!",
+                                        message: t("name_required"),
                                     },
                                 ]}
                             >
@@ -517,7 +515,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                label="Category"
+                                label={t("category")}
                                 name="category_id"
                                 validateStatus={
                                     errors.category_id ? "error" : ""
@@ -525,7 +523,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                 help={errors.category_id}
                             >
                                 <Select<number | null>
-                                    placeholder="Select a category"
+                                    placeholder={t("select_category")}
                                     value={data.category_id}
                                     onChange={(value) =>
                                         setData("category_id", value)
@@ -546,7 +544,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                     </Row>
 
                     <Form.Item
-                        label="Description"
+                        label={t("description")}
                         name="description"
                         validateStatus={errors.description ? "error" : ""}
                         help={errors.description}
@@ -558,7 +556,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                     </Form.Item>
                     <Col xs={24} md={12}>
                         <Form.Item
-                            label="Photo"
+                            label={t("photo")}
                             validateStatus={errors.photo ? "error" : ""}
                             help={errors.photo}
                         >
@@ -571,7 +569,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                 showUploadList={true}
                             >
                                 <Button icon={<UploadOutlined />}>
-                                    Click to upload
+                                    {t("click_to_upload")}
                                 </Button>
                             </Upload>
                             {service?.photo && !data.photo && (
@@ -591,7 +589,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                label="Price"
+                                label={t("price")}
                                 name="price"
                                 validateStatus={errors.price ? "error" : ""}
                                 help={errors.price}
@@ -609,11 +607,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                label="Tags"
+                                label={t("tags")}
                                 name="tags"
                                 validateStatus={errors.tags ? "error" : ""}
                                 help={errors.tags}
-                                extra="Comma separated list of tags"
+                                extra={t("tags_extra")}
                             >
                                 <Input
                                     value={data.tags}
@@ -627,7 +625,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
 
                     {service && (
                         <Form.Item
-                            label="Status"
+                            label={t("status")}
                             name="is_active"
                             valuePropName="checked"
                         >
@@ -647,7 +645,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                         onChange={handlePanelChange}
                     >
                         <Panel
-                            header="Creation Form Fields (shown when creating a service)"
+                            header={t("creation_fields")}
                             key="creation-fields"
                         >
                             <DndContext onDragEnd={handleDragEnd}>
@@ -672,7 +670,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                     <Card
                                                         title={
                                                             field.label ||
-                                                            `Field ${index + 1}`
+                                                            `${t("field")} ${
+                                                                index + 1
+                                                            }`
                                                         }
                                                         style={{
                                                             marginBottom: 16,
@@ -697,7 +697,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                         <Row gutter={16}>
                                                             <Col span={8}>
                                                                 <Form.Item
-                                                                    label="Label"
+                                                                    label={t(
+                                                                        "label"
+                                                                    )}
                                                                     name={[
                                                                         "fields",
                                                                         originalIndex,
@@ -708,7 +710,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                             required:
                                                                                 true,
                                                                             message:
-                                                                                "Please input field label!",
+                                                                                t(
+                                                                                    "label_required"
+                                                                                ),
                                                                         },
                                                                     ]}
                                                                 >
@@ -737,7 +741,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                             </Col>
                                                             <Col span={8}>
                                                                 <Form.Item
-                                                                    label="Type"
+                                                                    label={t(
+                                                                        "type"
+                                                                    )}
                                                                     name={[
                                                                         "fields",
                                                                         originalIndex,
@@ -748,7 +754,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                             required:
                                                                                 true,
                                                                             message:
-                                                                                "Please select field type!",
+                                                                                t(
+                                                                                    "type_required"
+                                                                                ),
                                                                         },
                                                                     ]}
                                                                 >
@@ -774,41 +782,63 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                         }}
                                                                     >
                                                                         <Option value="text">
-                                                                            Text
+                                                                            {t(
+                                                                                "text"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="textarea">
-                                                                            Textarea
+                                                                            {t(
+                                                                                "textarea"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="number">
-                                                                            Number
+                                                                            {t(
+                                                                                "number"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="email">
-                                                                            Email
+                                                                            {t(
+                                                                                "email"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="select">
-                                                                            Select
+                                                                            {t(
+                                                                                "select"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="multiselect">
-                                                                            Multi-Select
+                                                                            {t(
+                                                                                "multiselect"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="checkbox">
-                                                                            Checkbox
+                                                                            {t(
+                                                                                "checkbox"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="radio">
-                                                                            Radio
+                                                                            {t(
+                                                                                "radio"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="date">
-                                                                            Date
+                                                                            {t(
+                                                                                "date"
+                                                                            )}
                                                                         </Option>
                                                                         <Option value="file">
-                                                                            File
+                                                                            {t(
+                                                                                "file"
+                                                                            )}
                                                                         </Option>
                                                                     </Select>
                                                                 </Form.Item>
                                                             </Col>
                                                             <Col span={8}>
                                                                 <Form.Item
-                                                                    label="Required"
+                                                                    label={t(
+                                                                        "required"
+                                                                    )}
                                                                     name={[
                                                                         "fields",
                                                                         originalIndex,
@@ -856,11 +886,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                 block
                                 icon={<PlusOutlined />}
                             >
-                                Add Creation Field
+                                {t("add_creation_field")}
                             </Button>
                         </Panel>
 
-                        <Panel header="Service Steps" key="steps">
+                        <Panel header={t("service_steps")} key="steps">
                             <DndContext onDragEnd={handleDragEnd}>
                                 <SortableContext
                                     items={data.steps.map(
@@ -874,8 +904,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                             id={`step-${step.order}`}
                                         >
                                             <Card
-                                                title={`Step ${step.order}: ${
-                                                    step.title || "New Step"
+                                                title={`${t("step")} ${
+                                                    step.order
+                                                }: ${
+                                                    step.title || t("new_step")
                                                 }`}
                                                 style={{ marginBottom: 24 }}
                                                 extra={
@@ -897,7 +929,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                 <Row gutter={24}>
                                                     <Col span={12}>
                                                         <Form.Item
-                                                            label="Title"
+                                                            label={t("title")}
                                                             name={[
                                                                 "steps",
                                                                 stepIndex,
@@ -908,7 +940,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                     required:
                                                                         true,
                                                                     message:
-                                                                        "Please input step title!",
+                                                                        t(
+                                                                            "title_required"
+                                                                        ),
                                                                 },
                                                             ]}
                                                         >
@@ -937,7 +971,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                     </Col>
                                                     <Col span={6}>
                                                         <Form.Item
-                                                            label="Deadline (days)"
+                                                            label={t(
+                                                                "deadline_days"
+                                                            )}
                                                             name={[
                                                                 "steps",
                                                                 stepIndex,
@@ -975,7 +1011,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                     </Col>
                                                 </Row>
                                                 <Form.Item
-                                                    label="Description"
+                                                    label={t("description")}
                                                     name={[
                                                         "steps",
                                                         stepIndex,
@@ -1002,7 +1038,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                 </Form.Item>
 
                                                 <Divider orientation="left">
-                                                    Step Fields
+                                                    {t("step_fields")}
                                                 </Divider>
 
                                                 <DndContext
@@ -1050,7 +1086,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                             <Card
                                                                                 title={
                                                                                     field.label ||
-                                                                                    `Field ${
+                                                                                    `${t(
+                                                                                        "field"
+                                                                                    )} ${
                                                                                         fieldIndex +
                                                                                         1
                                                                                     }`
@@ -1086,7 +1124,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                         }
                                                                                     >
                                                                                         <Form.Item
-                                                                                            label="Label"
+                                                                                            label={t(
+                                                                                                "label"
+                                                                                            )}
                                                                                             name={[
                                                                                                 "fields",
                                                                                                 originalIndex,
@@ -1097,7 +1137,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                                     required:
                                                                                                         true,
                                                                                                     message:
-                                                                                                        "Please input field label!",
+                                                                                                        t(
+                                                                                                            "label_required"
+                                                                                                        ),
                                                                                                 },
                                                                                             ]}
                                                                                         >
@@ -1130,7 +1172,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                         }
                                                                                     >
                                                                                         <Form.Item
-                                                                                            label="Type"
+                                                                                            label={t(
+                                                                                                "type"
+                                                                                            )}
                                                                                             name={[
                                                                                                 "fields",
                                                                                                 originalIndex,
@@ -1141,7 +1185,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                                     required:
                                                                                                         true,
                                                                                                     message:
-                                                                                                        "Please select field type!",
+                                                                                                        t(
+                                                                                                            "type_required"
+                                                                                                        ),
                                                                                                 },
                                                                                             ]}
                                                                                         >
@@ -1167,34 +1213,54 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                                 }}
                                                                                             >
                                                                                                 <Option value="text">
-                                                                                                    Text
+                                                                                                    {t(
+                                                                                                        "text"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="textarea">
-                                                                                                    Textarea
+                                                                                                    {t(
+                                                                                                        "textarea"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="number">
-                                                                                                    Number
+                                                                                                    {t(
+                                                                                                        "number"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="email">
-                                                                                                    Email
+                                                                                                    {t(
+                                                                                                        "email"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="select">
-                                                                                                    Select
+                                                                                                    {t(
+                                                                                                        "select"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="multiselect">
-                                                                                                    Multi-Select
+                                                                                                    {t(
+                                                                                                        "multiselect"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="checkbox">
-                                                                                                    Checkbox
+                                                                                                    {t(
+                                                                                                        "checkbox"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="radio">
-                                                                                                    Radio
+                                                                                                    {t(
+                                                                                                        "radio"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="date">
-                                                                                                    Date
+                                                                                                    {t(
+                                                                                                        "date"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                                 <Option value="file">
-                                                                                                    File
+                                                                                                    {t(
+                                                                                                        "file"
+                                                                                                    )}
                                                                                                 </Option>
                                                                                             </Select>
                                                                                         </Form.Item>
@@ -1205,7 +1271,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                                                         }
                                                                                     >
                                                                                         <Form.Item
-                                                                                            label="Required"
+                                                                                            label={t(
+                                                                                                "required"
+                                                                                            )}
                                                                                             name={[
                                                                                                 "fields",
                                                                                                 originalIndex,
@@ -1257,7 +1325,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                                     block
                                                     icon={<PlusOutlined />}
                                                 >
-                                                    Add Field to This Step
+                                                    {t("add_field_to_step")}
                                                 </Button>
                                             </Card>
                                         </SortableItem>
@@ -1270,13 +1338,13 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, categories }) => {
                                 block
                                 icon={<PlusOutlined />}
                             >
-                                Add Step
+                                {t("add_step")}
                             </Button>
                         </Panel>
                     </Collapse>
                 </Card>
             </Form>
-        </AdminLayout>
+        </div>
     );
 };
 

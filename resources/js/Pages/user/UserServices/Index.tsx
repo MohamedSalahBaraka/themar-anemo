@@ -14,6 +14,8 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import AdminLayout from "@/Layouts/AdminLayout";
+import AppLayout from "@/Layouts/Layout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { TextArea } = Input;
 
@@ -85,10 +87,11 @@ const RatingModal = ({
 }) => {
     const [rating, setRating] = useState<number>(0);
     const [review, setReview] = useState<string>("");
+    const { t } = useLanguage();
 
     return (
         <Modal
-            title="Rate This Service"
+            title={t("Rate This Service")}
             open={visible}
             onCancel={onCancel}
             onOk={() => onOk(rating, review)}
@@ -112,20 +115,35 @@ const RatingModal = ({
             </div>
             <TextArea
                 rows={4}
-                placeholder="Share your experience (optional)"
+                placeholder={t("Share your experience (optional)")}
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
             />
         </Modal>
     );
 };
-
-const UserServicesIndex = ({
+const UserServicesIndex: React.FC<UserServicesIndexProps> = ({
     services,
     filters: initialFilters,
     allServices,
     allStatuses,
     allUsers,
+}) => (
+    <AppLayout>
+        <Page
+            allServices={allServices}
+            allStatuses={allStatuses}
+            allUsers={allUsers}
+            filters={initialFilters}
+            services={services}
+        />
+    </AppLayout>
+);
+const Page = ({
+    services,
+    filters: initialFilters,
+    allServices,
+    allStatuses,
 }: UserServicesIndexProps) => {
     type StatusKey =
         | "pending"
@@ -144,11 +162,11 @@ const UserServicesIndex = ({
     const [filters, setFilters] = useState({
         status: initialFilters.status || null,
         service_id: initialFilters.service_id || null,
-        user_id: initialFilters.user_id || null,
         date_from: initialFilters.date_from || null,
         date_to: initialFilters.date_to || null,
     });
 
+    const { t } = useLanguage();
     const [ratingModalVisible, setRatingModalVisible] = useState<number | null>(
         null
     );
@@ -168,11 +186,11 @@ const UserServicesIndex = ({
                 preserveScroll: true,
                 onSuccess: () => {
                     setRatingModalVisible(null);
-                    message.success("Rating submitted successfully!");
+                    message.success(t("Rating submitted successfully!"));
                 },
                 onError: (e) => {
                     console.log(e);
-                    message.error("Failed to submit rating");
+                    message.error(t("Failed to submit rating"));
                 },
                 onFinish: () => {
                     setSubmittingRating(false);
@@ -183,18 +201,18 @@ const UserServicesIndex = ({
 
     const columns: ColumnsType<UserService> = [
         {
-            title: "ID",
+            title: t("ID"),
             dataIndex: "id",
             key: "id",
         },
         {
-            title: "Service",
+            title: t("Service"),
             dataIndex: "service",
             key: "service",
             render: (service: Service) => service?.name,
         },
         {
-            title: "Status",
+            title: t("Status"),
             dataIndex: "status",
             render: (status: string) => (
                 <Tag color={statusColors[status as StatusKey] || "gray"}>
@@ -203,13 +221,13 @@ const UserServicesIndex = ({
             ),
         },
         {
-            title: "Current Step",
+            title: t("Current Step"),
             dataIndex: "current_step",
             key: "current_step",
             render: (step: Step) => step?.title,
         },
         {
-            title: "Rating",
+            title: t("Rating"),
             dataIndex: "rating",
             key: "rating",
             render: (rating: number | null, record: UserService) => {
@@ -220,7 +238,7 @@ const UserServicesIndex = ({
                             size="small"
                             onClick={() => setRatingModalVisible(record.id)}
                         >
-                            Rate Service
+                            {t("Rate Service")}
                         </Button>
                     ) : null;
                 }
@@ -237,13 +255,13 @@ const UserServicesIndex = ({
             },
         },
         {
-            title: "Created At",
+            title: t("Created At"),
             dataIndex: "created_at",
             key: "created_at",
             render: (date: string) => new Date(date).toLocaleString(),
         },
         {
-            title: "Actions",
+            title: t("Actions"),
             key: "actions",
             render: (_: any, record: UserService) => (
                 <Button
@@ -254,7 +272,7 @@ const UserServicesIndex = ({
                         )
                     }
                 >
-                    View Details
+                    {t("View Details")}
                 </Button>
             ),
         },
@@ -271,7 +289,6 @@ const UserServicesIndex = ({
         setFilters({
             status: null,
             service_id: null,
-            user_id: null,
             date_from: null,
             date_to: null,
         });
@@ -297,141 +314,117 @@ const UserServicesIndex = ({
     };
 
     return (
-        <AdminLayout>
-            <div>
-                <h1>Service Requests</h1>
+        <div>
+            <h1>{t("Service Requests")}</h1>
 
-                <div
-                    style={{
-                        background: "#fafafa",
-                        padding: 20,
-                        marginBottom: 20,
-                        borderRadius: 4,
-                    }}
-                >
-                    <h3>Filters</h3>
-                    <Space size={20} style={{ marginBottom: 16 }}>
-                        <div>
-                            <div style={{ marginBottom: 8 }}>Status</div>
-                            <Select
-                                value={filters.status}
-                                onChange={(value) =>
-                                    setFilters({ ...filters, status: value })
-                                }
-                                style={{ width: 200 }}
-                                placeholder="Select status"
-                                allowClear
-                            >
-                                {allStatuses.map((status) => (
-                                    <Select.Option key={status} value={status}>
-                                        {status.replace("_", " ").toUpperCase()}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </div>
+            <div
+                style={{
+                    background: "#fafafa",
+                    padding: 20,
+                    marginBottom: 20,
+                    borderRadius: 4,
+                }}
+            >
+                <h3>Filters</h3>
+                <Space size={20} style={{ marginBottom: 16 }}>
+                    <div>
+                        <div style={{ marginBottom: 8 }}>{t("Status")}</div>
+                        <Select
+                            value={filters.status}
+                            onChange={(value) =>
+                                setFilters({ ...filters, status: value })
+                            }
+                            style={{ width: 200 }}
+                            placeholder={t("Select status")}
+                            allowClear
+                        >
+                            {allStatuses.map((status) => (
+                                <Select.Option key={status} value={status}>
+                                    {status.replace("_", " ").toUpperCase()}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </div>
 
-                        <div>
-                            <div style={{ marginBottom: 8 }}>Service</div>
-                            <Select
-                                value={filters.service_id}
-                                onChange={(value) =>
-                                    setFilters({
-                                        ...filters,
-                                        service_id: value,
-                                    })
-                                }
-                                style={{ width: 200 }}
-                                placeholder="Select service"
-                                allowClear
-                            >
-                                {allServices.map((service) => (
-                                    <Select.Option
-                                        key={service.id}
-                                        value={service.id}
-                                    >
-                                        {service.name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </div>
+                    <div>
+                        <div style={{ marginBottom: 8 }}>{t("Service")}</div>
+                        <Select
+                            value={filters.service_id}
+                            onChange={(value) =>
+                                setFilters({
+                                    ...filters,
+                                    service_id: value,
+                                })
+                            }
+                            style={{ width: 200 }}
+                            placeholder={t("Select service")}
+                            allowClear
+                        >
+                            {allServices.map((service) => (
+                                <Select.Option
+                                    key={service.id}
+                                    value={service.id}
+                                >
+                                    {service.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </div>
+                </Space>
 
-                        <div>
-                            <div style={{ marginBottom: 8 }}>User</div>
-                            <Select
-                                value={filters.user_id}
-                                onChange={(value) =>
-                                    setFilters({ ...filters, user_id: value })
-                                }
-                                style={{ width: 200 }}
-                                placeholder="Select user"
-                                allowClear
-                            >
-                                {allUsers.map((user) => (
-                                    <Select.Option
-                                        key={user.id}
-                                        value={user.id}
-                                    >
-                                        {user.name} ({user.email})
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </div>
-                    </Space>
+                <Space size={20} style={{ marginBottom: 16 }}>
+                    <div>
+                        <div style={{ marginBottom: 8 }}>{t("Date From")}</div>
+                        <DatePicker
+                            value={filters.date_from}
+                            onChange={(date) =>
+                                setFilters({ ...filters, date_from: date })
+                            }
+                            style={{ width: 200 }}
+                            placeholder={t("Start date")}
+                        />
+                    </div>
 
-                    <Space size={20} style={{ marginBottom: 16 }}>
-                        <div>
-                            <div style={{ marginBottom: 8 }}>Date From</div>
-                            <DatePicker
-                                value={filters.date_from}
-                                onChange={(date) =>
-                                    setFilters({ ...filters, date_from: date })
-                                }
-                                style={{ width: 200 }}
-                                placeholder="Start date"
-                            />
-                        </div>
+                    <div>
+                        <div style={{ marginBottom: 8 }}>{t("Date To")}</div>
+                        <DatePicker
+                            value={filters.date_to}
+                            onChange={(date) =>
+                                setFilters({ ...filters, date_to: date })
+                            }
+                            style={{ width: 200 }}
+                            placeholder={t("End date")}
+                        />
+                    </div>
+                </Space>
 
-                        <div>
-                            <div style={{ marginBottom: 8 }}>Date To</div>
-                            <DatePicker
-                                value={filters.date_to}
-                                onChange={(date) =>
-                                    setFilters({ ...filters, date_to: date })
-                                }
-                                style={{ width: 200 }}
-                                placeholder="End date"
-                            />
-                        </div>
-                    </Space>
-
-                    <Space>
-                        <Button type="primary" onClick={applyFilters}>
-                            Apply Filters
-                        </Button>
-                        <Button onClick={resetFilters}>Reset Filters</Button>
-                    </Space>
-                </div>
-
-                <Table
-                    columns={columns}
-                    dataSource={services.data}
-                    rowKey="id"
-                    pagination={{
-                        current: services.current_page,
-                        total: services.total,
-                        pageSize: services.per_page,
-                        showSizeChanger: false,
-                    }}
-                    onChange={handleTableChange}
-                />
-                <RatingModal
-                    visible={!!ratingModalVisible}
-                    onCancel={() => setRatingModalVisible(null)}
-                    onOk={handleRatingSubmit}
-                    loading={submittingRating}
-                />
+                <Space>
+                    <Button type="primary" onClick={applyFilters}>
+                        {t("Apply Filters")}
+                    </Button>
+                    <Button onClick={resetFilters}>{t("Reset Filters")}</Button>
+                </Space>
             </div>
-        </AdminLayout>
+
+            <Table
+                columns={columns}
+                dataSource={services.data}
+                rowKey="id"
+                pagination={{
+                    current: services.current_page,
+                    total: services.total,
+                    pageSize: services.per_page,
+                    showSizeChanger: false,
+                }}
+                onChange={handleTableChange}
+            />
+            <RatingModal
+                visible={!!ratingModalVisible}
+                onCancel={() => setRatingModalVisible(null)}
+                onOk={handleRatingSubmit}
+                loading={submittingRating}
+            />
+        </div>
     );
 };
 

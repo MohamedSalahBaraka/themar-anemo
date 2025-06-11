@@ -8,11 +8,18 @@ import { PageProps } from "@/types";
 import { RcFile, UploadFile } from "antd/es/upload";
 import { UploadChangeParam } from "antd/lib/upload";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface page extends PageProps {
     categories: ServiceCategory[];
 }
-const ServiceCategoriesIndex = () => {
+const ServiceCategoriesIndex: React.FC = () => (
+    <AdminLayout>
+        <Page />
+    </AdminLayout>
+);
+const Page = () => {
     const { categories } = usePage<page>().props;
+    const { t } = useLanguage();
     const { data, setData, processing, errors, reset } = useForm<{
         id: number;
         name: string;
@@ -27,12 +34,12 @@ const ServiceCategoriesIndex = () => {
     const [isEdit, setIsEdit] = useState(false);
     const columns = [
         {
-            title: "الاسم",
+            title: t("name"),
             dataIndex: "name",
             key: "name",
         },
         {
-            title: "الأيقونة",
+            title: t("icon"),
             dataIndex: "icon_url",
             key: "icon_url",
             render: (iconUrl: string) =>
@@ -40,24 +47,24 @@ const ServiceCategoriesIndex = () => {
                     <img
                         src={iconUrl}
                         style={{ width: 40, height: 40, objectFit: "contain" }}
-                        alt="أيقونة"
+                        alt={t("icon")}
                     />
                 ) : null,
         },
         {
-            title: "الإجراءات",
+            title: t("Actions"),
             key: "actions",
             render: (record: ServiceCategory) => (
                 <div>
                     <Button type="link" onClick={() => showEditModal(record)}>
-                        تعديل
+                        {t("Edit")}
                     </Button>
                     <Button
                         type="link"
                         danger
                         onClick={() => handleDelete(record.id)}
                     >
-                        حذف
+                        {t("Delete")}
                     </Button>
                 </div>
             ),
@@ -93,11 +100,12 @@ const ServiceCategoriesIndex = () => {
             formData.append("_method", "PUT"); // 👈 spoof the method
             router.post(route("service-categories.update", data.id), formData, {
                 // forceFormData: true,
-                onSuccess: () => message.success("تم تحديث التصنيف بنجاح"),
+                onSuccess: () =>
+                    message.success(t("Category have been Updated")),
                 onError: (e) => {
                     console.log(e);
                     if (e.icon) message.error(e.icon);
-                    else message.error("خطأ في تحديث التصنيف");
+                    else message.error(t("Faild to Update Category"));
                 },
                 onFinish: (e) => {
                     setVisible(false);
@@ -105,10 +113,13 @@ const ServiceCategoriesIndex = () => {
             });
         } else {
             router.post(route("service-categories.store"), formData, {
-                onSuccess: () => message.success("تم إنشاء التصنيف بنجاح"),
+                onSuccess: () =>
+                    message.success(
+                        t("Category have been created successfully")
+                    ),
                 onError: (e) => {
                     console.log(e);
-                    message.error("خطأ في إنشاء التصنيف");
+                    message.error(t("Error Creating Category"));
                 },
                 onFinish: (e) => {
                     setVisible(false);
@@ -119,11 +130,13 @@ const ServiceCategoriesIndex = () => {
 
     const handleDelete = (id: number) => {
         Modal.confirm({
-            title: "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟",
+            title: t("Are you sure you want to delete this Category?"),
             onOk: () => {
                 router.delete(route("service-categories.destroy", id), {
                     onSuccess: () => {
-                        message.success("تم حذف التصنيف بنجاح");
+                        message.success(
+                            t("Category have beed deleted successfully")
+                        );
                     },
                 });
             },
@@ -135,61 +148,53 @@ const ServiceCategoriesIndex = () => {
     };
 
     return (
-        <AdminLayout>
-            <div>
-                <div style={{ marginBottom: 16 }}>
-                    <Button type="primary" onClick={showCreateModal}>
-                        إنشاء تصنيف جديد
-                    </Button>
-                </div>
-
-                <Table columns={columns} dataSource={categories} rowKey="id" />
-
-                <Modal
-                    visible={visible}
-                    title={isEdit ? "تعديل التصنيف" : "إنشاء تصنيف جديد"}
-                    onOk={handleSubmit}
-                    confirmLoading={processing}
-                    onCancel={() => setVisible(false)}
-                >
-                    <Form layout="vertical">
-                        <Form.Item label="الاسم" required>
-                            <Input
-                                value={data.name}
-                                onChange={(e) =>
-                                    setData("name", e.target.value)
-                                }
-                            />
-                            {errors.name && (
-                                <span className="text-red-500">
-                                    {errors.name}
-                                </span>
-                            )}
-                        </Form.Item>
-
-                        <Form.Item label="الأيقونة">
-                            <Upload
-                                name="photo"
-                                listType="picture"
-                                maxCount={1}
-                                beforeUpload={() => false}
-                                onChange={handleFileChange}
-                                showUploadList={true}
-                            >
-                                <Button icon={<UploadOutlined />}>
-                                    انقر للرفع
-                                </Button>
-                            </Upload>
-                            {errors.icon && (
-                                <span className="text-red-500">
-                                    {errors.icon}
-                                </span>
-                            )}
-                        </Form.Item>
-                    </Form>
-                </Modal>
+        <div>
+            <div style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={showCreateModal}>
+                    {t("create new Category")}
+                </Button>
             </div>
-        </AdminLayout>
+
+            <Table columns={columns} dataSource={categories} rowKey="id" />
+
+            <Modal
+                visible={visible}
+                title={isEdit ? t("Edit Category") : t("create new Category")}
+                onOk={handleSubmit}
+                confirmLoading={processing}
+                onCancel={() => setVisible(false)}
+            >
+                <Form layout="vertical">
+                    <Form.Item label={t("name")} required>
+                        <Input
+                            value={data.name}
+                            onChange={(e) => setData("name", e.target.value)}
+                        />
+                        {errors.name && (
+                            <span className="text-red-500">{errors.name}</span>
+                        )}
+                    </Form.Item>
+
+                    <Form.Item label={t("icon")}>
+                        <Upload
+                            name="photo"
+                            listType="picture"
+                            maxCount={1}
+                            beforeUpload={() => false}
+                            onChange={handleFileChange}
+                            showUploadList={true}
+                        >
+                            <Button icon={<UploadOutlined />}>
+                                {t("click to upload")}
+                            </Button>
+                        </Upload>
+                        {errors.icon && (
+                            <span className="text-red-500">{errors.icon}</span>
+                        )}
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </div>
     );
 };
 

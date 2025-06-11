@@ -1,3 +1,4 @@
+import { City } from "./city";
 import { User } from "./user";
 
 export interface Property {
@@ -9,6 +10,7 @@ export interface Property {
     status: PropertyStatus;
     purpose: "sale" | "rent";
     price: number;
+    views_count: number;
     area?: number;
     user: User;
     bedrooms?: number;
@@ -30,6 +32,7 @@ export interface Property {
     imageUrl?: string;
     images?: { image_url: string }[];
     features: string[];
+    city: City;
 }
 export type PropertyType = "apartment" | "villa" | "land" | "office";
 export type PropertyStatus =
@@ -62,6 +65,7 @@ export interface PropertyFilter {
     type?: "apartment" | "villa" | "land" | "office";
     minPrice?: number;
     maxPrice?: number;
+    city?: number;
     purpose?: "sale" | "rent";
     bedrooms?: number;
     bathrooms?: number;

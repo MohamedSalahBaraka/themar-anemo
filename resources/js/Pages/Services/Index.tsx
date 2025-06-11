@@ -1,4 +1,3 @@
-// صفحات/الخدمات/Index.tsx
 import React, { useState } from "react";
 import { usePage } from "@inertiajs/react";
 import { Link, router } from "@inertiajs/react";
@@ -23,6 +22,7 @@ import {
 } from "@/types/Services";
 import { PageProps } from "@/types";
 import FrontLayout from "@/Layouts/FrontLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -60,6 +60,7 @@ const Page: React.FC = () => {
         filters.tags || []
     );
 
+    const { t } = useLanguage();
     const handleSearch = (value: string) => {
         setLoading(true);
         router.get(
@@ -153,13 +154,13 @@ const Page: React.FC = () => {
                 </Text>
             </div>
             <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-6">خدماتنا</h1>
+                <h1 className="text-3xl font-bold mb-6">{t("our_services")}</h1>
 
                 <div className="bg-white p-6 rounded-lg shadow mb-6">
                     <Row gutter={[16, 16]} align="middle">
                         <Col xs={24} sm={12} md={8}>
                             <Search
-                                placeholder="ابحث عن خدمات..."
+                                placeholder={t("search_services_placeholder")}
                                 allowClear
                                 enterButton={<SearchOutlined />}
                                 size="large"
@@ -171,7 +172,7 @@ const Page: React.FC = () => {
 
                         <Col xs={24} sm={12} md={8}>
                             <Select
-                                placeholder="تصفية حسب الفئة"
+                                placeholder={t("filter_by_category")}
                                 style={{ width: "100%" }}
                                 size="large"
                                 allowClear
@@ -192,7 +193,7 @@ const Page: React.FC = () => {
                         <Col xs={24} sm={12} md={8}>
                             <Select
                                 mode="multiple"
-                                placeholder="تصفية حسب الوسوم"
+                                placeholder={t("filter_by_tags")}
                                 style={{ width: "100%" }}
                                 size="large"
                                 allowClear
@@ -216,7 +217,7 @@ const Page: React.FC = () => {
                                     onClick={clearFilters}
                                     icon={<FilterOutlined />}
                                 >
-                                    مسح جميع الفلاتر
+                                    {t("clear_all_filters")}
                                 </Button>
                             </Col>
                         )}
@@ -267,14 +268,6 @@ const Page: React.FC = () => {
                                                 title={service.name}
                                                 description={
                                                     <>
-                                                        {/* <div
-                                                            className="truncate mb-2"
-                                                            dangerouslySetInnerHTML={{
-                                                                __html:
-                                                                    service.description ||
-                                                                    "",
-                                                            }}
-                                                        /> */}
                                                         <div className="font-bold text-lg">
                                                             {service.price}
                                                         </div>
@@ -312,11 +305,11 @@ const Page: React.FC = () => {
                     </>
                 ) : (
                     <Empty
-                        description="لا توجد خدمات متاحة"
+                        description={t("no_services_available")}
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
                     >
                         <Button type="primary" onClick={clearFilters}>
-                            مسح الفلاتر
+                            {t("clear_filters")}
                         </Button>
                     </Empty>
                 )}
@@ -363,7 +356,7 @@ const Page: React.FC = () => {
                                     fontSize: "16px",
                                 }}
                             >
-                                تجربة مجانية
+                                {t("free_trial")}
                             </Button>
                             <Button
                                 size="large"
@@ -377,7 +370,7 @@ const Page: React.FC = () => {
                                     color: "white",
                                 }}
                             >
-                                احجز باقة الآن
+                                {t("book_package_now")}
                             </Button>
                         </div>
                     </div>

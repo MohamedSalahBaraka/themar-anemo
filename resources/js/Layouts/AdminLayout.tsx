@@ -125,7 +125,7 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
             icon: <UserOutlined />,
             label: (
                 <Link href="/admin/service-categories">
-                    {t("servicesCategory")}
+                    {t("service_categories")}
                 </Link>
             ),
         },
@@ -138,13 +138,15 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
             key: "Service Orders",
             icon: <UserOutlined />,
             label: (
-                <Link href="/admin/user-services">{t("Service Orders")}</Link>
+                <Link href="/admin/user-services">{t("service_orders")}</Link>
             ),
         },
         {
             key: "team-members",
             icon: <TeamOutlined />,
-            label: <Link href="/admin/team-members">{t("team_members")}</Link>,
+            label: (
+                <Link href="/admin/team-members">{t("team_management")}</Link>
+            ),
         },
         {
             key: "cities",

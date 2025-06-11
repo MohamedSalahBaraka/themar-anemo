@@ -27,7 +27,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Property::class);
     }
-
+    public function FeaturedProperties()
+    {
+        return $this->properties()->where("is_featured", true)->count();
+    }
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
@@ -122,5 +125,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin'; // or whatever your role check logic is
     }
 }

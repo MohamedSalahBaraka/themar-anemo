@@ -1,53 +1,25 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 import {
     Card,
     Row,
-    Col,
-    Image,
     Typography,
-    Divider,
     Button,
-    Space,
     Descriptions,
-    Modal,
-    Form,
-    Input,
-    Tag,
     DatePicker,
-    Badge,
-    message,
-    Empty,
-    Select,
-    Radio,
-    Pagination,
     Table,
     Collapse,
-    List,
 } from "antd";
 import {
-    EnvironmentOutlined,
-    PhoneOutlined,
-    MailOutlined,
-    CalendarOutlined,
-    HomeOutlined,
-    StarOutlined,
-    ArrowsAltOutlined,
-    SearchOutlined,
-    CheckCircleOutlined,
     CheckOutlined,
     CloseOutlined,
     CaretRightOutlined,
 } from "@ant-design/icons";
-import Map from "@/Components/Map";
-import dayjs from "dayjs";
 import { PageProps } from "@/types";
-import { Property, PropertyFilter } from "@/types/property";
-import { FaBath, FaBed } from "react-icons/fa";
-import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
 import PackageCard, { Package } from "@/Components/PackageCard";
 import { Faq } from "@/types/faq";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -74,131 +46,126 @@ const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
     const { faqs, aboutValues, meta, auth } = props;
-    // Map user_type to column names
-    const userTypeLabelMap: Record<string, "company" | "agent" | "owner"> = {
-        company: "company",
-        agent: "agent",
-        owner: "owner",
-    };
+    const { t } = useLanguage();
 
     const features: PlanFeature[] = [
         {
             key: "1",
-            name: "عدد الإعلانات",
+            name: t("number_of_listings"),
             company:
                 props.packages.find((pkg) => pkg.user_type === "company")
                     ?.max_listings === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "company")
                           ?.max_listings?.toString() ?? "",
             agent:
                 props.packages.find((pkg) => pkg.user_type === "agent")
                     ?.max_listings === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "agent")
                           ?.max_listings?.toString() ?? "",
             owner:
                 props.packages.find((pkg) => pkg.user_type === "owner")
                     ?.max_listings === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "owner")
                           ?.max_listings?.toString() ?? "",
         },
         {
             key: "2",
-            name: "الإعلانات المميزة",
+            name: t("featured_listings"),
             company:
                 props.packages.find((pkg) => pkg.user_type === "company")
                     ?.max_adds === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "company")
                           ?.max_adds?.toString() ?? "",
             agent:
                 props.packages.find((pkg) => pkg.user_type === "agent")
                     ?.max_adds === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "agent")
                           ?.max_adds?.toString() ?? "",
             owner:
                 props.packages.find((pkg) => pkg.user_type === "owner")
                     ?.max_adds === -1
-                    ? "غير محدود"
+                    ? t("unlimited")
                     : props.packages
                           .find((pkg) => pkg.user_type === "owner")
                           ?.max_adds?.toString() ?? "",
         },
         {
             key: "3",
-            name: "لوحة تحكم",
-            company: "متقدمة مع تقارير",
-            agent: "متقدمة",
-            owner: "أساسي",
+            name: t("dashboard"),
+            company: t("advanced_with_reports"),
+            agent: t("advanced"),
+            owner: t("basic"),
         },
         {
             key: "4",
-            name: "إحصائيات",
+            name: t("statistics"),
             company: true,
             agent: true,
             owner: false,
         },
         {
             key: "5",
-            name: "ظهور في نتائج البحث",
+            name: t("search_results_visibility"),
             company: true,
             agent: true,
             owner: false,
         },
         {
             key: "6",
-            name: "تقرير مالية",
+            name: t("financial_reports"),
             company: true,
             agent: false,
             owner: false,
         },
         {
             key: "7",
-            name: "ربط مع انظمة العقود",
+            name: t("contract_systems_integration"),
             company: true,
             agent: false,
             owner: false,
         },
         {
             key: "8",
-            name: "دعم فني",
-            company: "مخصص",
-            agent: "أولوية",
-            owner: "عادي",
+            name: t("technical_support"),
+            company: t("dedicated"),
+            agent: t("priority"),
+            owner: t("normal"),
         },
     ];
 
     const columns = [
         {
-            title: "الفئة/الشركات",
+            title: t("category_companies"),
             dataIndex: "name",
             key: "name",
             width: 200,
         },
         {
-            title: "الباقة الأساسية",
+            title: t("basic_package"),
             dataIndex: "owner",
             key: "owner",
             render: (value: string | boolean) => renderCell(value),
             align: "center" as const,
         },
         {
-            title: "باقة المميزة",
+            title: t("premium_package"),
             dataIndex: "agent",
             key: "agent",
             render: (value: string | boolean) => renderCell(value),
             align: "center" as const,
         },
         {
-            title: "الشركات",
+            title: t("companies"),
             dataIndex: "company",
             key: "company",
             render: (value: string | boolean) => renderCell(value),
@@ -260,7 +227,7 @@ const Page: React.FC = () => {
             </Row>
             <Card className="container mx-auto px-4 py-6">
                 <Title level={3} style={{ textAlign: "center" }}>
-                    مقارنة شاملة بين الباقات
+                    {t("comprehensive_package_comparison")}
                 </Title>
                 <p style={{ textAlign: "center", marginBottom: 24 }}>
                     {appConfigs["pricing.package_comperson"]}
@@ -285,7 +252,7 @@ const Page: React.FC = () => {
                     level={2}
                     style={{ textAlign: "right", marginBottom: "24px" }}
                 >
-                    الأسئلة الشائعة
+                    {t("frequently_asked_questions")}
                 </Title>
                 <p style={{ textAlign: "right", marginBottom: "24px" }}>
                     {appConfigs["pricing.faq"]}
@@ -355,7 +322,7 @@ const Page: React.FC = () => {
                                     fontSize: "16px",
                                 }}
                             >
-                                تجربة مجانية
+                                {t("free_trial")}
                             </Button>
                             <Button
                                 size="large"
@@ -369,7 +336,7 @@ const Page: React.FC = () => {
                                     color: "white",
                                 }}
                             >
-                                احجز باقة الآن
+                                {t("book_package_now")}
                             </Button>
                         </div>
                     </div>

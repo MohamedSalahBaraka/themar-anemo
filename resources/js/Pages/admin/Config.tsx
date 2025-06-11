@@ -37,6 +37,7 @@ const ConfigIndex: React.FC = () => (
     </AdminLayout>
 );
 const Page = () => {
+    const { t } = useLanguage();
     const { props } = usePage<Props>();
     const { configs } = props;
     const [aboutValues, setAboutValues] = useState(props.aboutValues || []);
@@ -75,14 +76,14 @@ const Page = () => {
             console.log(response);
 
             if (response.ok) {
-                message.success("About Us values updated");
+                message.success(t("about_values_updated"));
             } else {
                 throw new Error();
             }
         } catch (e) {
             console.log(e);
 
-            message.error("Failed to update About Us values");
+            message.error(t("failed_update_about_values"));
         }
     };
 
@@ -111,8 +112,8 @@ const Page = () => {
 
     const handleSubmit = () => {
         put(route("admin.configs.update"), {
-            onSuccess: () => message.success("Settings saved"),
-            onError: () => message.error("Failed to save"),
+            onSuccess: () => message.success(t("settings_saved")),
+            onError: () => message.error(t("failed_save_settings")),
         });
     };
 
@@ -142,14 +143,16 @@ const Page = () => {
                     // @ts-ignore
                     result.url
                 );
-                message.success(`${type} logo uploaded`);
+                message.success(
+                    t(type === "dark" ? "dark_logo_uploaded" : "logo_uploaded")
+                );
             } else {
                 throw new Error();
             }
         } catch (e) {
             console.log(e);
 
-            message.error("Upload failed");
+            message.error(t("upload_failed"));
         } finally {
             setLogoUploading(false);
         }
@@ -158,7 +161,7 @@ const Page = () => {
     return (
         <div className="space-y-6">
             {Object.entries(grouped).map(([group, items]) => (
-                <Card key={group} title={group.toUpperCase()}>
+                <Card key={group} title={t(group)}>
                     {items.map((item) => {
                         let input;
                         switch (item.type) {
@@ -227,7 +230,7 @@ const Page = () => {
                                                     icon={<UploadOutlined />}
                                                     loading={logoUploading}
                                                 >
-                                                    Upload Logo
+                                                    {t("upload_logo")}
                                                 </Button>
                                             </Upload>
                                             {data[item.key] && (
@@ -238,7 +241,7 @@ const Page = () => {
                                                                 item.key
                                                             ] as string
                                                         }
-                                                        alt="Logo Preview"
+                                                        alt={t("logo_preview")}
                                                         style={{
                                                             maxWidth: "150px",
                                                         }}
@@ -249,7 +252,7 @@ const Page = () => {
                                     ) : item.key === "app.logo_dark_url" ? (
                                         <div>
                                             <p className="font-semibold mb-1">
-                                                Dark Mode Logo
+                                                {t("dark_mode_logo")}
                                             </p>
                                             <Upload
                                                 showUploadList={false}
@@ -264,7 +267,7 @@ const Page = () => {
                                                     icon={<UploadOutlined />}
                                                     loading={logoUploading}
                                                 >
-                                                    Upload Dark Logo
+                                                    {t("upload_dark_logo")}
                                                 </Button>
                                             </Upload>
                                             {data["app.logo_dark_url"] && (
@@ -274,7 +277,7 @@ const Page = () => {
                                                             "app.logo_dark_url"
                                                         ] as string
                                                     }
-                                                    alt="Dark Logo"
+                                                    alt={t("dark_logo")}
                                                     style={{
                                                         maxWidth: 150,
                                                         marginTop: 8,
@@ -301,7 +304,9 @@ const Page = () => {
                         return (
                             <div key={item.key} className="mb-4">
                                 <label className="block font-semibold">
-                                    {item.description || item.key}
+                                    {item.description
+                                        ? t(item.description)
+                                        : t(item.key)}
                                 </label>
                                 {input}
                             </div>
@@ -309,7 +314,7 @@ const Page = () => {
                     })}
                 </Card>
             ))}
-            <Card title="About Us Values">
+            <Card title={t("about_us_values")}>
                 {aboutValues.map((value, idx) => (
                     <div
                         key={idx}
@@ -319,16 +324,14 @@ const Page = () => {
                             name="icon"
                             listType="picture-card"
                             showUploadList={false}
-                            action={route("admin.about-values.upload")} // We'll create this in Laravel
+                            action={route("admin.about-values.upload")}
                             onChange={(info) => {
                                 if (info.file.status === "done") {
-                                    const url = info.file.response?.url; // Laravel will return the uploaded path
+                                    const url = info.file.response?.url;
                                     updateValue(idx, "icon", url);
-                                    message.success(
-                                        "Icon uploaded successfully"
-                                    );
+                                    message.success(t("icon_upload_success"));
                                 } else if (info.file.status === "error") {
-                                    message.error("Icon upload failed");
+                                    message.error(t("icon_upload_failed"));
                                 }
                             }}
                         >
@@ -345,45 +348,47 @@ const Page = () => {
                             ) : (
                                 <div>
                                     <PlusOutlined />
-                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                    <div style={{ marginTop: 8 }}>
+                                        {t("upload")}
+                                    </div>
                                 </div>
                             )}
                         </Upload>
 
                         <Input
-                            placeholder="Title"
+                            placeholder={t("title")}
                             value={value.title}
                             onChange={(e) =>
                                 updateValue(idx, "title", e.target.value)
                             }
                         />
                         <Input.TextArea
-                            placeholder="Details"
+                            placeholder={t("details")}
                             value={value.details}
                             onChange={(e) =>
                                 updateValue(idx, "details", e.target.value)
                             }
                         />
                         <Button danger onClick={() => handleRemoveValue(idx)}>
-                            Remove
+                            {t("remove")}
                         </Button>
                     </div>
                 ))}
 
                 <Button onClick={handleAddNewValue} className="mt-2">
-                    Add New Value
+                    {t("add_new_value")}
                 </Button>
 
                 <Divider />
 
                 <Button type="primary" onClick={handleAboutValuesSubmit}>
-                    Save About Us Values
+                    {t("save_about_us_values")}
                 </Button>
             </Card>
 
             <Divider />
             <Button type="primary" onClick={handleSubmit} loading={processing}>
-                Save Settings
+                {t("save_settings")}
             </Button>
         </div>
     );

@@ -1,4 +1,3 @@
-// صفحات/الخدمات/Show.tsx
 import React, { useState } from "react";
 import { router, usePage } from "@inertiajs/react";
 import { Link } from "@inertiajs/react";
@@ -27,6 +26,7 @@ import { Service } from "@/types/Services";
 import { PageProps } from "@/types";
 import FrontLayout from "@/Layouts/FrontLayout";
 import axios from "axios";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Meta } = Card;
@@ -47,6 +47,7 @@ const Page: React.FC = () => {
     const { service, relatedServices, auth } = usePage<prop>().props;
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
+    const { t } = useLanguage();
 
     const showModal = () => {
         if (!auth.user) return router.get(route("register"));
@@ -58,21 +59,14 @@ const Page: React.FC = () => {
         form.resetFields();
     };
 
-    // تحديث دالة handleSubmit في ملف Show.tsx
     const handleSubmit = async (values: any) => {
         try {
             const formData = new FormData();
-
-            // إضافة معلومات أساسية لطلب الخدمة
             formData.append("service_id", service.id.toString());
 
-            // إضافة قيم الحقول مع معرفاتها
             creationFields.forEach((field) => {
                 const value = values[field.label];
-
-                // التعامل مع أنواع الحقول المختلفة
                 if (field.field_type === "file" && value) {
-                    // لرفع الملفات، نضيف كل ملف
                     value.fileList.forEach((file: any) => {
                         formData.append(`${field.id}`, file.originFileObj);
                     });
@@ -80,7 +74,6 @@ const Page: React.FC = () => {
                     field.field_type === "checkbox" ||
                     field.field_type === "multiselect"
                 ) {
-                    // للمصفوفات (مجموعات الاختيارات، الاختيار المتعدد)
                     if (Array.isArray(value)) {
                         formData.append(
                             `fields[${field.id}]`,
@@ -88,14 +81,12 @@ const Page: React.FC = () => {
                         );
                     }
                 } else {
-                    // لجميع أنواع الحقول الأخرى
                     if (value !== undefined && value !== null) {
                         formData.append(`fields[${field.id}]`, value);
                     }
                 }
             });
 
-            // الإرسال إلى الخلفية
             const response = await axios.post(
                 route("public.services.apply", service.id),
                 formData,
@@ -106,37 +97,56 @@ const Page: React.FC = () => {
                 }
             );
 
-            message.success("تم تقديم الطلب بنجاح!");
+            message.success(t("request_submitted_success"));
             setIsModalVisible(false);
             form.resetFields();
         } catch (error) {
-            message.error("فشل في تقديم الطلب. يرجى المحاولة مرة أخرى.");
-            console.error("خطأ في الإرسال:", error);
+            message.error(t("request_submission_failed"));
+            console.error(t("submission_error"), error);
         }
     };
+
     const renderField = (field: any) => {
         const rules = [
-            { required: field.required, message: `${field.label} مطلوب` },
+            {
+                required: field.required,
+                message: t("field_required", { field: field.label }),
+            },
         ];
 
         switch (field.field_type) {
             case "text":
-                return <Input placeholder={`أدخل ${field.label}`} />;
+                return (
+                    <Input
+                        placeholder={t("enter_field", { field: field.label })}
+                    />
+                );
             case "textarea":
                 return (
-                    <TextArea rows={4} placeholder={`أدخل ${field.label}`} />
+                    <TextArea
+                        rows={4}
+                        placeholder={t("enter_field", { field: field.label })}
+                    />
                 );
             case "email":
                 return (
-                    <Input type="email" placeholder={`أدخل ${field.label}`} />
+                    <Input
+                        type="email"
+                        placeholder={t("enter_field", { field: field.label })}
+                    />
                 );
             case "number":
                 return (
-                    <Input type="number" placeholder={`أدخل ${field.label}`} />
+                    <Input
+                        type="number"
+                        placeholder={t("enter_field", { field: field.label })}
+                    />
                 );
             case "select":
                 return (
-                    <Select placeholder={`اختر ${field.label}`}>
+                    <Select
+                        placeholder={t("select_field", { field: field.label })}
+                    >
                         {field.options?.map((option: string) => (
                             <Select.Option key={option} value={option}>
                                 {option}
@@ -148,7 +158,10 @@ const Page: React.FC = () => {
                 return <Checkbox.Group options={field.options} />;
             case "multiselect":
                 return (
-                    <Select mode="multiple" placeholder={`اختر ${field.label}`}>
+                    <Select
+                        mode="multiple"
+                        placeholder={t("select_field", { field: field.label })}
+                    >
                         {field.options?.map((option: string) => (
                             <Select.Option key={option} value={option}>
                                 {option}
@@ -163,15 +176,20 @@ const Page: React.FC = () => {
             case "file":
                 return (
                     <Upload beforeUpload={() => false}>
-                        <Button icon={<UploadOutlined />}>انقر للرفع</Button>
+                        <Button icon={<UploadOutlined />}>
+                            {t("click_to_upload")}
+                        </Button>
                     </Upload>
                 );
             default:
-                return <Input placeholder={`أدخل ${field.label}`} />;
+                return (
+                    <Input
+                        placeholder={t("enter_field", { field: field.label })}
+                    />
+                );
         }
     };
 
-    // تصفية الحقول التي يجب عرضها عند الإنشاء
     const creationFields =
         service.fields?.filter((field) => field.show_on_creation) || [];
 
@@ -183,7 +201,7 @@ const Page: React.FC = () => {
                 onClick={() => window.history.back()}
                 className="mb-4"
             >
-                العودة إلى الخدمات
+                {t("back_to_services")}
             </Button>
 
             <Row gutter={[24, 24]}>
@@ -217,7 +235,7 @@ const Page: React.FC = () => {
                         <Divider />
 
                         <Title level={4} className="mb-4">
-                            التسعير
+                            {t("pricing")}
                         </Title>
                         <Text strong className="text-2xl">
                             {service.price}
@@ -232,14 +250,14 @@ const Page: React.FC = () => {
                             onClick={showModal}
                         >
                             {auth.user
-                                ? " تقديم طلب الآن"
-                                : "سجل أولاً لتقديم الطلب"}
+                                ? t("apply_now")
+                                : t("register_to_apply")}
                         </Button>
                     </Card>
                 </Col>
 
                 <Col xs={24} lg={8}>
-                    <Card title="خدمات ذات صلة">
+                    <Card title={t("related_services")}>
                         <List
                             itemLayout="horizontal"
                             dataSource={relatedServices}
@@ -289,19 +307,19 @@ const Page: React.FC = () => {
             </Row>
 
             <Modal
-                title={`تقديم طلب لـ ${service.name}`}
+                title={t("apply_for_service", { service: service.name })}
                 visible={isModalVisible}
                 onCancel={handleCancel}
                 footer={[
                     <Button key="back" onClick={handleCancel}>
-                        إلغاء
+                        {t("cancel")}
                     </Button>,
                     <Button
                         key="submit"
                         type="primary"
                         onClick={() => form.submit()}
                     >
-                        تقديم الطلب
+                        {t("submit_request")}
                     </Button>,
                 ]}
                 width={800}
@@ -315,7 +333,9 @@ const Page: React.FC = () => {
                             rules={[
                                 {
                                     required: field.required,
-                                    message: `${field.label} مطلوب`,
+                                    message: t("field_required", {
+                                        field: field.label,
+                                    }),
                                 },
                             ]}
                         >

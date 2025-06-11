@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\City;
 use App\Models\configs;
 use App\Models\Property;
+use App\Models\PropertyView;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +14,10 @@ use Inertia\Inertia;
 
 class PropertyController extends Controller
 {
+    public function cities()
+    {
+        return City::select('id', 'title')->get();
+    }
     public function propertyManagement()
     {
         $query = Property::query()
@@ -180,6 +186,7 @@ class PropertyController extends Controller
                 'area' => $property->area,
                 'floor' => $property->floor,
                 'address' => $property->address,
+                'city_id' => $property->city_id,
                 'latitude' => $property->latitude,
                 'longitude' => $property->longitude,
                 'status' => $property->status,
@@ -251,6 +258,7 @@ class PropertyController extends Controller
             'area' => $request->area,
             'floor' => $request->floor,
             'features' => $request->features,
+            'city_id' => $request->city_id,
             'address' => $request->address,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
@@ -325,6 +333,7 @@ class PropertyController extends Controller
             'bathrooms' => $request->bathrooms,
             'area' => $request->area,
             'floor' => $request->floor,
+            'city_id' => $request->city_id,
             'address' => $request->address,
             'features' => $request->features,
             'latitude' => $request->latitude,
@@ -353,6 +362,28 @@ class PropertyController extends Controller
 
         return redirect()->back()->with('success', 'Property status updated successfully.');
     }
+    public function updatefeatured(Property $property)
+    {
+        $user = User::find(Auth::id());
+
+        if (!$user->subscription || !$user->subscription->package) {
+            return redirect()->back()->withErrors(['error' => __('no_package')]);
+        }
+
+        $package = $user->subscription->package;
+        $featuredCount = $user->FeaturedProperties();
+
+        if (!$property->is_featured && $featuredCount >= $package->max_adds) {
+            return redirect()->back()->withErrors(['error' => __('max_featured_reached')]);
+        }
+
+        $property->update(['is_featured' => !$property->is_featured]);
+
+        return redirect()->back()->with('success', $property->is_featured
+            ? __('property_featured')
+            : __('property_unfeatured'));
+    }
+
     public function destroy(Property $property)
     {
         // $this->authorize('delete', $property);
@@ -363,16 +394,21 @@ class PropertyController extends Controller
     }
     public function show($id)
     {
-        $property = Property::with('user')->findOrFail($id);
+        $property = Property::with(['user', 'city'])->findOrFail($id);
+        if (Auth::check()) {
+            PropertyView::firstOrCreate(['property_id' => $property->id, 'user_id' => Auth::id()]);
+        }
         return Inertia::render('PropertyDetails', [
             'property' => [
                 'id' => $property->id,
+                'views_count' => $property->views()->count(),
                 'title' => $property->title,
                 'description' => $property->description,
                 'price' => $property->price,
                 'bedrooms' => $property->bedrooms,
                 'bathrooms' => $property->bathrooms,
                 'area' => $property->area,
+                'created_at' => $property->created_at,
                 'floor' => $property->floor,
                 'user_id' => $property->user_id,
                 'address' => $property->address,
@@ -381,6 +417,7 @@ class PropertyController extends Controller
                 'type' => $property->type,
                 'purpose' => $property->purpose,
                 'user' => $property->user,
+                'city' => $property->city,
                 'is_featured' => $property->is_featured,
                 'features' => $property->features,
                 'latitude' => $property->latitude,

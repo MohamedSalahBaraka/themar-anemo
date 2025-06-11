@@ -22,6 +22,8 @@ import {
 import { PaginationProps } from "antd/lib/pagination";
 import { ColumnsType } from "antd/lib/table";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const { Search } = Input;
 const { Option } = Select;
 
@@ -81,13 +83,30 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
     categories,
     creators,
     filters,
+}) => (
+    <AdminLayout>
+        <Page
+            categories={categories}
+            creators={creators}
+            filters={filters}
+            services={services}
+        />
+    </AdminLayout>
+);
+
+const Page: React.FC<ServicesIndexProps> = ({
+    services,
+    categories,
+    creators,
+    filters,
 }) => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
     const [loading, setLoading] = useState(false);
+    const { t } = useLanguage();
 
     const columns: ColumnsType<Service> = [
         {
-            title: "الصورة",
+            title: t("image"),
             dataIndex: "photo",
             key: "photo",
             render: (photo?: string) => (
@@ -99,7 +118,7 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
             ),
         },
         {
-            title: "الاسم",
+            title: t("name"),
             dataIndex: "name",
             key: "name",
             render: (text: string, record: Service) => (
@@ -109,21 +128,21 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
             ),
         },
         {
-            title: "التصنيف",
+            title: t("category"),
             dataIndex: "category",
             key: "category",
             render: (category: Service["category"]) =>
-                category?.name || "غير محدد",
+                category?.name || t("not_specified"),
         },
         {
-            title: "السعر",
+            title: t("price"),
             dataIndex: "price",
             key: "price",
             render: (price: number) =>
-                price ? `${price.toFixed(2)}` : "غير محدد",
+                price ? `${price.toFixed(2)}` : t("not_specified"),
         },
         {
-            title: "الحالة",
+            title: t("status"),
             dataIndex: "is_active",
             key: "is_active",
             render: (isActive: boolean, record: Service) => (
@@ -136,13 +155,13 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
             ),
         },
         {
-            title: "تم الإنشاء بواسطة",
+            title: t("created_by"),
             dataIndex: "creator",
             key: "creator",
             render: (creator: Service["creator"]) => creator.name,
         },
         {
-            title: "الإجراءات",
+            title: t("actions"),
             key: "actions",
             render: (_: any, record: Service) => (
                 <Space size="middle">
@@ -150,10 +169,10 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
                         <Button icon={<EditOutlined />} />
                     </Link>
                     <Popconfirm
-                        title="هل أنت متأكد من حذف هذه الخدمة؟"
+                        title={t("confirm_delete_service")}
                         onConfirm={() => handleDelete(record.id)}
-                        okText="نعم"
-                        cancelText="لا"
+                        okText={t("yes")}
+                        cancelText={t("no")}
                     >
                         <Button danger icon={<DeleteOutlined />} />
                     </Popconfirm>
@@ -169,14 +188,14 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
                 is_active: isActive,
             },
             {
-                onSuccess: () => message.success("تم تحديث الحالة بنجاح"),
+                onSuccess: () => message.success(t("status_updated_success")),
             }
         );
     };
 
     const handleDelete = (id: number) => {
         router.delete(route("admin.services.destroy", id), {
-            onSuccess: () => message.success("تم حذف الخدمة بنجاح"),
+            onSuccess: () => message.success(t("service_deleted_success")),
         });
     };
 
@@ -223,14 +242,14 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
 
     return (
         <AdminLayout>
-            <Head title="إدارة الخدمات" />
+            <Head title={t("manage_services")} />
 
             <Card
-                title="الخدمات"
+                title={t("services")}
                 extra={
                     <Link href={route("admin.services.create")}>
                         <Button type="primary" icon={<PlusOutlined />}>
-                            إنشاء خدمة جديدة
+                            {t("create_new_service")}
                         </Button>
                     </Link>
                 }
@@ -238,14 +257,14 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
                 <div className="mb-4">
                     <Space size="large">
                         <Search
-                            placeholder="ابحث عن الخدمات"
+                            placeholder={t("search_services")}
                             allowClear
                             enterButton
                             onSearch={handleSearch}
                             style={{ width: 300 }}
                         />
                         <Select<number>
-                            placeholder="تصفية حسب التصنيف"
+                            placeholder={t("filter_by_category")}
                             style={{ width: 200 }}
                             onChange={(value) =>
                                 handleFilterChange("category", value)
@@ -260,7 +279,7 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
                             ))}
                         </Select>
                         <Select<string>
-                            placeholder="تصفية حسب الحالة"
+                            placeholder={t("filter_by_status")}
                             style={{ width: 200 }}
                             onChange={(value) =>
                                 handleFilterChange("status", value)
@@ -268,11 +287,11 @@ const ServicesIndex: React.FC<ServicesIndexProps> = ({
                             allowClear
                             value={filters.status}
                         >
-                            <Option value="active">نشط</Option>
-                            <Option value="inactive">غير نشط</Option>
+                            <Option value="active">{t("active")}</Option>
+                            <Option value="inactive">{t("inactive")}</Option>
                         </Select>
                         <Select<number>
-                            placeholder="تصفية حسب المنشئ"
+                            placeholder={t("filter_by_creator")}
                             style={{ width: 200 }}
                             onChange={(value) =>
                                 handleFilterChange("creator", value)

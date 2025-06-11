@@ -10,25 +10,31 @@ import {
 } from "@ant-design/icons";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { PageProps } from "@/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props extends PageProps {
     teamMembers: TeamMember[];
 }
 
-const TeamMemberIndex: React.FC<Props> = ({ teamMembers }) => {
-    const { props } = usePage();
+const TeamMemberIndex: React.FC<Props> = ({ teamMembers, auth }) => (
+    <AdminLayout>
+        <Page teamMembers={teamMembers} auth={auth} />
+    </AdminLayout>
+);
+
+const Page: React.FC<Props> = ({ teamMembers }) => {
+    const { t } = useLanguage();
 
     const handleDelete = (id: number) => {
         router.delete(route("admin.team-members.destroy", id), {
-            onSuccess: () =>
-                message.success("Team member deleted successfully"),
-            onError: () => message.error("Error deleting team member"),
+            onSuccess: () => message.success(t("team_member_deleted_success")),
+            onError: () => message.error(t("team_member_delete_error")),
         });
     };
 
     const columns = [
         {
-            title: "Photo",
+            title: t("photo"),
             dataIndex: "photo",
             key: "photo",
             render: (photo?: string) => (
@@ -36,29 +42,30 @@ const TeamMemberIndex: React.FC<Props> = ({ teamMembers }) => {
                     icon={<UserOutlined />}
                     src={`${window.location.origin}/storage/${photo}`}
                     size="large"
+                    alt={t("team_member_photo")}
                 />
             ),
         },
         {
-            title: "Name",
+            title: t("name"),
             dataIndex: "name",
             key: "name",
             sorter: (a: TeamMember, b: TeamMember) =>
                 a.name.localeCompare(b.name),
         },
         {
-            title: "Title",
+            title: t("title"),
             dataIndex: "title",
             key: "title",
         },
         {
-            title: "Order",
+            title: t("order"),
             dataIndex: "order",
             key: "order",
             sorter: (a: TeamMember, b: TeamMember) => a.order - b.order,
         },
         {
-            title: "Actions",
+            title: t("actions"),
             key: "actions",
             render: (_: any, record: TeamMember) => (
                 <Space size="middle">
@@ -66,10 +73,10 @@ const TeamMemberIndex: React.FC<Props> = ({ teamMembers }) => {
                         <Button type="primary" icon={<EditOutlined />} />
                     </Link>
                     <Popconfirm
-                        title="Are you sure you want to delete this team member?"
+                        title={t("confirm_delete_team_member")}
                         onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
+                        okText={t("yes")}
+                        cancelText={t("no")}
                     >
                         <Button danger icon={<DeleteOutlined />} />
                     </Popconfirm>
@@ -79,14 +86,14 @@ const TeamMemberIndex: React.FC<Props> = ({ teamMembers }) => {
     ];
 
     return (
-        <AdminLayout>
-            <Head title="Team Members" />
+        <div>
+            <Head title={t("team_members")} />
             <Card
-                title="Team Members"
+                title={t("team_members")}
                 extra={
                     <Link href={route("admin.team-members.create")}>
                         <Button type="primary" icon={<PlusOutlined />}>
-                            Add Member
+                            {t("add_member")}
                         </Button>
                     </Link>
                 }
@@ -98,7 +105,7 @@ const TeamMemberIndex: React.FC<Props> = ({ teamMembers }) => {
                     pagination={false}
                 />
             </Card>
-        </AdminLayout>
+        </div>
     );
 };
 

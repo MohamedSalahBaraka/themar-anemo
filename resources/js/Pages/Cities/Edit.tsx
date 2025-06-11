@@ -14,6 +14,8 @@ import Layout from "@/Layouts/Layout";
 import { City } from "@/types/city";
 import { PageProps } from "@/types";
 import { Head, Link, router, useForm } from "@inertiajs/react";
+import AdminLayout from "@/Layouts/AdminLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -21,29 +23,32 @@ const { Title } = Typography;
 interface Props extends PageProps {
     city: City;
 }
-
-const CityEdit: React.FC<Props> = ({ city }) => {
+const CityEdit: React.FC<Props> = ({ city, auth }) => (
+    <AdminLayout>
+        <Page city={city} auth={auth} />
+    </AdminLayout>
+);
+const Page: React.FC<Props> = ({ city }) => {
     const { data, setData, put, processing, errors } = useForm({
         title: city.title,
         bio: city.bio,
         photo: null as File | null,
     });
+    const { t } = useLanguage();
 
     const handleSubmit = (values: any) => {
         const formData = new FormData();
         formData.append("title", data.title);
         formData.append("bio", data.bio ?? "");
-        console.log(data);
         if (data.photo) {
             formData.append("photo", data.photo);
         }
-        formData.append("_method", "PUT"); // 👈 spoof the method
+        formData.append("_method", "PUT");
         router.post(route("admin.cities.update", city.id), formData, {
-            // forceFormData: true,
-            onSuccess: () => message.success("City updated successfully"),
+            onSuccess: () => message.success(t("city_updated_successfully")),
             onError: (e) => {
                 console.log(e);
-                message.error("Error updating City");
+                message.error(t("city_update_failed"));
             },
         });
     };
@@ -60,13 +65,15 @@ const CityEdit: React.FC<Props> = ({ city }) => {
     };
 
     return (
-        <Layout>
-            <Head title={`Edit ${city.title}`} />
+        <div>
+            <Head title={`${t("edit")} ${city.title}`} />
             <Card
-                title={<Title level={2}>Edit City</Title>}
+                title={<Title level={2}>{t("edit_city")}</Title>}
                 extra={
                     <Link href="/admin/cities">
-                        <Button icon={<ArrowLeftOutlined />}>Back</Button>
+                        <Button icon={<ArrowLeftOutlined />}>
+                            {t("back")}
+                        </Button>
                     </Link>
                 }
             >
@@ -75,6 +82,7 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                         width={200}
                         src={`/storage/${city.photo}`}
                         style={{ marginBottom: 20 }}
+                        alt={t("city_image")}
                     />
                 )}
                 <Form
@@ -83,14 +91,14 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                     initialValues={data}
                 >
                     <Form.Item
-                        label="Title"
+                        label={t("title")}
                         name="title"
                         validateStatus={errors.title ? "error" : ""}
                         help={errors.title}
                         rules={[
                             {
                                 required: true,
-                                message: "Please input the title!",
+                                message: t("title_required_message"),
                             },
                         ]}
                     >
@@ -101,7 +109,7 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                     </Form.Item>
 
                     <Form.Item
-                        label="Bio"
+                        label={t("bio")}
                         name="bio"
                         validateStatus={errors.bio ? "error" : ""}
                         help={errors.bio}
@@ -114,7 +122,7 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                     </Form.Item>
 
                     <Form.Item
-                        label="Photo"
+                        label={t("photo")}
                         name="photo"
                         valuePropName="fileList"
                         getValueFromEvent={normFile}
@@ -128,7 +136,7 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                             maxCount={1}
                         >
                             <Button icon={<UploadOutlined />}>
-                                Upload New Photo
+                                {t("upload_new_photo")}
                             </Button>
                         </Upload>
                     </Form.Item>
@@ -139,12 +147,12 @@ const CityEdit: React.FC<Props> = ({ city }) => {
                             htmlType="submit"
                             loading={processing}
                         >
-                            Update
+                            {t("update")}
                         </Button>
                     </Form.Item>
                 </Form>
             </Card>
-        </Layout>
+        </div>
     );
 };
 

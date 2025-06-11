@@ -39,6 +39,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
     packageData,
     userType,
 }) => {
+    const { t } = useLanguage();
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [isLoading, setisLoading] = React.useState(false);
@@ -55,11 +56,11 @@ const PackageForm: React.FC<PackageFormProps> = ({
 
             router.post(route("admin.packages.upsert"), values, {
                 onSuccess: () => {
-                    message.success("تم إنشاء الباقة بنجاح");
+                    message.success(t("package_created_successfully"));
                 },
                 onError: (errors) => {
                     console.error(errors);
-                    messageApi.error("فشل إنشاء الباقة");
+                    messageApi.error(t("failed_to_create_package"));
                 },
                 onFinish: () => {
                     onSuccess();
@@ -88,7 +89,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
 
     return (
         <Modal
-            title={packageData ? "تعديل الباقة" : "إضافة باقة"}
+            title={packageData ? t("edit_package") : t("add_package")}
             visible={visible}
             onOk={handleSubmit}
             onCancel={onCancel}
@@ -99,11 +100,11 @@ const PackageForm: React.FC<PackageFormProps> = ({
             <Form form={form} layout="vertical">
                 <Form.Item
                     name="name"
-                    label="اسم الباقة"
+                    label={t("package_name")}
                     rules={[
                         {
                             required: true,
-                            message: "يرجى إدخال اسم الباقة",
+                            message: t("please_enter_package_name"),
                         },
                     ]}
                 >
@@ -116,51 +117,62 @@ const PackageForm: React.FC<PackageFormProps> = ({
 
                 <Form.Item
                     name="description"
-                    label="الوصف"
-                    rules={[{ required: true, message: "يرجى إدخال الوصف" }]}
+                    label={t("description")}
+                    rules={[
+                        {
+                            required: true,
+                            message: t("please_enter_description"),
+                        },
+                    ]}
                 >
                     <Input.TextArea rows={4} />
                 </Form.Item>
 
                 <Form.Item
                     name="price"
-                    label="السعر الشهري"
-                    rules={[{ required: true, message: "يرجى إدخال السعر" }]}
+                    label={t("monthly_price")}
+                    rules={[
+                        { required: true, message: t("please_enter_price") },
+                    ]}
                 >
                     <InputNumber min={0} style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                     name="yearly_price"
-                    label="السعر السنوي"
-                    rules={[{ required: true, message: "يرجى إدخال السعر" }]}
+                    label={t("yearly_price")}
+                    rules={[
+                        { required: true, message: t("please_enter_price") },
+                    ]}
                 >
                     <InputNumber min={0} style={{ width: "100%" }} />
                 </Form.Item>
 
                 <Form.Item
                     name="user_type"
-                    label="نوع المستخدم"
+                    label={t("user_type")}
                     rules={[
                         {
                             required: true,
-                            message: "الرجاء اختيار نوع المستخدم",
+                            message: t("please_select_user_type"),
                         },
                     ]}
                 >
                     <Radio.Group>
-                        <Radio.Button value="owner">مالك</Radio.Button>
-                        <Radio.Button value="agent">وسيط</Radio.Button>
-                        <Radio.Button value="company">شركة</Radio.Button>
+                        <Radio.Button value="owner">{t("owner")}</Radio.Button>
+                        <Radio.Button value="agent">{t("agent")}</Radio.Button>
+                        <Radio.Button value="company">
+                            {t("company")}
+                        </Radio.Button>
                     </Radio.Group>
                 </Form.Item>
 
                 <Form.Item
                     name="max_listings"
-                    label="الحد الأقصى للعروض"
+                    label={t("max_listings")}
                     rules={[
                         {
                             required: true,
-                            message: "يرجى إدخال الحد الأقصى للعروض",
+                            message: t("please_enter_max_listings"),
                         },
                     ]}
                 >
@@ -168,18 +180,18 @@ const PackageForm: React.FC<PackageFormProps> = ({
                 </Form.Item>
                 <Form.Item
                     name="max_adds"
-                    label="الحد الأقصى للعروض المميزة"
+                    label={t("max_featured_listings")}
                     rules={[
                         {
                             required: true,
-                            message: "يرجى إدخال الحد الأقصى للعروض",
+                            message: t("please_enter_max_listings"),
                         },
                     ]}
                 >
                     <InputNumber min={1} style={{ width: "100%" }} />
                 </Form.Item>
 
-                <Form.Item label="الميزات">
+                <Form.Item label={t("features")}>
                     <Form.List name="features">
                         {(fields, { add, remove }) => (
                             <>
@@ -198,12 +210,17 @@ const PackageForm: React.FC<PackageFormProps> = ({
                                             rules={[
                                                 {
                                                     required: true,
-                                                    message:
-                                                        "يرجى إدخال الميزة",
+                                                    message: t(
+                                                        "please_enter_feature"
+                                                    ),
                                                 },
                                             ]}
                                         >
-                                            <Input placeholder="مثال: دعم العملاء على مدار الساعة" />
+                                            <Input
+                                                placeholder={t(
+                                                    "feature_example"
+                                                )}
+                                            />
                                         </Form.Item>
                                         <Button
                                             type="text"
@@ -220,7 +237,7 @@ const PackageForm: React.FC<PackageFormProps> = ({
                                         block
                                         icon={<PlusOutlined />}
                                     >
-                                        إضافة ميزة
+                                        {t("add_feature")}
                                     </Button>
                                 </Form.Item>
                             </>
@@ -230,12 +247,12 @@ const PackageForm: React.FC<PackageFormProps> = ({
 
                 <Form.Item
                     name="isActive"
-                    label="الحالة"
+                    label={t("status")}
                     valuePropName="checked"
                 >
                     <Switch
-                        checkedChildren="مفعل"
-                        unCheckedChildren="غير مفعل"
+                        checkedChildren={t("active")}
+                        unCheckedChildren={t("inactive")}
                     />
                 </Form.Item>
             </Form>

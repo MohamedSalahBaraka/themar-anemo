@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 // Fix marker icon paths
 import markerIconPng from "leaflet/dist/images/marker-icon.png";
 import markerShadowPng from "leaflet/dist/images/marker-shadow.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Custom icon fix for Leaflet default marker
 const defaultIcon = L.icon({
@@ -26,7 +27,7 @@ interface MapProps {
 
 const Map: React.FC<MapProps> = ({ latitude, longitude, address }) => {
     const position: [number, number] = [latitude, longitude];
-
+    const { t } = useLanguage();
     return (
         <MapContainer
             center={position}
@@ -40,7 +41,7 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, address }) => {
             />
             <Marker position={position}>
                 <Popup>
-                    <strong>Address:</strong>
+                    <strong>{t("Address")}:</strong>
                     <br />
                     {address || "No address available"}
                 </Popup>

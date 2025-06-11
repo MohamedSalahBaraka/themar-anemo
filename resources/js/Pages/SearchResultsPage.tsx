@@ -1,22 +1,18 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
 import {
     Card,
     Row,
     Col,
-    Image,
     Typography,
     Divider,
     Button,
     Space,
     Descriptions,
-    Modal,
-    Form,
     Input,
     Tag,
     DatePicker,
     Badge,
-    message,
     Empty,
     Select,
     Radio,
@@ -24,21 +20,17 @@ import {
 } from "antd";
 import {
     EnvironmentOutlined,
-    PhoneOutlined,
-    MailOutlined,
-    CalendarOutlined,
     HomeOutlined,
-    StarOutlined,
     ArrowsAltOutlined,
     SearchOutlined,
 } from "@ant-design/icons";
-import Map from "@/Components/Map";
-import dayjs from "dayjs";
 import { PageProps } from "@/types";
 import { Property, PropertyFilter } from "@/types/property";
-import { FaBath, FaBed } from "react-icons/fa";
+import { FaBath } from "react-icons/fa";
 import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { City } from "@/types/city";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -47,6 +39,7 @@ const { RangePicker } = DatePicker;
 interface PropertyDetailsPageProps extends PageProps {
     properties: Property[];
     filters: PropertyFilter;
+    cities: City[];
     meta: {
         total: number;
         current_page: number;
@@ -61,12 +54,12 @@ const SearchResultsPage: React.FC = () => (
     </FrontLayout>
 );
 const Page: React.FC = () => {
+    const { t, darkMode, language } = useLanguage();
     const { props } = usePage<PropertyDetailsPageProps>();
     const { properties, filters, meta } = props;
     const [filter, setFilter] = React.useState<PropertyFilter>(
         props.filters || {}
     );
-    const user = usePage().props.auth.user;
     const [loading, setLoading] = React.useState(false);
 
     const formatPrice = (price: number) => {
@@ -81,10 +74,10 @@ const Page: React.FC = () => {
 
     const getStatusTag = (status: string) => {
         const statusMap: Record<StatusKey, { color: string; text: string }> = {
-            available: { color: "green", text: "متاح" },
-            sold: { color: "red", text: "تم البيع" },
-            rented: { color: "blue", text: "مؤجر" },
-            reserved: { color: "orange", text: "محجوز" },
+            available: { color: "green", text: t("available") },
+            sold: { color: "red", text: t("sold") },
+            rented: { color: "blue", text: t("rented") },
+            reserved: { color: "orange", text: t("reserved") },
         };
         const key = status as StatusKey;
         return <Tag color={statusMap[key]?.color}>{statusMap[key]?.text}</Tag>;
@@ -94,7 +87,7 @@ const Page: React.FC = () => {
         setLoading(true);
         router.get(
             route("properties.search"),
-            { ...filter, page: 1 }, // Reset to first page on new search
+            { ...filter, page: 1 },
             {
                 preserveState: true,
                 replace: true,
@@ -121,17 +114,16 @@ const Page: React.FC = () => {
     };
 
     const propertyTypes = [
-        { value: "apartment", label: "شقة" },
-        { value: "villa", label: "فيلا" },
-        { value: "office", label: "مكتب" },
-        { value: "land", label: "أرض" },
-        { value: "house", label: "منزل" },
-        { value: "condo", label: "شقة فندقية" },
+        { value: "apartment", label: t("apartment") },
+        { value: "villa", label: t("villa") },
+        { value: "office", label: t("office") },
+        { value: "land", label: t("land") },
+        { value: "house", label: t("house") },
     ];
 
     const renderPropertyCard = (property: Property) => (
         <Badge.Ribbon
-            text="مميز"
+            text={t("featured")}
             color="gold"
             placement="start"
             style={{ display: property.is_featured ? "block" : "none" }}
@@ -150,13 +142,17 @@ const Page: React.FC = () => {
                             className="w-full h-full object-cover rounded-lg"
                         />
                         <span
-                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${
+                            className={`absolute top-1 ${
+                                language === "ar" ? `left-1` : "right-1"
+                            } px-1.5 py-0.5 rounded text-xs font-medium text-white ${
                                 property.purpose === "sale"
                                     ? "bg-blue-600"
                                     : "bg-green-600"
                             }`}
                         >
-                            {property.purpose === "sale" ? "للبيع" : "للإيجار"}
+                            {property.purpose === "sale"
+                                ? t("for_sale")
+                                : t("for_rent")}
                         </span>
                     </div>
                 }
@@ -187,24 +183,28 @@ const Page: React.FC = () => {
                                 <EnvironmentOutlined />
                                 <Text type="secondary">
                                     {property.address?.split(",")[0] ||
-                                        "الموقع غير محدد"}
+                                        t("location_not_specified")}
                                 </Text>
                             </Space>
                             <Divider style={{ margin: "8px 0" }} />
                             <Space size="large">
                                 <Space>
                                     <HomeOutlined />
-                                    {property.bedrooms || "غير محدد"} غرفة
+                                    {property.bedrooms ||
+                                        t("not_specified")}{" "}
+                                    {t("bedroom")}
                                 </Space>
                                 <Space>
                                     <FaBath />
-                                    {property.bathrooms || "غير محدد"}حمام
+                                    {property.bathrooms ||
+                                        t("not_specified")}{" "}
+                                    {t("bathroom")}
                                 </Space>
                                 <Space>
                                     <ArrowsAltOutlined />
                                     {property.area
                                         ? `${property.area} m²`
-                                        : "غير محدد"}
+                                        : t("not_specified")}
                                 </Space>
                             </Space>
                         </>
@@ -221,7 +221,9 @@ const Page: React.FC = () => {
                     <div
                         className="search-container"
                         style={{
-                            background: "rgba(255, 255, 255, 0.9)",
+                            background: darkMode
+                                ? "rgba(50, 50, 50, 0.7)"
+                                : "rgba(255, 255, 255, 0.9)",
                             padding: "24px",
                             borderRadius: "8px",
                             maxWidth: "1200px",
@@ -229,7 +231,6 @@ const Page: React.FC = () => {
                         }}
                     >
                         <Row gutter={[24, 24]} justify="center">
-                            {/* Sale/Rent/Offices Toggle */}
                             <Col span={24}>
                                 <Radio.Group
                                     size="large"
@@ -264,7 +265,7 @@ const Page: React.FC = () => {
                                             margin: 0,
                                         }}
                                     >
-                                        بيع
+                                        {t("sale")}
                                     </Radio.Button>
                                     <Radio.Button
                                         value="rent"
@@ -284,33 +285,39 @@ const Page: React.FC = () => {
                                             margin: 0,
                                         }}
                                     >
-                                        إيجار
+                                        {t("rent")}
                                     </Radio.Button>
                                 </Radio.Group>
                             </Col>
 
-                            {/* Area and Property Type */}
                             <Col xs={24} sm={12} md={6}>
                                 <Select
-                                    placeholder="المنطقة"
+                                    placeholder={t("city")}
                                     style={{ width: "100%" }}
                                     size="large"
-                                    value={filter.location}
+                                    value={
+                                        filter.city !== null
+                                            ? parseInt(`${filter.city}`)
+                                            : undefined
+                                    }
                                     onChange={(value) =>
-                                        handleFilterChange("location", value)
+                                        handleFilterChange("city", value)
                                     }
                                     options={[
                                         {
-                                            value: "all",
-                                            label: "جميع المناطق",
+                                            value: null,
+                                            label: t("all_areas"),
                                         },
-                                        // Add other area options here
+                                        ...props.cities.map((c) => ({
+                                            value: c.id,
+                                            label: c.title,
+                                        })),
                                     ]}
                                 />
                             </Col>
                             <Col xs={24} sm={12} md={6}>
                                 <Select
-                                    placeholder="نوع العقار"
+                                    placeholder={t("property_type")}
                                     style={{ width: "100%" }}
                                     size="large"
                                     value={filter.type}
@@ -321,11 +328,10 @@ const Page: React.FC = () => {
                                 />
                             </Col>
 
-                            {/* Price Range */}
                             <Col xs={24} sm={12} md={6}>
                                 <Input
                                     type="number"
-                                    placeholder="أقل سعر"
+                                    placeholder={t("min_price")}
                                     size="large"
                                     value={filter.minPrice}
                                     onChange={(e) =>
@@ -337,13 +343,16 @@ const Page: React.FC = () => {
                                         )
                                     }
                                     onPressEnter={handleSearch}
-                                    style={{ width: "100%" }}
+                                    style={{
+                                        width: "100%",
+                                        background: "transparent",
+                                    }}
                                 />
                             </Col>
                             <Col xs={24} sm={12} md={6}>
                                 <Input
                                     type="number"
-                                    placeholder="أعلى سعر"
+                                    placeholder={t("max_price")}
                                     size="large"
                                     value={filter.maxPrice}
                                     onChange={(e) =>
@@ -355,7 +364,10 @@ const Page: React.FC = () => {
                                         )
                                     }
                                     onPressEnter={handleSearch}
-                                    style={{ width: "100%" }}
+                                    style={{
+                                        width: "100%",
+                                        background: "transparent",
+                                    }}
                                 />
                             </Col>
                             <Col
@@ -365,9 +377,9 @@ const Page: React.FC = () => {
                                     justifyContent: "space-between",
                                 }}
                             >
-                                <Button type="default" size="small">
-                                    خيارات متقدمة
-                                </Button>
+                                {/* <Button type="default" size="small">
+                                    {t("advanced_options")}
+                                </Button> */}
                                 <Button
                                     type="primary"
                                     onClick={handleSearch}
@@ -375,7 +387,7 @@ const Page: React.FC = () => {
                                     size="small"
                                     icon={<SearchOutlined />}
                                 >
-                                    بحث
+                                    {t("search")}
                                 </Button>
                             </Col>
                         </Row>
@@ -387,11 +399,14 @@ const Page: React.FC = () => {
                 style={{ marginBottom: 20 }}
             >
                 <Title level={3} style={{ marginBottom: 0 }}>
-                    عقارات
+                    {t("properties")}
                 </Title>
                 {meta && (
                     <Text type="secondary">
-                        عرض {properties.length} من أصل {meta.total} عقار
+                        {t("showing_properties", {
+                            count: properties.length,
+                            total: meta.total,
+                        })}
                     </Text>
                 )}
             </Row>
@@ -419,13 +434,13 @@ const Page: React.FC = () => {
                                 onChange={handlePageChange}
                                 showSizeChanger={false}
                                 showQuickJumper
-                                locale={{ items_per_page: "/ صفحة" }}
+                                locale={{ items_per_page: `/${t("page")}` }}
                             />
                         </Row>
                     )}
                 </>
             ) : (
-                <Empty description={`لا توجد عقارات متاحة حالياً`} />
+                <Empty description={t("no_properties_available")} />
             )}
         </section>
     );

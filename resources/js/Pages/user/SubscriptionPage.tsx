@@ -16,6 +16,7 @@ import {
 import type { DescriptionsProps, TableProps } from "antd";
 import { PageProps } from "@/types";
 import AppLayout from "@/Layouts/Layout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text } = Typography;
 
@@ -82,8 +83,13 @@ interface SubscriptionPageProps extends PageProps {
     currentSubscription: (Subscription & { package: Package }) | null;
     transactions: (Transaction & { invoice?: Invoice })[];
 }
-
-const SubscriptionPage: React.FC = () => {
+const SubscriptionPage: React.FC = () => (
+    <AppLayout>
+        <Page />
+    </AppLayout>
+);
+const Page: React.FC = () => {
+    const { t } = useLanguage();
     const { props } = usePage<SubscriptionPageProps>();
     const [selectedInvoice, setSelectedInvoice] =
         React.useState<Invoice | null>(null);
@@ -106,7 +112,7 @@ const SubscriptionPage: React.FC = () => {
                         });
                     },
                     onError: (errors) => {
-                        console.error("خطأ في الاشتراك:", errors);
+                        console.error(t("subscription_error"), errors);
                     },
                     onFinish: () => {
                         setIsSubscribing(false);
@@ -114,7 +120,7 @@ const SubscriptionPage: React.FC = () => {
                 }
             );
         } catch (error) {
-            console.error("فشل الاشتراك:", error);
+            console.error(t("subscription_failed"), error);
             setIsSubscribing(false);
         }
     };
@@ -130,12 +136,12 @@ const SubscriptionPage: React.FC = () => {
                     },
                 }
             );
-            if (!res.ok) throw new Error("فشل جلب الفاتورة");
+            if (!res.ok) throw new Error(t("invoice_fetch_failed"));
             const data = await res.json();
             setSelectedInvoice(data.invoice);
             setModalVisible(true);
         } catch (error) {
-            console.error("فشل جلب الفاتورة:", error);
+            console.error(t("invoice_fetch_error"), error);
         } finally {
             setIsFetchingInvoice(false);
         }
@@ -143,35 +149,35 @@ const SubscriptionPage: React.FC = () => {
 
     const columns: TableProps<Transaction>["columns"] = [
         {
-            title: "التاريخ",
+            title: t("date"),
             dataIndex: "created_at",
             key: "date",
             render: (date) => new Date(date).toLocaleDateString(),
         },
         {
-            title: "المبلغ",
+            title: t("amount"),
             dataIndex: "amount",
             key: "amount",
             render: (amount) => <Text>${amount.toFixed(2)}</Text>,
         },
         {
-            title: "طريقة الدفع",
+            title: t("payment_method"),
             dataIndex: "method",
             key: "method",
             render: (method) => (
                 <Tag color="blue">
                     {method === "credit_card"
-                        ? "بطاقة ائتمان"
+                        ? t("credit_card")
                         : method === "paypal"
-                        ? "باي بال"
+                        ? t("paypal")
                         : method === "bank"
-                        ? "حوالة بنكية"
-                        : "نقدي"}
+                        ? t("bank_transfer")
+                        : t("cash")}
                 </Tag>
             ),
         },
         {
-            title: "الحالة",
+            title: t("status"),
             dataIndex: "status",
             key: "status",
             render: (status) => (
@@ -187,17 +193,17 @@ const SubscriptionPage: React.FC = () => {
                     }
                 >
                     {status === "completed"
-                        ? "مكتمل"
+                        ? t("completed")
                         : status === "pending"
-                        ? "قيد الانتظار"
+                        ? t("pending")
                         : status === "refunded"
-                        ? "تم الاسترداد"
-                        : "فشل"}
+                        ? t("refunded")
+                        : t("failed")}
                 </Tag>
             ),
         },
         {
-            title: "إجراء",
+            title: t("action"),
             key: "action",
             render: (_, record) => (
                 <Button
@@ -206,7 +212,7 @@ const SubscriptionPage: React.FC = () => {
                     disabled={record.status !== "completed" || !record.invoice}
                     loading={isFetchingInvoice}
                 >
-                    {record.invoice ? "عرض الفاتورة" : "لا يوجد فاتورة"}
+                    {record.invoice ? t("view_invoice") : t("no_invoice")}
                 </Button>
             ),
         },
@@ -217,12 +223,12 @@ const SubscriptionPage: React.FC = () => {
             ? [
                   {
                       key: "1",
-                      label: "الباقة",
+                      label: t("package"),
                       children: props.currentSubscription.package.name,
                   },
                   {
                       key: "2",
-                      label: "الحالة",
+                      label: t("status"),
                       children: (
                           <Tag
                               color={
@@ -232,322 +238,316 @@ const SubscriptionPage: React.FC = () => {
                               }
                           >
                               {props.currentSubscription.is_active
-                                  ? "نشط"
-                                  : "غير نشط"}
+                                  ? t("active")
+                                  : t("inactive")}
                           </Tag>
                       ),
                   },
                   {
                       key: "3",
-                      label: "تاريخ البدء",
+                      label: t("start_date"),
                       children: new Date(
                           props.currentSubscription.started_at
                       ).toLocaleDateString(),
                   },
                   {
                       key: "4",
-                      label: "تاريخ الانتهاء",
+                      label: t("end_date"),
                       children: props.currentSubscription.expires_at
                           ? new Date(
                                 props.currentSubscription.expires_at
                             ).toLocaleDateString()
-                          : "لا ينتهي",
+                          : t("no_expiry"),
                   },
                   {
                       key: "5",
-                      label: "الحد الأقصى للعقارات",
+                      label: t("max_listings"),
                       children: props.currentSubscription.package.max_listings,
                   },
                   {
                       key: "6",
-                      label: "المدة",
-                      children: `${props.currentSubscription.package.duration} يوم`,
+                      label: t("duration"),
+                      children: `${
+                          props.currentSubscription.package.duration
+                      } ${t("days")}`,
                   },
               ]
             : [];
 
     return (
-        <AppLayout>
-            <div className="subscription-page" style={{ direction: "rtl" }}>
-                <Title level={2}>الاشتراكات والفوترة</Title>
+        <div className="subscription-page" style={{ direction: "rtl" }}>
+            <Title level={2}>{t("subscriptions_billing")}</Title>
 
-                <Card
-                    title="الاشتراك الحالي"
-                    loading={!props}
-                    style={{ marginBottom: 24 }}
-                >
-                    {props.currentSubscription ? (
-                        <Descriptions
-                            items={subscriptionItems}
-                            bordered
-                            column={2}
-                        />
-                    ) : (
-                        <Alert
-                            message="لا يوجد اشتراك نشط"
-                            type="warning"
-                            showIcon
-                            action={
-                                <Button
-                                    type="primary"
-                                    onClick={() => router.reload()}
-                                >
-                                    تحديث
-                                </Button>
-                            }
-                        />
-                    )}
-                </Card>
+            <Card
+                title={t("current_subscription")}
+                loading={!props}
+                style={{ marginBottom: 24 }}
+            >
+                {props.currentSubscription ? (
+                    <Descriptions
+                        items={subscriptionItems}
+                        bordered
+                        column={2}
+                    />
+                ) : (
+                    <Alert
+                        message={t("no_active_subscription")}
+                        type="warning"
+                        showIcon
+                        action={
+                            <Button
+                                type="primary"
+                                onClick={() => router.reload()}
+                            >
+                                {t("refresh")}
+                            </Button>
+                        }
+                    />
+                )}
+            </Card>
 
-                <Card
-                    title="الباقات المتاحة"
-                    loading={!props.packages}
-                    style={{ marginBottom: 24 }}
-                >
-                    <div className="packages-list">
-                        <List
-                            grid={{ gutter: 16, xs: 1, sm: 2, lg: 3 }}
-                            dataSource={props.packages}
-                            renderItem={(pkg) => (
-                                <List.Item>
-                                    <Card
-                                        hoverable
-                                        style={{
-                                            border: "2px solid #1890ff",
-                                            borderRadius: 12,
-                                            boxShadow:
-                                                "0 4px 12px rgba(0, 0, 0, 0.15)",
-                                            backgroundColor: "#f9f9f9",
-                                            transition: "0.3s",
-                                        }}
-                                        headStyle={{
-                                            backgroundColor: "#e6f7ff",
-                                            borderBottom: "1px solid #91d5ff",
-                                        }}
-                                        title={
-                                            <Text
-                                                strong
-                                                style={{ fontSize: "1.2rem" }}
-                                            >
-                                                {pkg.name}
-                                            </Text>
-                                        }
-                                        extra={
-                                            <Text
-                                                strong
-                                                style={{
-                                                    fontSize: "1.1rem",
-                                                    color: "#1890ff",
-                                                }}
-                                            >
-                                                ${pkg.price.toFixed(2)}
-                                            </Text>
-                                        }
-                                        actions={[
-                                            <Button
-                                                type="primary"
-                                                size="large"
-                                                onClick={() =>
-                                                    handleSubscribe(pkg.id)
-                                                }
-                                                loading={isSubscribing}
-                                                disabled={
+            <Card
+                title={t("available_packages")}
+                loading={!props.packages}
+                style={{ marginBottom: 24 }}
+            >
+                <div className="packages-list">
+                    <List
+                        grid={{ gutter: 16, xs: 1, sm: 2, lg: 3 }}
+                        dataSource={props.packages}
+                        renderItem={(pkg) => (
+                            <List.Item>
+                                <Card
+                                    hoverable
+                                    style={{
+                                        border: "2px solid #1890ff",
+                                        borderRadius: 12,
+                                        boxShadow:
+                                            "0 4px 12px rgba(0, 0, 0, 0.15)",
+                                        backgroundColor: "#f9f9f9",
+                                        transition: "0.3s",
+                                    }}
+                                    headStyle={{
+                                        backgroundColor: "#e6f7ff",
+                                        borderBottom: "1px solid #91d5ff",
+                                    }}
+                                    title={
+                                        <Text
+                                            strong
+                                            style={{ fontSize: "1.2rem" }}
+                                        >
+                                            {pkg.name}
+                                        </Text>
+                                    }
+                                    extra={
+                                        <Text
+                                            strong
+                                            style={{
+                                                fontSize: "1.1rem",
+                                                color: "#1890ff",
+                                            }}
+                                        >
+                                            ${pkg.price.toFixed(2)}
+                                        </Text>
+                                    }
+                                    actions={[
+                                        <Button
+                                            type="primary"
+                                            size="large"
+                                            onClick={() =>
+                                                handleSubscribe(pkg.id)
+                                            }
+                                            loading={isSubscribing}
+                                            disabled={
+                                                props.currentSubscription
+                                                    ?.package_id === pkg.id
+                                            }
+                                            style={{
+                                                backgroundColor:
                                                     props.currentSubscription
                                                         ?.package_id === pkg.id
-                                                }
-                                                style={{
-                                                    backgroundColor:
-                                                        props
-                                                            .currentSubscription
-                                                            ?.package_id ===
-                                                        pkg.id
-                                                            ? "#52c41a"
-                                                            : undefined,
-                                                    borderColor:
-                                                        props
-                                                            .currentSubscription
-                                                            ?.package_id ===
-                                                        pkg.id
-                                                            ? "#52c41a"
-                                                            : undefined,
-                                                }}
-                                            >
-                                                {props.currentSubscription
-                                                    ?.package_id === pkg.id
-                                                    ? "الباقة الحالية"
-                                                    : "اشترك الآن"}
-                                            </Button>,
-                                        ]}
-                                    >
-                                        <div style={{ minHeight: 100 }}>
-                                            <Divider />
-                                            <Space
-                                                direction="vertical"
-                                                size="middle"
-                                            >
-                                                <Text>
-                                                    📅 المدة: {pkg.duration} يوم
-                                                </Text>
-                                                <Text>
-                                                    📦 الحد الأقصى للعقارات:{" "}
-                                                    {pkg.max_listings}
-                                                </Text>
-                                                <Text>{pkg.description}</Text>
-                                            </Space>
-                                        </div>
-                                    </Card>
-                                </List.Item>
+                                                        ? "#52c41a"
+                                                        : undefined,
+                                                borderColor:
+                                                    props.currentSubscription
+                                                        ?.package_id === pkg.id
+                                                        ? "#52c41a"
+                                                        : undefined,
+                                            }}
+                                        >
+                                            {props.currentSubscription
+                                                ?.package_id === pkg.id
+                                                ? t("current_package")
+                                                : t("subscribe_now")}
+                                        </Button>,
+                                    ]}
+                                >
+                                    <div style={{ minHeight: 100 }}>
+                                        <Divider />
+                                        <Space
+                                            direction="vertical"
+                                            size="middle"
+                                        >
+                                            <Text>
+                                                📅 {t("duration")}:{" "}
+                                                {pkg.duration} {t("days")}
+                                            </Text>
+                                            <Text>
+                                                📦 {t("max_listings")}:{" "}
+                                                {pkg.max_listings}
+                                            </Text>
+                                            <Text>{pkg.description}</Text>
+                                        </Space>
+                                    </div>
+                                </Card>
+                            </List.Item>
+                        )}
+                    />
+                </div>
+            </Card>
+
+            <Card
+                title={t("transaction_history")}
+                loading={!props.transactions}
+            >
+                <Table
+                    columns={columns}
+                    dataSource={props.transactions}
+                    rowKey="id"
+                    pagination={{ pageSize: 5 }}
+                />
+            </Card>
+
+            <Modal
+                title={t("invoice_details")}
+                open={modalVisible}
+                onCancel={() => setModalVisible(false)}
+                footer={null}
+                width={800}
+            >
+                {selectedInvoice && (
+                    <div>
+                        <Descriptions bordered column={2}>
+                            <Descriptions.Item label={t("invoice_number")}>
+                                {selectedInvoice.invoice_number}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={t("issue_date")}>
+                                {new Date(
+                                    selectedInvoice.issue_date
+                                ).toLocaleDateString()}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={t("due_date")}>
+                                {new Date(
+                                    selectedInvoice.due_date
+                                ).toLocaleDateString()}
+                            </Descriptions.Item>
+                            <Descriptions.Item label={t("total_amount")}>
+                                <Text strong>
+                                    ${selectedInvoice.total.toFixed(2)}
+                                </Text>
+                            </Descriptions.Item>
+                        </Descriptions>
+
+                        <Divider orientation="right">{t("items")}</Divider>
+
+                        <Table
+                            columns={[
+                                {
+                                    title: t("description"),
+                                    dataIndex: "description",
+                                    key: "description",
+                                },
+                                {
+                                    title: t("quantity"),
+                                    dataIndex: "quantity",
+                                    key: "quantity",
+                                },
+                                {
+                                    title: t("unit_price"),
+                                    dataIndex: "unit_price",
+                                    key: "unitPrice",
+                                    render: (value) => `$${value.toFixed(2)}`,
+                                },
+                                {
+                                    title: t("total"),
+                                    dataIndex: "total_price",
+                                    key: "totalPrice",
+                                    render: (value) => `$${value.toFixed(2)}`,
+                                },
+                            ]}
+                            dataSource={selectedInvoice.items}
+                            rowKey="description"
+                            pagination={false}
+                            summary={() => (
+                                <Table.Summary fixed>
+                                    <Table.Summary.Row>
+                                        <Table.Summary.Cell
+                                            index={0}
+                                            colSpan={3}
+                                            align="left"
+                                        >
+                                            <Text strong>{t("subtotal")}:</Text>
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell index={1}>
+                                            <Text strong>
+                                                $
+                                                {selectedInvoice.subtotal.toFixed(
+                                                    2
+                                                )}
+                                            </Text>
+                                        </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                    <Table.Summary.Row>
+                                        <Table.Summary.Cell
+                                            index={0}
+                                            colSpan={3}
+                                            align="left"
+                                        >
+                                            <Text strong>{t("tax")}:</Text>
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell index={1}>
+                                            <Text strong>
+                                                $
+                                                {selectedInvoice.tax.toFixed(2)}
+                                            </Text>
+                                        </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                    <Table.Summary.Row>
+                                        <Table.Summary.Cell
+                                            index={0}
+                                            colSpan={3}
+                                            align="left"
+                                        >
+                                            <Text strong>{t("total")}:</Text>
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell index={1}>
+                                            <Text strong>
+                                                $
+                                                {selectedInvoice.total.toFixed(
+                                                    2
+                                                )}
+                                            </Text>
+                                        </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                </Table.Summary>
                             )}
                         />
+
+                        {selectedInvoice.invoice_pdf_url && (
+                            <div style={{ marginTop: 16 }}>
+                                <Button
+                                    type="primary"
+                                    href={selectedInvoice.invoice_pdf_url}
+                                    target="_blank"
+                                >
+                                    {t("download_pdf")}
+                                </Button>
+                            </div>
+                        )}
                     </div>
-                </Card>
-
-                <Card title="سجل المعاملات" loading={!props.transactions}>
-                    <Table
-                        columns={columns}
-                        dataSource={props.transactions}
-                        rowKey="id"
-                        pagination={{ pageSize: 5 }}
-                    />
-                </Card>
-
-                <Modal
-                    title="تفاصيل الفاتورة"
-                    open={modalVisible}
-                    onCancel={() => setModalVisible(false)}
-                    footer={null}
-                    width={800}
-                >
-                    {selectedInvoice && (
-                        <div>
-                            <Descriptions bordered column={2}>
-                                <Descriptions.Item label="رقم الفاتورة">
-                                    {selectedInvoice.invoice_number}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="تاريخ الإصدار">
-                                    {new Date(
-                                        selectedInvoice.issue_date
-                                    ).toLocaleDateString()}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="تاريخ الاستحقاق">
-                                    {new Date(
-                                        selectedInvoice.due_date
-                                    ).toLocaleDateString()}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="المبلغ الإجمالي">
-                                    <Text strong>
-                                        ${selectedInvoice.total.toFixed(2)}
-                                    </Text>
-                                </Descriptions.Item>
-                            </Descriptions>
-
-                            <Divider orientation="right">العناصر</Divider>
-
-                            <Table
-                                columns={[
-                                    {
-                                        title: "الوصف",
-                                        dataIndex: "description",
-                                        key: "description",
-                                    },
-                                    {
-                                        title: "الكمية",
-                                        dataIndex: "quantity",
-                                        key: "quantity",
-                                    },
-                                    {
-                                        title: "سعر الوحدة",
-                                        dataIndex: "unit_price",
-                                        key: "unitPrice",
-                                        render: (value) =>
-                                            `$${value.toFixed(2)}`,
-                                    },
-                                    {
-                                        title: "الإجمالي",
-                                        dataIndex: "total_price",
-                                        key: "totalPrice",
-                                        render: (value) =>
-                                            `$${value.toFixed(2)}`,
-                                    },
-                                ]}
-                                dataSource={selectedInvoice.items}
-                                rowKey="description"
-                                pagination={false}
-                                summary={() => (
-                                    <Table.Summary fixed>
-                                        <Table.Summary.Row>
-                                            <Table.Summary.Cell
-                                                index={0}
-                                                colSpan={3}
-                                                align="left"
-                                            >
-                                                <Text strong>
-                                                    المجموع الفرعي:
-                                                </Text>
-                                            </Table.Summary.Cell>
-                                            <Table.Summary.Cell index={1}>
-                                                <Text strong>
-                                                    $
-                                                    {selectedInvoice.subtotal.toFixed(
-                                                        2
-                                                    )}
-                                                </Text>
-                                            </Table.Summary.Cell>
-                                        </Table.Summary.Row>
-                                        <Table.Summary.Row>
-                                            <Table.Summary.Cell
-                                                index={0}
-                                                colSpan={3}
-                                                align="left"
-                                            >
-                                                <Text strong>الضريبة:</Text>
-                                            </Table.Summary.Cell>
-                                            <Table.Summary.Cell index={1}>
-                                                <Text strong>
-                                                    $
-                                                    {selectedInvoice.tax.toFixed(
-                                                        2
-                                                    )}
-                                                </Text>
-                                            </Table.Summary.Cell>
-                                        </Table.Summary.Row>
-                                        <Table.Summary.Row>
-                                            <Table.Summary.Cell
-                                                index={0}
-                                                colSpan={3}
-                                                align="left"
-                                            >
-                                                <Text strong>الإجمالي:</Text>
-                                            </Table.Summary.Cell>
-                                            <Table.Summary.Cell index={1}>
-                                                <Text strong>
-                                                    $
-                                                    {selectedInvoice.total.toFixed(
-                                                        2
-                                                    )}
-                                                </Text>
-                                            </Table.Summary.Cell>
-                                        </Table.Summary.Row>
-                                    </Table.Summary>
-                                )}
-                            />
-
-                            {selectedInvoice.invoice_pdf_url && (
-                                <div style={{ marginTop: 16 }}>
-                                    <Button
-                                        type="primary"
-                                        href={selectedInvoice.invoice_pdf_url}
-                                        target="_blank"
-                                    >
-                                        تحميل PDF
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </Modal>
-            </div>
-        </AppLayout>
+                )}
+            </Modal>
+        </div>
     );
 };
 

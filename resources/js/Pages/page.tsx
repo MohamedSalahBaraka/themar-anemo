@@ -1,53 +1,9 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
-import {
-    Card,
-    Row,
-    Col,
-    Image,
-    Typography,
-    Divider,
-    Button,
-    Space,
-    Descriptions,
-    Modal,
-    Form,
-    Input,
-    Tag,
-    DatePicker,
-    Badge,
-    message,
-    Empty,
-    Select,
-    Radio,
-    Pagination,
-    Table,
-    Collapse,
-    List,
-} from "antd";
-import {
-    EnvironmentOutlined,
-    PhoneOutlined,
-    MailOutlined,
-    CalendarOutlined,
-    HomeOutlined,
-    StarOutlined,
-    ArrowsAltOutlined,
-    SearchOutlined,
-    CheckCircleOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    CaretRightOutlined,
-} from "@ant-design/icons";
-import Map from "@/Components/Map";
-import dayjs from "dayjs";
+import { usePage } from "@inertiajs/react";
+import { Typography, Button, Descriptions, DatePicker, Collapse } from "antd";
 import { PageProps } from "@/types";
-import { Property, PropertyFilter } from "@/types/property";
-import { FaBath, FaBed } from "react-icons/fa";
-import Meta from "antd/es/card/Meta";
 import FrontLayout from "@/Layouts/FrontLayout";
-import PackageCard, { Package } from "@/Components/PackageCard";
-import { Faq } from "@/types/faq";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -74,6 +30,7 @@ const Page: React.FC = () => {
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
     const { page, auth } = props;
 
+    const { t } = useLanguage();
     return (
         <section>
             <div className="m-10" dangerouslySetInnerHTML={{ __html: page }} />
@@ -119,7 +76,7 @@ const Page: React.FC = () => {
                                     fontSize: "16px",
                                 }}
                             >
-                                تجربة مجانية
+                                {t("free_trial")}
                             </Button>
                             <Button
                                 size="large"
@@ -133,7 +90,7 @@ const Page: React.FC = () => {
                                     color: "white",
                                 }}
                             >
-                                احجز باقة الآن
+                                {t("book_package_now")}
                             </Button>
                         </div>
                     </div>

@@ -95,6 +95,7 @@ class HomeController extends Controller
 
         return Inertia::render('HomePage', [
             'packages' => Package::limit(3)->get(),
+            'cities' => City::all(),
             'featuredProperties' => $featuredProperties,
             'recentlyViewed' => $recentlyViewed,
             'propertyCounts' => $propertyCounts,
@@ -104,7 +105,7 @@ class HomeController extends Controller
                 'popularTypes' => $popularProperties,
             ],
             'filters' => $request->only([
-                'location',
+                'city',
                 'type',
                 'purpose',
                 'minPrice',
@@ -175,5 +176,21 @@ class HomeController extends Controller
         $aboutValues = AboutValue::all();
         $teamMembers = TeamMember::all();
         return Inertia::render('AboutUs', ['aboutValues' => $aboutValues, 'teamMembers' => $teamMembers]);
+    }
+    public function getConfigs()
+    {
+        $configs = configs::where('is_public', true)->get()->map(function ($config) {
+            return [
+                'key' => $config->key,
+                'value' => $config->value,
+                'type' => $config->type,
+                'options' => $config->options ? json_decode($config->options) : [],
+                'description' => $config->description,
+                'group' => $config->group,
+            ];
+        });
+        return Inertia::render('admin/Config', [
+            'configs' => $configs,
+        ]);
     }
 }

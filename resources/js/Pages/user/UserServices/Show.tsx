@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     Button,
     Row,
@@ -7,18 +7,10 @@ import {
     Descriptions,
     Tag,
     List,
-    Modal,
-    Form,
     Input,
     Avatar,
     Space,
     Select,
-    Upload,
-    message,
-    Divider,
-    Checkbox,
-    Radio,
-    DatePicker,
     Table,
 } from "antd";
 import { usePage, router } from "@inertiajs/react";
@@ -30,9 +22,10 @@ import {
     UserServiceFieldValue,
     UserServiceStep,
 } from "@/types/Services";
-import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import AdminLayout from "@/Layouts/AdminLayout";
-import dayjs, { isDayjs } from "dayjs";
+import AppLayout from "@/Layouts/Layout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -77,8 +70,13 @@ interface Page extends PageProps {
     };
     serviceSteps: ServiceStep[];
 }
-
-const UserServiceShow = () => {
+const UserServiceShow: React.FC = () => (
+    <AppLayout>
+        <Page />
+    </AppLayout>
+);
+const Page = () => {
+    const { t } = useLanguage();
     const { props } = usePage<Page>();
     const { userService, serviceSteps } = props;
 
@@ -129,7 +127,7 @@ const UserServiceShow = () => {
     };
     const attachmentsColumns = [
         {
-            title: "File",
+            title: t("File"),
             dataIndex: "file_path",
             key: "file_path",
             render: (text: string) => (
@@ -139,32 +137,32 @@ const UserServiceShow = () => {
             ),
         },
         {
-            title: "Note",
+            title: t("Note"),
             dataIndex: "note",
             key: "note",
         },
         {
-            title: "Uploaded At",
+            title: t("Uploaded At"),
             dataIndex: "created_at",
             key: "created_at",
             render: (text: string) => formatDate(text),
         },
         {
-            title: "Action",
+            title: t("Actions"),
             key: "action",
             render: (_: any, record: any) => (
                 <Button
                     icon={<DownloadOutlined />}
                     onClick={() => handleDownload(record.file_path)}
                 >
-                    Download
+                    {t("Download")}
                 </Button>
             ),
         },
     ];
 
     if (!userService) {
-        return <div>Loading...</div>;
+        return <div>{t("Loading...")}</div>;
     }
 
     return (
@@ -173,7 +171,7 @@ const UserServiceShow = () => {
                 <Card
                     title={
                         <Space>
-                            <Button
+                            {/* <Button
                                 type="link"
                                 onClick={() =>
                                     router.visit(
@@ -182,9 +180,10 @@ const UserServiceShow = () => {
                                 }
                             >
                                 Back
-                            </Button>
+                            </Button> */}
                             <span>
-                                Service: <b>{userService.service.name}</b>
+                                {t("Service")}:{" "}
+                                <b>{userService.service.name}</b>
                             </span>
                             <Tag color="blue">{userService.status}</Tag>
                         </Space>
@@ -200,29 +199,31 @@ const UserServiceShow = () => {
                                 style={{ marginBottom: 16 }}
                             >
                                 <Descriptions size="small" column={1}>
-                                    <Descriptions.Item label="Name">
+                                    <Descriptions.Item label={t("Name")}>
                                         {userService.user?.name || "N/A"}
                                     </Descriptions.Item>
-                                    <Descriptions.Item label="Email">
+                                    <Descriptions.Item label={t("Email")}>
                                         {userService.user?.email || "N/A"}
                                     </Descriptions.Item>
-                                    <Descriptions.Item label="Created At">
+                                    <Descriptions.Item label={t("Created At")}>
                                         {formatDate(userService.created_at)}
                                     </Descriptions.Item>
                                 </Descriptions>
                             </Card>
-                            <Card type="inner" title="Service Information">
+                            <Card type="inner" title={t("Service Information")}>
                                 <Descriptions size="small" column={1}>
-                                    <Descriptions.Item label="Service">
+                                    <Descriptions.Item label={t("Service")}>
                                         {userService.service.name}
                                     </Descriptions.Item>
-                                    <Descriptions.Item label="Category">
+                                    <Descriptions.Item label={t("Category")}>
                                         {userService.service.category?.name ||
                                             "N/A"}
                                     </Descriptions.Item>
-                                    <Descriptions.Item label="Current Step">
+                                    <Descriptions.Item
+                                        label={t("Current Step")}
+                                    >
                                         {userService.current_step?.title ||
-                                            "Not started"}
+                                            t("Not started")}
                                     </Descriptions.Item>
                                 </Descriptions>
                             </Card>
@@ -234,7 +235,7 @@ const UserServiceShow = () => {
                             {creationFields.length > 0 && (
                                 <Card
                                     type="inner"
-                                    title="Initial Information"
+                                    title={t("Initial Information")}
                                     style={{ marginBottom: 16 }}
                                 >
                                     <Descriptions column={2}>
@@ -258,7 +259,7 @@ const UserServiceShow = () => {
                                                             )
                                                         }
                                                     >
-                                                        Download
+                                                        {t("Download")}
                                                     </Button>
                                                 )}
                                             </Descriptions.Item>
@@ -274,7 +275,9 @@ const UserServiceShow = () => {
                                         <Card
                                             key={step.id}
                                             type="inner"
-                                            title={`Step: ${step.title}`}
+                                            title={`${t("Step")}: ${
+                                                step.title
+                                            }`}
                                             style={{ marginBottom: 16 }}
                                             extra={
                                                 <Space>
@@ -283,8 +286,12 @@ const UserServiceShow = () => {
                                                             color={
                                                                 userStepData.status ===
                                                                 "completed"
-                                                                    ? "success"
-                                                                    : "processing"
+                                                                    ? t(
+                                                                          "success"
+                                                                      )
+                                                                    : t(
+                                                                          "processing"
+                                                                      )
                                                             }
                                                         >
                                                             {
@@ -305,8 +312,12 @@ const UserServiceShow = () => {
                                                             color={
                                                                 userStepData.status ===
                                                                 "completed"
-                                                                    ? "success"
-                                                                    : "processing"
+                                                                    ? t(
+                                                                          "success"
+                                                                      )
+                                                                    : t(
+                                                                          "processing"
+                                                                      )
                                                             }
                                                         >
                                                             {
@@ -314,19 +325,25 @@ const UserServiceShow = () => {
                                                             }
                                                         </Tag>
                                                     </Descriptions.Item>
-                                                    <Descriptions.Item label="Completed At">
+                                                    <Descriptions.Item
+                                                        label={t(
+                                                            "Completed At"
+                                                        )}
+                                                    >
                                                         {userStepData.completed_at
                                                             ? formatDate(
                                                                   userStepData.completed_at
                                                               )
-                                                            : "Not completed"}
+                                                            : t(
+                                                                  "Not completed"
+                                                              )}
                                                     </Descriptions.Item>
                                                     <Descriptions.Item
-                                                        label="Admin Note"
+                                                        label={t("Admin Note")}
                                                         span={2}
                                                     >
                                                         {userStepData.admin_note ||
-                                                            "No notes"}
+                                                            t("No notes")}
                                                     </Descriptions.Item>
                                                 </Descriptions>
                                             )}
@@ -350,7 +367,9 @@ const UserServiceShow = () => {
                                                                         )
                                                                     }
                                                                 >
-                                                                    View File
+                                                                    {t(
+                                                                        "View File"
+                                                                    )}
                                                                 </a>
                                                             ) : (
                                                                 "N/A"

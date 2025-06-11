@@ -30,6 +30,11 @@ import {
     ShopOutlined,
     GlobalOutlined,
     BulbOutlined,
+    BulbFilled,
+    MoonFilled,
+    SunFilled,
+    LogoutOutlined,
+    DashboardOutlined,
 } from "@ant-design/icons";
 import { Link, usePage } from "@inertiajs/react";
 // @ts-ignore
@@ -52,17 +57,19 @@ const FrontLayout = ({ children }: FrontLayoutProps) => (
 );
 
 const MainLayout = ({ children }: FrontLayoutProps) => {
-    const { t, language, direction, antdLocale, setLanguage } = useLanguage();
+    const {
+        t,
+        language,
+        direction,
+        antdLocale,
+        setLanguage,
+        darkMode,
+        setDarkMode,
+    } = useLanguage();
     const user = usePage().props.auth.user;
     const appConfigs = usePage().props.appConfigs as Record<string, any>;
     const services = usePage().props.footerServices as Service[];
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== "undefined") {
-            const savedMode = localStorage.getItem("darkMode");
-            return savedMode ? JSON.parse(savedMode) : false;
-        }
-        return false;
-    });
+
     const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -104,51 +111,6 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
     const toggleDarkMode = () => setDarkMode(!darkMode);
     const toggleMobileMenu = () => setMobileMenuVisible(!mobileMenuVisible);
 
-    const navItems = [
-        {
-            key: "home",
-            icon: <HomeOutlined />,
-            label: <Link href="/">{t("home")}</Link>,
-        },
-        {
-            key: "properties",
-            icon: <HomeOutlined />,
-            label: <Link href="/properties">{t("properties")}</Link>,
-        },
-        {
-            key: "favorites",
-            icon: <HeartOutlined />,
-            label: <Link href="/favorites">{t("favorites")}</Link>,
-        },
-        {
-            key: "about",
-            icon: <InfoCircleOutlined />,
-            label: <Link href="/about">{t("about_us")}</Link>,
-        },
-        {
-            key: "contact",
-            icon: <PhoneOutlined />,
-            label: <Link href="/contact">{t("contact_us")}</Link>,
-        },
-    ];
-
-    const userMenuItems = [
-        {
-            key: "profile",
-            label: <Link href="/profile">{t("profile")}</Link>,
-            icon: <UserOutlined />,
-        },
-        {
-            key: "logout",
-            label: (
-                <Link href="/logout" method="post">
-                    {t("logout")}
-                </Link>
-            ),
-            icon: <UserOutlined />,
-        },
-    ];
-
     const renderThumb = ({ style }: { style: React.CSSProperties }) => (
         <div
             style={{
@@ -160,7 +122,21 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
     );
     const { url } = usePage();
     const currentPath = new URL(url, window.location.origin).pathname;
-
+    const userMenu = (
+        <Menu>
+            <Menu.Item key="profile" icon={<UserOutlined />}>
+                <Link href="/profile">{t("profile")}</Link>
+            </Menu.Item>
+            <Menu.Item key="logout" icon={<LogoutOutlined />}>
+                <Link href="/logout" method="post">
+                    {t("logout")}
+                </Link>
+            </Menu.Item>
+            <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
+                <Link href="/user/dashboard">{t("dashboard")}</Link>
+            </Menu.Item>
+        </Menu>
+    );
     const pathKeyMap: Record<string, string> = {
         "/": "home",
         "/properties/search": "properties",
@@ -184,132 +160,6 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
             >
                 <Layout className="min-h-screen font-cairo">
                     {/* Header */}
-                    {/* Mobile Menu Drawer */}
-                    <Drawer
-                        title={
-                            <div className="flex items-center gap-2">
-                                <img
-                                    className="h-8"
-                                    src={
-                                        darkMode
-                                            ? appConfigs["app.logo_dark_url"]
-                                            : appConfigs["app.logo_url"]
-                                    }
-                                    alt="Logo"
-                                />
-                            </div>
-                        }
-                        placement={direction === "rtl" ? "right" : "left"}
-                        onClose={toggleMobileMenu}
-                        open={mobileMenuVisible}
-                        bodyStyle={{ padding: 0 }}
-                        width={280}
-                    >
-                        <Scrollbars
-                            autoHide
-                            autoHideTimeout={500}
-                            autoHideDuration={200}
-                            renderThumbVertical={renderThumb}
-                        >
-                            <div className="flex flex-col h-full">
-                                <Menu
-                                    mode="inline"
-                                    theme={darkMode ? "dark" : "light"}
-                                    items={[
-                                        {
-                                            key: "home",
-                                            label: "الرئيسة",
-                                            icon: <HomeOutlined />,
-                                        },
-                                        {
-                                            key: "properties",
-                                            label: "العقارات",
-                                            icon: <ShopOutlined />,
-                                        },
-                                        {
-                                            key: "languages",
-                                            label: "اللغات",
-                                            icon: <GlobalOutlined />,
-                                        },
-                                        {
-                                            key: "about",
-                                            label: "من نحن",
-                                            icon: <InfoCircleOutlined />,
-                                        },
-                                        {
-                                            key: "contact",
-                                            label: "إضاءة",
-                                            icon: <BulbOutlined />,
-                                        },
-                                    ]}
-                                    className="flex-1 border-0"
-                                    selectedKeys={[]}
-                                />
-
-                                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <Button
-                                            type="text"
-                                            icon={
-                                                darkMode ? (
-                                                    <SunOutlined />
-                                                ) : (
-                                                    <MoonOutlined />
-                                                )
-                                            }
-                                            onClick={toggleDarkMode}
-                                        />
-                                        <Button
-                                            type="text"
-                                            icon={<TranslationOutlined />}
-                                            onClick={() => {
-                                                setLanguage(
-                                                    language === "ar"
-                                                        ? "en"
-                                                        : "ar"
-                                                );
-                                                toggleMobileMenu();
-                                            }}
-                                        >
-                                            {language === "ar"
-                                                ? "EN"
-                                                : "العربية"}
-                                        </Button>
-                                    </div>
-
-                                    {user ? (
-                                        <div className="flex items-center gap-2">
-                                            <Avatar icon={<UserOutlined />} />
-                                            <div>
-                                                <div className="font-medium">
-                                                    {user.name}
-                                                </div>
-                                                <Link
-                                                    href="/logout"
-                                                    className="text-sm text-gray-500"
-                                                >
-                                                    تسجيل خروج
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <Space className="w-full">
-                                            <Button block href="/login">
-                                                السجل الدخول
-                                            </Button>
-                                            <Button
-                                                block
-                                                type="primary"
-                                                href="/register"
-                                            >
-                                                إشاء حساب
-                                            </Button>
-                                        </Space>
-                                    )}
-                                </div>
-                            </div>
-                        </Scrollbars>
-                    </Drawer>
                     <Header
                         className={`sticky top-0 z-50 w-full px-6 ${
                             darkMode ? "bg-gray-900" : "bg-[#F7FAFC]"
@@ -342,40 +192,55 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                             <div className="flex items-center gap-3">
                                 {user ? (
                                     <Dropdown
-                                        menu={{
-                                            items: [
-                                                {
-                                                    key: "profile",
-                                                    label: "الملف الشخصي",
-                                                },
-                                                {
-                                                    key: "logout",
-                                                    label: "تسجيل خروج",
-                                                },
-                                            ],
-                                        }}
+                                        overlay={userMenu}
                                         placement="bottomRight"
                                     >
-                                        <Avatar
-                                            icon={<UserOutlined />}
-                                            className="cursor-pointer"
-                                        />
+                                        <div className="flex items-center gap-2 cursor-pointer px-4">
+                                            <Avatar
+                                                size="default"
+                                                className="bg-primary"
+                                                icon={<UserOutlined />}
+                                            />
+                                            <span className="text-dark dark:text-white60 hidden md:inline-block">
+                                                المستخدم
+                                            </span>
+                                        </div>
                                     </Dropdown>
                                 ) : (
+                                    // <Dropdown
+                                    //     menu={{
+                                    //         items: [
+                                    //             {
+                                    //                 key: "profile",
+                                    //                 label: t("profile"),
+                                    //             },
+                                    //             {
+                                    //                 key: "logout",
+                                    //                 label: t("logout"),
+                                    //             },
+                                    //         ],
+                                    //     }}
+                                    //     placement="bottomRight"
+                                    // >
+                                    //     <Avatar
+                                    //         icon={<UserOutlined />}
+                                    //         className="cursor-pointer"
+                                    //     />
+                                    // </Dropdown>
                                     <Space>
                                         <Button
                                             type="default"
                                             href="/login"
                                             className="text-sm font-medium"
                                         >
-                                            تسجيل الدخول
+                                            {t("login")}
                                         </Button>
                                         <Button
                                             type="primary"
                                             href="/register"
                                             className="text-sm font-medium"
                                         >
-                                            إنشاء حساب
+                                            {t("register")}
                                         </Button>
                                     </Space>
                                 )}
@@ -398,27 +263,39 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 items={[
                                     {
                                         key: "home",
-                                        label: <a href="/">الرئيسية</a>,
+                                        label: <a href="/">{t("home")}</a>,
                                     },
                                     {
                                         key: "properties",
                                         label: (
                                             <a href="/properties/search">
-                                                العقارات
+                                                {t("properties")}
                                             </a>
                                         ),
                                     },
                                     {
                                         key: "pricing",
-                                        label: <a href="/pricing">الباقات</a>,
+                                        label: (
+                                            <a href="/pricing">
+                                                {t("pricing")}
+                                            </a>
+                                        ),
                                     },
                                     {
                                         key: "services",
-                                        label: <a href="/services">الخدمات</a>,
+                                        label: (
+                                            <a href="/services">
+                                                {t("services")}
+                                            </a>
+                                        ),
                                     },
                                     {
                                         key: "about-us",
-                                        label: <a href="/about-us">من نحن</a>,
+                                        label: (
+                                            <a href="/about-us">
+                                                {t("about_us")}
+                                            </a>
+                                        ),
                                     },
                                 ]}
                                 className="border-0 bg-transparent font-medium flex-1"
@@ -426,12 +303,24 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                             />
 
                             {/* Add Property Link */}
-                            <Link
-                                href={route("user.properties.create")}
-                                className="text-green-600 font-medium text-sm hover:underline"
-                            >
-                                + إضافة عقار
-                            </Link>
+                            <div>
+                                <Button
+                                    type="text"
+                                    onClick={() => {
+                                        setLanguage(
+                                            language === "ar" ? "en" : "ar"
+                                        );
+                                    }}
+                                >
+                                    {t("switch_to_arabic")}
+                                </Button>
+                                <Button
+                                    type="text"
+                                    onClick={() => setDarkMode(!darkMode)}
+                                >
+                                    {darkMode ? <SunFilled /> : <MoonFilled />}
+                                </Button>
+                            </div>
                         </div>
                     </Header>
 
@@ -448,7 +337,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 {/* About Section */}
                                 <div>
                                     <h3 className="text-lg text-white font-semibold mb-4">
-                                        عن {appConfigs["app.name"]}
+                                        {t("about")} {appConfigs["app.name"]}
                                     </h3>
                                     <p className="text-gray-500 dark:text-gray-400">
                                         {appConfigs["about.short"]}
@@ -458,7 +347,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 {/* Quick Links Section */}
                                 <div>
                                     <h3 className="text-lg text-white font-semibold mb-4">
-                                        روابط سريعة
+                                        {t("quick_links")}
                                     </h3>
                                     <ul className="space-y-2">
                                         <li>
@@ -466,7 +355,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                                 href={route("Page", "help")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
-                                                المساعدة
+                                                {t("help")}
                                             </a>
                                         </li>
                                         <li>
@@ -474,7 +363,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                                 href={route("Page", "privacy")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
-                                                سياسة الخصوصية
+                                                {t("privacy_policy")}
                                             </a>
                                         </li>
                                         <li>
@@ -482,7 +371,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                                 href={route("Page", "terms")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
-                                                شروط الاستخدام
+                                                {t("terms_of_service")}
                                             </a>
                                         </li>
                                         <li>
@@ -490,7 +379,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                                 href={route("Faq")}
                                                 className="text-gray-500 dark:text-gray-400 hover:text-primary"
                                             >
-                                                الأسئلة الشائعة
+                                                {t("faqs")}
                                             </a>
                                         </li>
                                     </ul>
@@ -499,7 +388,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 {/* Services Section */}
                                 <div>
                                     <h3 className="text-lg text-white font-semibold mb-4">
-                                        الخدمات
+                                        {t("services")}
                                     </h3>
                                     <ul className="space-y-2">
                                         {services.map((service) => (
@@ -521,7 +410,7 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                 {/* Contact Section */}
                                 <div>
                                     <h3 className="text-lg text-white font-semibold mb-4">
-                                        اتصل بنا
+                                        {t("contact_us")}
                                     </h3>
                                     <div className="text-gray-500 dark:text-gray-400 space-y-2">
                                         <p>
@@ -548,7 +437,8 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                             <div className="flex flex-col md:flex-row justify-between items-center">
                                 <span className="text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
                                     © {new Date().getFullYear()}{" "}
-                                    {appConfigs["app.name"]}. جميع الحقوق محفوظة
+                                    {appConfigs["app.name"]}.{" "}
+                                    {t("all_rights_reserved")}
                                 </span>
                                 <div className="flex gap-4">
                                     <Button
@@ -556,14 +446,14 @@ const MainLayout = ({ children }: FrontLayoutProps) => {
                                         type="text"
                                         className="text-white"
                                     >
-                                        سياسة الخصوصية
+                                        {t("privacy_policy")}
                                     </Button>
                                     <Button
                                         href={route("Page", "terms")}
                                         type="text"
                                         className="text-white"
                                     >
-                                        شروط الخدمة
+                                        {t("terms_of_service")}
                                     </Button>
                                 </div>
                             </div>

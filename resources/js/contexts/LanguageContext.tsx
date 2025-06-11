@@ -17,6 +17,8 @@ interface LanguageContextType {
     direction: DirectionType;
     antdLocale: any;
     setLanguage: (lang: string) => void;
+    darkMode: boolean;
+    setDarkMode: (t: boolean) => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -32,7 +34,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         }
         return "ar";
     });
-
+    const [darkMode, setDarkMode] = useState(() => {
+        if (typeof window !== "undefined") {
+            const savedMode = localStorage.getItem("darkMode");
+            return savedMode ? JSON.parse(savedMode) : false;
+        }
+        return false;
+    });
     const direction: DirectionType = language === "ar" ? "rtl" : "ltr";
     const [translations, setTranslations] = useState<Translations>({});
     const antdLocale = language === "ar" ? ar_EG : en_US;
@@ -51,19 +59,30 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         key: string,
         params?: Record<string, string | number>
     ): string => {
-        // In a real implementation, you would load these from your JSON files
-        let translation = translations[key] || key;
+        const resolvePath = (path: string, obj: any): any => {
+            return path.split(".").reduce((prev, part) => {
+                // Handle array indices like rating_levels.3
+                if (prev && !isNaN(Number(part))) {
+                    return prev[Number(part)];
+                }
+                return prev?.[part];
+            }, obj);
+        };
 
-        if (params) {
+        // Attempt to resolve the full key path
+        let translation = resolvePath(key, translations) ?? key;
+
+        // Replace placeholders like {param}
+        if (typeof translation === "string" && params) {
             Object.entries(params).forEach(([param, value]) => {
                 translation = translation.replace(
-                    `{${param}}`,
+                    new RegExp(`{${param}}`, "g"),
                     value.toString()
                 );
             });
         }
 
-        return translation;
+        return typeof translation === "string" ? translation : key;
     };
 
     useEffect(() => {
@@ -82,6 +101,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
                 direction,
                 antdLocale,
                 setLanguage,
+                darkMode,
+                setDarkMode,
             }}
         >
             {children}

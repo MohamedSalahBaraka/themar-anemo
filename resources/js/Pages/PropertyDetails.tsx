@@ -1,5 +1,5 @@
 import React from "react";
-import { usePage, router, Link } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
 import {
     Card,
     Row,
@@ -18,16 +18,13 @@ import {
     Badge,
     message,
     InputNumber,
-    List,
     Empty,
 } from "antd";
 import {
     EnvironmentOutlined,
     PhoneOutlined,
-    MailOutlined,
     CalendarOutlined,
     HomeOutlined,
-    StarOutlined,
     EyeOutlined,
     ArrowsAltOutlined,
     TagOutlined,
@@ -43,9 +40,10 @@ import dayjs from "dayjs";
 import { PageProps } from "@/types";
 import { Property } from "@/types/property";
 
-import { FaBath, FaBed } from "react-icons/fa";
+import { FaBath } from "react-icons/fa";
 import FrontLayout from "@/Layouts/FrontLayout";
 import Meta from "antd/es/card/Meta";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Item } = Descriptions;
@@ -76,6 +74,7 @@ const PropertyDetails: React.FC = () => (
 );
 const Page: React.FC = () => {
     const { props } = usePage<PropertyDetailsPageProps>();
+    const { t, language } = useLanguage();
     const { property, isLoggedIn, similarProperties } = props;
     const user = usePage().props.auth.user;
     const [inquiryModalVisible, setInquiryModalVisible] = React.useState(false);
@@ -91,14 +90,14 @@ const Page: React.FC = () => {
             {
                 onSuccess: () => {
                     message.success(
-                        "Your inquiry has been submitted successfully!"
+                        t("Your inquiry has been submitted successfully!")
                     );
                     setInquiryModalVisible(false);
                     inquiryForm.resetFields();
                 },
                 onError: () => {
                     message.error(
-                        "Failed to submit inquiry. Please try again."
+                        t("Failed to submit inquiry. Please try again.")
                     );
                 },
             }
@@ -123,15 +122,19 @@ const Page: React.FC = () => {
                 onSuccess: () => {
                     message.success(
                         property.purpose === "rent"
-                            ? "Your rental request has been submitted successfully!"
-                            : "Your purchase request has been submitted successfully!"
+                            ? t(
+                                  "Your rental request has been submitted successfully!"
+                              )
+                            : t(
+                                  "Your purchase request has been submitted successfully!"
+                              )
                     );
                     setReservationModalVisible(false);
                     reservationForm.resetFields();
                 },
                 onError: () => {
                     message.error(
-                        "Failed to submit inquiry. Please try again."
+                        t("Failed to submit inquiry. Please try again.")
                     );
                 },
             }
@@ -146,7 +149,7 @@ const Page: React.FC = () => {
     };
     const renderPropertyCard = (property: Property) => (
         <Badge.Ribbon
-            text="مميز"
+            text={t("Featured")}
             color="gold"
             placement="start"
             style={{ display: property.is_featured ? "block" : "none" }}
@@ -164,28 +167,18 @@ const Page: React.FC = () => {
                             }
                             className="w-full h-full object-cover rounded-lg"
                         />
-                        {/* <button
-                            type="button"
-                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full shadow hover:bg-white focus:outline-none"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(property.id);
-                            }}
-                        >
-                            {favorites.has(property.id) ? (
-                                <HeartFilled className="text-red-500 text-sm" />
-                            ) : (
-                                <HeartOutlined className="text-sm" />
-                            )}
-                        </button> */}
                         <span
-                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${
+                            className={`absolute top-1 ${
+                                language === "ar" ? `left-1` : "right-1"
+                            }  px-1.5 py-0.5 rounded text-xs font-medium text-white ${
                                 property.purpose === "sale"
                                     ? "bg-blue-600"
                                     : "bg-green-600"
                             }`}
                         >
-                            {property.purpose === "sale" ? "للبيع" : "للإيجار"}
+                            {property.purpose === "sale"
+                                ? t("For Sale")
+                                : t("For Rent")}
                         </span>
                     </div>
                 }
@@ -216,24 +209,28 @@ const Page: React.FC = () => {
                                 <EnvironmentOutlined />
                                 <Text type="secondary">
                                     {property.address?.split(",")[0] ||
-                                        "الموقع غير محدد"}
+                                        t("Location not specified")}
                                 </Text>
                             </Space>
                             <Divider style={{ margin: "8px 0" }} />
                             <Space size="large">
                                 <Space>
                                     <HomeOutlined />
-                                    {property.bedrooms || "غير محدد"} غرفة
+                                    {property.bedrooms ||
+                                        t("Not specified")}{" "}
+                                    {t("Rooms")}
                                 </Space>
                                 <Space>
                                     <FaBath />
-                                    {property.bathrooms || "غير محدد"}حمام
+                                    {property.bathrooms ||
+                                        t("Not specified")}{" "}
+                                    {t("Bathrooms")}
                                 </Space>
                                 <Space>
                                     <ArrowsAltOutlined />
                                     {property.area
                                         ? `${property.area} m²`
-                                        : "غير محدد"}
+                                        : t("Not specified")}
                                 </Space>
                             </Space>
                         </>
@@ -266,7 +263,11 @@ const Page: React.FC = () => {
                     ))}
                 </Row>
             ) : (
-                <Empty description={`لا توجد ${title} متاحة حالياً`} />
+                <Empty
+                    description={`${t("No")} ${title} ${t(
+                        "available currently"
+                    )}`}
+                />
             )}
         </section>
     );
@@ -275,10 +276,10 @@ const Page: React.FC = () => {
 
     const getStatusTag = (status: string) => {
         const statusMap: Record<StatusKey, { color: string; text: string }> = {
-            available: { color: "green", text: "Available" },
-            sold: { color: "red", text: "Sold" },
-            rented: { color: "blue", text: "Rented" },
-            reserved: { color: "orange", text: "Reserved" },
+            available: { color: "green", text: t("Available") },
+            sold: { color: "red", text: t("Sold") },
+            rented: { color: "blue", text: t("Rented") },
+            reserved: { color: "orange", text: t("Reserved") },
         };
         const key = status as StatusKey;
         return <Tag color={statusMap[key]?.color}>{statusMap[key]?.text}</Tag>;
@@ -286,17 +287,17 @@ const Page: React.FC = () => {
 
     const getTypeTag = (type: string) => {
         const typeMap: Record<TypeKey, { color: string; text: string }> = {
-            apartment: { color: "purple", text: "Apartment" },
-            villa: { color: "gold", text: "Villa" },
-            land: { color: "cyan", text: "Land" },
-            office: { color: "blue", text: "Office" },
+            apartment: { color: "purple", text: t("Apartment") },
+            villa: { color: "gold", text: t("Villa") },
+            land: { color: "cyan", text: t("Land") },
+            office: { color: "blue", text: t("Office") },
         };
         const key = type as TypeKey;
         return <Tag color={typeMap[key]?.color}>{typeMap[key]?.text}</Tag>;
     };
 
     const handleFacebookShare = () => {
-        const url = encodeURIComponent(window.location.href); // or your property URL
+        const url = encodeURIComponent(window.location.href);
         window.open(
             `https://www.facebook.com/sharer/sharer.php?u=${url}`,
             "_blank"
@@ -304,7 +305,9 @@ const Page: React.FC = () => {
     };
     const handleWhatsAppShare = () => {
         const url = window.location.href;
-        const text = `مسكن دليلك العقاري, تصفح هذا العقار: ${url}`;
+        const text =
+            t("Maskan, your real estate guide, browse this property:") +
+            ` ${url}`;
         window.open(
             `https://wa.me/?text=${encodeURIComponent(text)}`,
             "_blank"
@@ -313,9 +316,9 @@ const Page: React.FC = () => {
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(window.location.href);
-            message.success("تم نسخ الرابط بنجاح!");
+            message.success(t("Link copied successfully!"));
         } catch (err) {
-            message.error("حدث خطأ أثناء نسخ الرابط");
+            message.error(t("An error occurred while copying the link"));
         }
     };
 
@@ -345,7 +348,6 @@ const Page: React.FC = () => {
                         bottom: 40,
                         right: 40,
                         maxWidth: 500,
-                        // backgroundColor: "rgba(255, 255, 255, 0.95)",
                         borderRadius: 12,
                         padding: 24,
                         fontFamily: "Arial, sans-serif",
@@ -374,7 +376,8 @@ const Page: React.FC = () => {
                     </Title>
                     <Text style={{ fontSize: 16, color: "#fff" }}>
                         <EnvironmentOutlined />{" "}
-                        {property.address || "الدوار السابع، عمان"}
+                        {property.city?.title && property.city?.title + ", "}
+                        {property.address || t("7th Circle, Amman")}
                     </Text>
 
                     {/* Features */}
@@ -388,7 +391,7 @@ const Page: React.FC = () => {
                                     }}
                                 >
                                     <FaBath size={20} />
-                                    <div>الحمامات</div>
+                                    <div>{t("Bathrooms")}</div>
                                 </div>
                                 <Text strong style={{ color: "#fff" }}>
                                     {property.bathrooms}
@@ -404,7 +407,7 @@ const Page: React.FC = () => {
                                     }}
                                 >
                                     <HomeOutlined />
-                                    <div>الغرف</div>
+                                    <div>{t("Rooms")}</div>
                                 </div>
                                 <Text strong style={{ color: "#fff" }}>
                                     {property.bedrooms}
@@ -420,10 +423,10 @@ const Page: React.FC = () => {
                                     }}
                                 >
                                     <ArrowsAltOutlined />
-                                    <div>المساحة</div>
+                                    <div>{t("Area")}</div>
                                 </div>
                                 <Text strong style={{ color: "#fff" }}>
-                                    {property.area} م²
+                                    {property.area} m²
                                 </Text>
                             </div>
                         </Col>
@@ -436,10 +439,10 @@ const Page: React.FC = () => {
                                     }}
                                 >
                                     <TagOutlined />
-                                    <div>السعر</div>
+                                    <div>{t("Price")}</div>
                                 </div>
                                 <Text strong style={{ color: "#fff" }}>
-                                    {property.price} دينار
+                                    {property.price} {t("JOD")}
                                 </Text>
                             </div>
                         </Col>
@@ -453,7 +456,8 @@ const Page: React.FC = () => {
                                 size="large"
                                 href="#photos"
                             >
-                                عرض جميع الصور ({property.images?.length || 5})
+                                {t("View all photos")} (
+                                {property.images?.length || 5})
                             </Button>
                         </Col>
                         <Col span={12}>
@@ -464,7 +468,7 @@ const Page: React.FC = () => {
                                 onClick={() => setInquiryModalVisible(true)}
                                 size="large"
                             >
-                                تواصل مع المعلن
+                                {t("Contact advertiser")}
                             </Button>
                         </Col>
                     </Row>
@@ -473,27 +477,27 @@ const Page: React.FC = () => {
             <div className="container mx-auto px-4 py-6">
                 <Card style={{ margin: 20 }}>
                     <Row gutter={[24, 24]}>
-                        {/* Property Images would go here */}
-
-                        {/* Property Description */}
                         <Col span={24}>
-                            <Title level={4}>الوصف التفصيلي</Title>
+                            <Title level={4}>{t("Detailed Description")}</Title>
                             <Paragraph>{property.description}</Paragraph>
 
                             <Divider />
 
                             <Space>
                                 <Text>
-                                    <EyeOutlined /> 1243
+                                    <EyeOutlined /> {property.views_count}
                                 </Text>
                                 <Text>
-                                    <CalendarOutlined /> 15/04/2025
+                                    <CalendarOutlined />{" "}
+                                    {new Date(
+                                        property.created_at
+                                    ).toDateString()}
                                 </Text>
                             </Space>
 
                             <Divider />
 
-                            <Title level={4}>مميزات العقار</Title>
+                            <Title level={4}>{t("Property Features")}</Title>
                             <Space wrap size="large">
                                 {property.features?.map((item, index) => (
                                     <Space key={index} align="start">
@@ -511,7 +515,7 @@ const Page: React.FC = () => {
                     <Row gutter={[24, 24]}>
                         {property.latitude && property.longitude && (
                             <>
-                                <Title level={4}>الموقع</Title>
+                                <Title level={4}>{t("Location")}</Title>
                                 <div
                                     style={{
                                         height: "300px",
@@ -532,7 +536,7 @@ const Page: React.FC = () => {
                 <Card style={{ margin: 20 }}>
                     <Row gutter={[24, 24]} id="photos">
                         <Col xs={24} md={24}>
-                            <Title level={4}>معرض الصور</Title>
+                            <Title level={4}>{t("Photo Gallery")}</Title>
                             <Image.PreviewGroup>
                                 <Space
                                     direction="vertical"
@@ -567,17 +571,17 @@ const Page: React.FC = () => {
                 </Card>
                 <Card style={{ margin: 20 }}>
                     <Col>
-                        <Title level={4}>معلومات المعلن</Title>
+                        <Title level={4}>{t("Advertiser Information")}</Title>
                         <div
                             style={{ display: "flex", flexDirection: "column" }}
                         >
                             <Text>{property.user.name}</Text>
                             <Text>
                                 {property.user.role == "agent"
-                                    ? " وكبل عقاري"
+                                    ? t("Real estate agent")
                                     : property.user.role == "company"
-                                    ? "شركة ومطور عقاري"
-                                    : "مالك"}
+                                    ? t("Real estate company and developer")
+                                    : t("Owner")}
                             </Text>
                         </div>
                     </Col>
@@ -587,11 +591,11 @@ const Page: React.FC = () => {
                             style={{ flex: 1 }}
                             type="primary"
                             onClick={() => {
-                                window.location.href = `tel:${property.user.phone}`; // make sure phone exists
+                                window.location.href = `tel:${property.user.phone}`;
                             }}
                         >
                             <PhoneOutlined />
-                            اتصل الآن
+                            {t("Call now")}
                         </Button>
 
                         <Button
@@ -599,14 +603,16 @@ const Page: React.FC = () => {
                             style={{ flex: 1 }}
                         >
                             <CommentOutlined />
-                            ارسل رسالة
+                            {t("Send message")}
                         </Button>
                         <Button
                             type="primary"
                             style={{ backgroundColor: "#22C55E", flex: 1 }}
                             onClick={() => {
-                                const phone = property.user.phone; // e.g., "249912345678"
-                                const message = `مرحباً، أود الاستفسار عن العقار: ${window.location.href}`;
+                                const phone = property.user.phone;
+                                const message = `${t(
+                                    "Hello, I would like to inquire about the property:"
+                                )} ${window.location.href}`;
                                 window.open(
                                     `https://wa.me/${phone}?text=${encodeURIComponent(
                                         message
@@ -616,12 +622,12 @@ const Page: React.FC = () => {
                             }}
                         >
                             <WhatsAppOutlined />
-                            تواصل عبر واتساب
+                            {t("Contact via WhatsApp")}
                         </Button>
                     </Row>
                 </Card>
                 <Card style={{ margin: 20 }}>
-                    <Title level={4}>مشاركة العقار</Title>
+                    <Title level={4}>{t("Share Property")}</Title>
                     <Row style={{ gap: 10 }}>
                         <Button
                             variant="filled"
@@ -638,23 +644,23 @@ const Page: React.FC = () => {
                             onClick={handleWhatsAppShare}
                         >
                             <WhatsAppOutlined />
-                            واتساب
+                            WhatsApp
                         </Button>
                         <Button style={{ flex: 1 }} onClick={handleCopyLink}>
                             <CopyOutlined />
-                            نسخ
+                            {t("Copy")}
                         </Button>
                     </Row>
                 </Card>
                 {renderPropertySection(
                     similarProperties,
-                    "عقارات مشابهة",
+                    t("Similar Properties"),
                     <ShopOutlined />
                 )}
             </div>
             {/* Inquiry Modal */}
             <Modal
-                title="Contact Property Owner"
+                title={t("Contact Property Owner")}
                 open={inquiryModalVisible}
                 onCancel={() => setInquiryModalVisible(false)}
                 footer={null}
@@ -666,23 +672,19 @@ const Page: React.FC = () => {
                 >
                     <Form.Item
                         name="message"
-                        label="Message"
+                        label={t("Message")}
                         rules={[
                             {
                                 required: true,
-                                message: "Please enter your message",
+                                message: t("Please enter your message"),
                             },
                         ]}
                     >
                         <Input.TextArea rows={4} />
                     </Form.Item>
                     <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            // loading={router.page.props.processing}
-                        >
-                            Send Inquiry
+                        <Button type="primary" htmlType="submit">
+                            {t("Send Inquiry")}
                         </Button>
                     </Form.Item>
                 </Form>
@@ -692,8 +694,8 @@ const Page: React.FC = () => {
             <Modal
                 title={
                     property.purpose === "rent"
-                        ? "Rent This Property"
-                        : "Make an Offer"
+                        ? t("Rent This Property")
+                        : t("Make an Offer")
                 }
                 open={reservationModalVisible}
                 onCancel={() => setReservationModalVisible(false)}
@@ -707,11 +709,11 @@ const Page: React.FC = () => {
                     {property.purpose === "rent" && (
                         <Form.Item
                             name="dates"
-                            label="Rental Period"
+                            label={t("Rental Period")}
                             rules={[
                                 {
                                     required: true,
-                                    message: "Please select rental dates",
+                                    message: t("Please select rental dates"),
                                 },
                             ]}
                         >
@@ -720,28 +722,32 @@ const Page: React.FC = () => {
                     )}
                     <Form.Item
                         name="price"
-                        label="السعر "
+                        label={t("Price")}
                         rules={[
-                            { required: true, message: "يرجى إدخال السعر" },
+                            {
+                                required: true,
+                                message: t("Please enter the price"),
+                            },
                         ]}
                     >
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
-                    <Form.Item name="special_requests" label="Special Requests">
+                    <Form.Item
+                        name="special_requests"
+                        label={t("Special Requests")}
+                    >
                         <Input.TextArea
                             rows={4}
-                            placeholder="Any special requirements or notes..."
+                            placeholder={t(
+                                "Any special requirements or notes..."
+                            )}
                         />
                     </Form.Item>
                     <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            // loading={router.page.props.processing}
-                        >
+                        <Button type="primary" htmlType="submit">
                             {property.purpose === "rent"
-                                ? "Submit Rental Request"
-                                : "Submit Offer"}
+                                ? t("Submit Rental Request")
+                                : t("Submit Offer")}
                         </Button>
                     </Form.Item>
                 </Form>

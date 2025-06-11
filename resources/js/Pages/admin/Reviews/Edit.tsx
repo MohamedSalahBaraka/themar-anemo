@@ -3,6 +3,7 @@
 import { Form, Input, Button, Rate, Switch, message, Space } from "antd";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Link, useForm } from "@inertiajs/react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Review {
     id: number;
@@ -22,32 +23,41 @@ interface Review {
 interface ReviewEditProps {
     review: Review;
 }
-
-const ReviewEdit: React.FC<ReviewEditProps> = ({ review }) => {
+const ReviewEdit: React.FC<ReviewEditProps> = ({ review }) => (
+    <AdminLayout>
+        <Page review={review} />
+    </AdminLayout>
+);
+const Page: React.FC<ReviewEditProps> = ({ review }) => {
     const { data, setData, put, processing, errors } = useForm({
         rating: review.rating,
         review: review.review,
         is_public: review.is_public,
     });
 
+    const { t } = useLanguage();
     const handleSubmit = () => {
         put(route("admin.reviews.update", review.id), {
             preserveScroll: true,
-            onSuccess: () => message.success("Review updated successfully"),
+            onSuccess: () => message.success(t("Review updated successfully")),
         });
     };
 
     return (
         <div>
             <div style={{ marginBottom: 16 }}>
-                <h1>Edit Review</h1>
-                <p>Service: {review.user_service?.service?.name}</p>
-                <p>User: {review.user_service?.user?.name}</p>
+                <h1>{t("Edit Review")}</h1>
+                <p>
+                    {t("Service")}: {review.user_service?.service?.name}
+                </p>
+                <p>
+                    {t("User")}: {review.user_service?.user?.name}
+                </p>
             </div>
 
             <Form layout="vertical" onFinish={handleSubmit}>
                 <Form.Item
-                    label="Rating"
+                    label={t("Rating")}
                     validateStatus={errors.rating ? "error" : ""}
                     help={errors.rating}
                 >
@@ -58,7 +68,7 @@ const ReviewEdit: React.FC<ReviewEditProps> = ({ review }) => {
                 </Form.Item>
 
                 <Form.Item
-                    label="Review"
+                    label={t("Review")}
                     validateStatus={errors.review ? "error" : ""}
                     help={errors.review}
                 >
@@ -70,7 +80,7 @@ const ReviewEdit: React.FC<ReviewEditProps> = ({ review }) => {
                 </Form.Item>
 
                 <Form.Item
-                    label="Public"
+                    label={t("Public")}
                     validateStatus={errors.is_public ? "error" : ""}
                     help={errors.is_public}
                 >
@@ -87,10 +97,10 @@ const ReviewEdit: React.FC<ReviewEditProps> = ({ review }) => {
                             htmlType="submit"
                             loading={processing}
                         >
-                            Save Changes
+                            {t("Save Changes")}
                         </Button>
                         <Link href={route("admin.reviews.index")}>
-                            <Button>Cancel</Button>
+                            <Button>{t("Cancel")}</Button>
                         </Link>
                     </Space>
                 </Form.Item>

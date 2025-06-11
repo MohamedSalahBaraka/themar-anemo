@@ -33,6 +33,7 @@ import {
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import AdminLayout from "@/Layouts/AdminLayout";
 import dayjs, { isDayjs } from "dayjs";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -77,12 +78,17 @@ interface Page extends PageProps {
     };
     serviceSteps: ServiceStep[];
 }
-
-const UserServiceShow = () => {
+const UserServiceShow: React.FC = () => (
+    <AdminLayout>
+        <Page />
+    </AdminLayout>
+);
+const Page = () => {
     const { props } = usePage<Page>();
     const { userService, serviceSteps } = props;
     const [form] = Form.useForm();
 
+    const { t } = useLanguage();
     const [editModal, setEditModal] = useState<{
         visible: boolean;
         stepId: number | null;
@@ -151,7 +157,8 @@ const UserServiceShow = () => {
         setEditModal({
             visible: true,
             stepId: step === "creation" ? null : step.id,
-            stepTitle: step === "creation" ? "المعلومات الأولية" : step.title,
+            stepTitle:
+                step === "creation" ? t("initial_information") : step.title,
             fields,
             values,
         });
@@ -210,10 +217,10 @@ const UserServiceShow = () => {
                         preserveScroll: true,
                         onSuccess: () => {
                             setEditModal({ ...editModal, visible: false });
-                            message.success("تم تحديث الحقول بنجاح");
+                            message.success(t("fields_updated_successfully"));
                         },
                         onError: (errors) => {
-                            message.error("فشل في تحديث الحقول");
+                            message.error(t("failed_to_update_fields"));
                             console.error(errors);
                         },
                     }
@@ -239,11 +246,11 @@ const UserServiceShow = () => {
                 preserveScroll: true,
                 onSuccess: () => {
                     setFileList([]);
-                    message.success("تم رفع الملف بنجاح");
+                    message.success(t("file_uploaded_successfully"));
                     setUploading(false);
                 },
                 onError: () => {
-                    message.error("فشل في رفع الملف");
+                    message.error(t("failed_to_upload_file"));
                     setUploading(false);
                 },
             }
@@ -271,22 +278,31 @@ const UserServiceShow = () => {
 
         switch (field.field_type) {
             case "text":
-                return <Input placeholder={`أدخل ${field.label}`} />;
+                return <Input placeholder={t("enter") + ` ${field.label}`} />;
             case "textarea":
                 return (
-                    <TextArea rows={4} placeholder={`أدخل ${field.label}`} />
+                    <TextArea
+                        rows={4}
+                        placeholder={t("enter") + ` ${field.label}`}
+                    />
                 );
             case "email":
                 return (
-                    <Input type="email" placeholder={`أدخل ${field.label}`} />
+                    <Input
+                        type="email"
+                        placeholder={t("enter") + ` ${field.label}`}
+                    />
                 );
             case "number":
                 return (
-                    <Input type="number" placeholder={`أدخل ${field.label}`} />
+                    <Input
+                        type="number"
+                        placeholder={t("enter") + ` ${field.label}`}
+                    />
                 );
             case "select":
                 return (
-                    <Select placeholder={`اختر ${field.label}`}>
+                    <Select placeholder={t("select") + ` ${field.label}`}>
                         {field.options?.map((option: string) => (
                             <Option key={option} value={option}>
                                 {option}
@@ -305,7 +321,10 @@ const UserServiceShow = () => {
                 );
             case "multiselect":
                 return (
-                    <Select mode="multiple" placeholder={`اختر ${field.label}`}>
+                    <Select
+                        mode="multiple"
+                        placeholder={t("select") + ` ${field.label}`}
+                    >
                         {field.options?.map((option: string) => (
                             <Option key={option} value={option}>
                                 {option}
@@ -344,17 +363,19 @@ const UserServiceShow = () => {
                         fileList={fileList}
                         onChange={({ fileList }) => setFileList(fileList)}
                     >
-                        <Button icon={<UploadOutlined />}>انقر للرفع</Button>
+                        <Button icon={<UploadOutlined />}>
+                            {t("click_to_upload")}
+                        </Button>
                     </Upload>
                 );
             default:
-                return <Input placeholder={`أدخل ${field.label}`} />;
+                return <Input placeholder={t("enter") + ` ${field.label}`} />;
         }
     };
 
     const attachmentsColumns = [
         {
-            title: "الملف",
+            title: t("file"),
             dataIndex: "file_path",
             key: "file_path",
             render: (text: string) => (
@@ -364,377 +385,371 @@ const UserServiceShow = () => {
             ),
         },
         {
-            title: "ملاحظة",
+            title: t("note"),
             dataIndex: "note",
             key: "note",
         },
         {
-            title: "تاريخ الرفع",
+            title: t("upload_date"),
             dataIndex: "created_at",
             key: "created_at",
             render: (text: string) => formatDate(text),
         },
         {
-            title: "إجراء",
+            title: t("action"),
             key: "action",
             render: (_: any, record: any) => (
                 <Button
                     icon={<DownloadOutlined />}
                     onClick={() => handleDownload(record.file_path)}
                 >
-                    تنزيل
+                    {t("download")}
                 </Button>
             ),
         },
     ];
 
     if (!userService) {
-        return <div>جاري التحميل...</div>;
+        return <div>{t("loading")}...</div>;
     }
 
     return (
-        <AdminLayout>
-            <div>
-                <Card
-                    title={
-                        <Space>
-                            <Button
-                                type="link"
-                                onClick={() =>
-                                    router.visit(
-                                        route("admin.user-services.index")
-                                    )
-                                }
-                            >
-                                رجوع
-                            </Button>
-                            <span>
-                                الخدمة: <b>{userService.service.name}</b>
-                            </span>
-                            <Tag color="blue">{userService.status}</Tag>
-                        </Space>
-                    }
-                    style={{ marginBottom: 24 }}
-                >
-                    <Row gutter={16}>
-                        {/* معلومات المستخدم والخدمة */}
-                        <Col span={6}>
+        <div>
+            <Card
+                title={
+                    <Space>
+                        <Button
+                            type="link"
+                            onClick={() =>
+                                router.visit(route("admin.user-services.index"))
+                            }
+                        >
+                            {t("back")}
+                        </Button>
+                        <span>
+                            {t("service")}: <b>{userService.service.name}</b>
+                        </span>
+                        <Tag color="blue">{userService.status}</Tag>
+                    </Space>
+                }
+                style={{ marginBottom: 24 }}
+            >
+                <Row gutter={16}>
+                    {/* معلومات المستخدم والخدمة */}
+                    <Col span={6}>
+                        <Card
+                            type="inner"
+                            title={t("user_information")}
+                            style={{ marginBottom: 16 }}
+                        >
+                            <Descriptions size="small" column={1}>
+                                <Descriptions.Item label={t("name")}>
+                                    {userService.user?.name ||
+                                        t("not_available")}
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t("email")}>
+                                    {userService.user?.email ||
+                                        t("not_available")}
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t("created_at")}>
+                                    {formatDate(userService.created_at)}
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </Card>
+                        <Card type="inner" title={t("service_information")}>
+                            <Descriptions size="small" column={1}>
+                                <Descriptions.Item label={t("service")}>
+                                    {userService.service.name}
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t("category")}>
+                                    {userService.service.category?.name ||
+                                        t("not_available")}
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t("current_step")}>
+                                    {userService.current_step?.title ||
+                                        t("not_started_yet")}
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </Card>
+                    </Col>
+
+                    {/* الحقول والخطوات */}
+                    <Col span={18}>
+                        {/* حقول الإنشاء */}
+                        {creationFields.length > 0 && (
                             <Card
                                 type="inner"
-                                title="معلومات المستخدم"
+                                title={t("initial_information")}
                                 style={{ marginBottom: 16 }}
+                                extra={
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        onClick={() =>
+                                            showEditModal("creation")
+                                        }
+                                    >
+                                        {t("edit")}
+                                    </Button>
+                                }
                             >
-                                <Descriptions size="small" column={1}>
-                                    <Descriptions.Item label="الاسم">
-                                        {userService.user?.name || "غير متوفر"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="البريد الإلكتروني">
-                                        {userService.user?.email || "غير متوفر"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="تاريخ الإنشاء">
-                                        {formatDate(userService.created_at)}
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            </Card>
-                            <Card type="inner" title="معلومات الخدمة">
-                                <Descriptions size="small" column={1}>
-                                    <Descriptions.Item label="الخدمة">
-                                        {userService.service.name}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="الفئة">
-                                        {userService.service.category?.name ||
-                                            "غير متوفر"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="الخطوة الحالية">
-                                        {userService.current_step?.title ||
-                                            "لم تبدأ بعد"}
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            </Card>
-                        </Col>
-
-                        {/* الحقول والخطوات */}
-                        <Col span={18}>
-                            {/* حقول الإنشاء */}
-                            {creationFields.length > 0 && (
-                                <Card
-                                    type="inner"
-                                    title="المعلومات الأولية"
-                                    style={{ marginBottom: 16 }}
-                                    extra={
-                                        <Button
-                                            type="primary"
-                                            size="small"
-                                            onClick={() =>
-                                                showEditModal("creation")
-                                            }
+                                <Descriptions column={2}>
+                                    {creationFields.map((field) => (
+                                        <Descriptions.Item
+                                            key={field.id}
+                                            label={field.label}
                                         >
-                                            تعديل
-                                        </Button>
-                                    }
-                                >
-                                    <Descriptions column={2}>
-                                        {creationFields.map((field) => (
-                                            <Descriptions.Item
-                                                key={field.id}
-                                                label={field.label}
-                                            >
-                                                {getFieldValue(field.id) ||
-                                                    "غير متوفر"}
-                                                {field.field_type == "file" && (
-                                                    <Button
-                                                        icon={
-                                                            <DownloadOutlined />
-                                                        }
-                                                        onClick={() =>
-                                                            handleDownload(
-                                                                getFieldValue(
-                                                                    field.id
-                                                                )
+                                            {getFieldValue(field.id) ||
+                                                t("not_available")}
+                                            {field.field_type == "file" && (
+                                                <Button
+                                                    icon={<DownloadOutlined />}
+                                                    onClick={() =>
+                                                        handleDownload(
+                                                            getFieldValue(
+                                                                field.id
                                                             )
+                                                        )
+                                                    }
+                                                >
+                                                    {t("download")}
+                                                </Button>
+                                            )}
+                                        </Descriptions.Item>
+                                    ))}
+                                </Descriptions>
+                            </Card>
+                        )}
+
+                        {/* الخطوات مع الحقول */}
+                        {stepFields.map(
+                            ({ step, fields, userStepData }) =>
+                                fields.length > 0 && (
+                                    <Card
+                                        key={step.id}
+                                        type="inner"
+                                        title={`${t("step")}: ${step.title}`}
+                                        style={{ marginBottom: 16 }}
+                                        extra={
+                                            <Space>
+                                                {userStepData && (
+                                                    <Tag
+                                                        color={
+                                                            userStepData.status ===
+                                                            "completed"
+                                                                ? "success"
+                                                                : "processing"
                                                         }
                                                     >
-                                                        تنزيل
-                                                    </Button>
+                                                        {t(userStepData.status)}
+                                                    </Tag>
                                                 )}
-                                            </Descriptions.Item>
-                                        ))}
-                                    </Descriptions>
+                                                <Button
+                                                    type="primary"
+                                                    size="small"
+                                                    onClick={() =>
+                                                        showEditModal(step)
+                                                    }
+                                                >
+                                                    {t("edit")}
+                                                </Button>
+                                            </Space>
+                                        }
+                                    >
+                                        {userStepData && (
+                                            <Descriptions
+                                                column={2}
+                                                style={{ marginBottom: 16 }}
+                                            >
+                                                <Descriptions.Item
+                                                    label={t("status")}
+                                                >
+                                                    <Tag
+                                                        color={
+                                                            userStepData.status ===
+                                                            "completed"
+                                                                ? "success"
+                                                                : "processing"
+                                                        }
+                                                    >
+                                                        {t(userStepData.status)}
+                                                    </Tag>
+                                                </Descriptions.Item>
+                                                <Descriptions.Item
+                                                    label={t("completion_date")}
+                                                >
+                                                    {userStepData.completed_at
+                                                        ? formatDate(
+                                                              userStepData.completed_at
+                                                          )
+                                                        : t("not_completed")}
+                                                </Descriptions.Item>
+                                                <Descriptions.Item
+                                                    label={t("admin_note")}
+                                                    span={2}
+                                                >
+                                                    {userStepData.admin_note ||
+                                                        t("no_notes")}
+                                                </Descriptions.Item>
+                                            </Descriptions>
+                                        )}
+                                        <Descriptions column={2}>
+                                            {fields.map((field) => (
+                                                <Descriptions.Item
+                                                    key={field.id}
+                                                    label={field.label}
+                                                >
+                                                    {field.field_type ===
+                                                    "file" ? (
+                                                        getFieldValue(
+                                                            field.id
+                                                        ) ? (
+                                                            <a
+                                                                onClick={() =>
+                                                                    handleDownload(
+                                                                        getFieldValue(
+                                                                            field.id
+                                                                        )
+                                                                    )
+                                                                }
+                                                            >
+                                                                {t("view_file")}
+                                                            </a>
+                                                        ) : (
+                                                            t("not_available")
+                                                        )
+                                                    ) : (
+                                                        getFieldValue(
+                                                            field.id
+                                                        ) || t("not_available")
+                                                    )}
+                                                </Descriptions.Item>
+                                            ))}
+                                        </Descriptions>
+                                    </Card>
+                                )
+                        )}
+
+                        {/* المرفقات */}
+                        {userService.attachments &&
+                            userService.attachments.length > 0 && (
+                                <Card
+                                    type="inner"
+                                    title={t("attachments")}
+                                    style={{ marginBottom: 16 }}
+                                >
+                                    <Table
+                                        columns={attachmentsColumns}
+                                        dataSource={userService.attachments}
+                                        rowKey="id"
+                                        size="small"
+                                        pagination={false}
+                                    />
                                 </Card>
                             )}
 
-                            {/* الخطوات مع الحقول */}
-                            {stepFields.map(
-                                ({ step, fields, userStepData }) =>
-                                    fields.length > 0 && (
-                                        <Card
-                                            key={step.id}
-                                            type="inner"
-                                            title={`الخطوة: ${step.title}`}
-                                            style={{ marginBottom: 16 }}
-                                            extra={
-                                                <Space>
-                                                    {userStepData && (
-                                                        <Tag
-                                                            color={
-                                                                userStepData.status ===
-                                                                "completed"
-                                                                    ? "success"
-                                                                    : "processing"
+                        {/* سجل النشاط */}
+                        {userService.activityLogs &&
+                            userService.activityLogs.length > 0 && (
+                                <Card type="inner" title={t("activity_log")}>
+                                    <List
+                                        itemLayout="horizontal"
+                                        dataSource={userService.activity_logs}
+                                        renderItem={(log) => (
+                                            <List.Item>
+                                                <List.Item.Meta
+                                                    avatar={
+                                                        <Avatar
+                                                            src={
+                                                                log.user.profile
+                                                                    ?.profile_image
                                                             }
-                                                        >
-                                                            {
-                                                                userStepData.status
-                                                            }
-                                                        </Tag>
-                                                    )}
-                                                    <Button
-                                                        type="primary"
-                                                        size="small"
-                                                        onClick={() =>
-                                                            showEditModal(step)
-                                                        }
-                                                    >
-                                                        تعديل
-                                                    </Button>
-                                                </Space>
-                                            }
-                                        >
-                                            {userStepData && (
-                                                <Descriptions
-                                                    column={2}
-                                                    style={{ marginBottom: 16 }}
-                                                >
-                                                    <Descriptions.Item label="الحالة">
-                                                        <Tag
-                                                            color={
-                                                                userStepData.status ===
-                                                                "completed"
-                                                                    ? "success"
-                                                                    : "processing"
-                                                            }
-                                                        >
-                                                            {
-                                                                userStepData.status
-                                                            }
-                                                        </Tag>
-                                                    </Descriptions.Item>
-                                                    <Descriptions.Item label="تاريخ الإكمال">
-                                                        {userStepData.completed_at
-                                                            ? formatDate(
-                                                                  userStepData.completed_at
-                                                              )
-                                                            : "غير مكتمل"}
-                                                    </Descriptions.Item>
-                                                    <Descriptions.Item
-                                                        label="ملاحظة المشرف"
-                                                        span={2}
-                                                    >
-                                                        {userStepData.admin_note ||
-                                                            "لا توجد ملاحظات"}
-                                                    </Descriptions.Item>
-                                                </Descriptions>
-                                            )}
-                                            <Descriptions column={2}>
-                                                {fields.map((field) => (
-                                                    <Descriptions.Item
-                                                        key={field.id}
-                                                        label={field.label}
-                                                    >
-                                                        {field.field_type ===
-                                                        "file" ? (
-                                                            getFieldValue(
-                                                                field.id
-                                                            ) ? (
-                                                                <a
-                                                                    onClick={() =>
-                                                                        handleDownload(
-                                                                            getFieldValue(
-                                                                                field.id
-                                                                            )
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    عرض الملف
-                                                                </a>
-                                                            ) : (
-                                                                "غير متوفر"
-                                                            )
-                                                        ) : (
-                                                            getFieldValue(
-                                                                field.id
-                                                            ) || "غير متوفر"
-                                                        )}
-                                                    </Descriptions.Item>
-                                                ))}
-                                            </Descriptions>
-                                        </Card>
-                                    )
-                            )}
-
-                            {/* المرفقات */}
-                            {userService.attachments &&
-                                userService.attachments.length > 0 && (
-                                    <Card
-                                        type="inner"
-                                        title="المرفقات"
-                                        style={{ marginBottom: 16 }}
-                                    >
-                                        <Table
-                                            columns={attachmentsColumns}
-                                            dataSource={userService.attachments}
-                                            rowKey="id"
-                                            size="small"
-                                            pagination={false}
-                                        />
-                                    </Card>
-                                )}
-
-                            {/* سجل النشاط */}
-                            {userService.activityLogs &&
-                                userService.activityLogs.length > 0 && (
-                                    <Card type="inner" title="سجل النشاط">
-                                        <List
-                                            itemLayout="horizontal"
-                                            dataSource={
-                                                userService.activity_logs
-                                            }
-                                            renderItem={(log) => (
-                                                <List.Item>
-                                                    <List.Item.Meta
-                                                        avatar={
-                                                            <Avatar
-                                                                src={
-                                                                    log.user
-                                                                        .profile
-                                                                        ?.profile_image
-                                                                }
-                                                                size="small"
-                                                            />
-                                                        }
-                                                        title={
-                                                            <span>
-                                                                {log.user.name}{" "}
-                                                                {log.action.replace(
+                                                            size="small"
+                                                        />
+                                                    }
+                                                    title={
+                                                        <span>
+                                                            {log.user.name}{" "}
+                                                            {t(
+                                                                log.action.replace(
                                                                     "_",
                                                                     " "
-                                                                )}
-                                                                {log.meta
-                                                                    ?.step_title && (
-                                                                    <Tag
-                                                                        color="blue"
-                                                                        style={{
-                                                                            marginLeft: 8,
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            log
-                                                                                .meta
-                                                                                .step_title
-                                                                        }
-                                                                    </Tag>
-                                                                )}
-                                                            </span>
-                                                        }
-                                                        description={
-                                                            <span
-                                                                style={{
-                                                                    color: "#999",
-                                                                    fontSize: 12,
-                                                                }}
-                                                            >
-                                                                {formatDate(
-                                                                    log.created_at
-                                                                )}
-                                                            </span>
-                                                        }
-                                                    />
-                                                </List.Item>
-                                            )}
-                                        />
-                                    </Card>
-                                )}
-                        </Col>
-                    </Row>
-                </Card>
+                                                                )
+                                                            )}
+                                                            {log.meta
+                                                                ?.step_title && (
+                                                                <Tag
+                                                                    color="blue"
+                                                                    style={{
+                                                                        marginLeft: 8,
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        log.meta
+                                                                            .step_title
+                                                                    }
+                                                                </Tag>
+                                                            )}
+                                                        </span>
+                                                    }
+                                                    description={
+                                                        <span
+                                                            style={{
+                                                                color: "#999",
+                                                                fontSize: 12,
+                                                            }}
+                                                        >
+                                                            {formatDate(
+                                                                log.created_at
+                                                            )}
+                                                        </span>
+                                                    }
+                                                />
+                                            </List.Item>
+                                        )}
+                                    />
+                                </Card>
+                            )}
+                    </Col>
+                </Row>
+            </Card>
 
-                {/* نافذة تعديل الحقول */}
-                <Modal
-                    title={`تعديل الحقول - ${editModal.stepTitle}`}
-                    open={editModal.visible}
-                    onOk={handleEditSubmit}
-                    onCancel={() =>
-                        setEditModal({ ...editModal, visible: false })
-                    }
-                    width={800}
-                    okText="حفظ التغييرات"
-                    cancelText="إلغاء"
-                    confirmLoading={uploading}
+            {/* نافذة تعديل الحقول */}
+            <Modal
+                title={`${t("edit_fields")} - ${editModal.stepTitle}`}
+                open={editModal.visible}
+                onOk={handleEditSubmit}
+                onCancel={() => setEditModal({ ...editModal, visible: false })}
+                width={800}
+                okText={t("save_changes")}
+                cancelText={t("cancel")}
+                confirmLoading={uploading}
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    initialValues={editModal.values}
                 >
-                    <Form
-                        form={form}
-                        layout="vertical"
-                        initialValues={editModal.values}
-                    >
-                        {editModal.fields.map((field) => (
-                            <Form.Item
-                                key={field.id}
-                                label={field.label}
-                                name={`field_${field.id}`}
-                                rules={[
-                                    {
-                                        required: field.required,
-                                        message: `${field.label} مطلوب`,
-                                    },
-                                ]}
-                            >
-                                {renderFieldInput(field)}
-                            </Form.Item>
-                        ))}
-                    </Form>
-                </Modal>
-            </div>
-        </AdminLayout>
+                    {editModal.fields.map((field) => (
+                        <Form.Item
+                            key={field.id}
+                            label={field.label}
+                            name={`field_${field.id}`}
+                            rules={[
+                                {
+                                    required: field.required,
+                                    message: `${field.label} ${t(
+                                        "is_required"
+                                    )}`,
+                                },
+                            ]}
+                        >
+                            {renderFieldInput(field)}
+                        </Form.Item>
+                    ))}
+                </Form>
+            </Modal>
+        </div>
     );
 };
 

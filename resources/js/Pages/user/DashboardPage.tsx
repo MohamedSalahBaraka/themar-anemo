@@ -27,6 +27,7 @@ import {
 import PropertyCard from "@/Components/PropertyCard";
 import { PageProps } from "@/types";
 import AppLayout from "@/Layouts/Layout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Title, Text } = Typography;
 const { Countdown } = Statistic;
@@ -55,15 +56,22 @@ interface DashboardPageProps extends PageProps {
     properties: any[];
 }
 
-const DashboardPage: React.FC = () => {
+const DashboardPage: React.FC = () => (
+    <AppLayout>
+        <Page />
+    </AppLayout>
+);
+
+const Page: React.FC = () => {
     const { props } = usePage<DashboardPageProps>();
     const { user, stats, subscription, properties } = props;
+    const { t } = useLanguage();
 
     const getSubscriptionStatusTag = (status: string) => {
         const statusMap: Record<string, { color: string; text: string }> = {
-            active: { color: "green", text: "نشط" },
-            expired: { color: "red", text: "منتهي" },
-            canceled: { color: "orange", text: "ملغي" },
+            active: { color: "green", text: t("active") },
+            expired: { color: "red", text: t("expired") },
+            canceled: { color: "orange", text: t("canceled") },
         };
         return (
             <Tag color={statusMap[status]?.color || "default"}>
@@ -73,236 +81,252 @@ const DashboardPage: React.FC = () => {
     };
 
     return (
-        <AppLayout>
-            <div className="dashboard-page" style={{ padding: "24px" }}>
-                <Title level={2}>لوحة التحكم</Title>
-                <Text type="secondary">
-                    أهلاً بعودتك، {user?.name || "مستخدم"}!
-                </Text>
+        <div className="dashboard-page" style={{ padding: "24px" }}>
+            <Title level={2}>{t("dashboard")}</Title>
+            <Text type="secondary">
+                {t("welcome_back")}, {user?.name || t("user")}!
+            </Text>
 
-                <Divider />
+            <Divider />
 
-                {/* نظرة عامة على الإحصائيات */}
-                <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="العقارات النشطة"
-                                value={stats?.active_listings || 0}
-                                prefix={<HomeOutlined />}
+            {/* Statistics Overview */}
+            <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title={t("active_listings")}
+                            value={stats?.active_listings || 0}
+                            prefix={<HomeOutlined />}
+                        />
+                        <Button
+                            type="link"
+                            href={route("user.properties.index")}
+                            style={{ paddingLeft: 0 }}
+                        >
+                            {t("view_all_properties")}
+                        </Button>
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title={t("total_views")}
+                            value={stats?.total_views || 0}
+                            prefix={<EyeOutlined />}
+                        />
+                        <Progress
+                            percent={Math.min(
+                                ((stats?.total_views || 0) / 100) * 100,
+                                100
+                            )}
+                            size="small"
+                            status="active"
+                            style={{ marginTop: "8px" }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title={t("inquiries")}
+                            value={stats?.total_inquiries || 0}
+                            prefix={<MessageOutlined />}
+                        />
+                        <Button
+                            type="link"
+                            href={route("user.inquiries.index")}
+                            style={{ paddingLeft: 0 }}
+                        >
+                            {t("view_inquiries")}
+                        </Button>
+                    </Card>
+                </Col>
+                {/* <Col xs={24} sm={12} md={6}>
+                    <Card>
+                        <Statistic
+                            title={t("reservations")}
+                            value={stats?.total_reservations || 0}
+                            prefix={<MessageOutlined />}
+                        />
+                        <Button
+                            type="link"
+                            href={route("user.reservations")}
+                            style={{ paddingLeft: 0 }}
+                        >
+                            {t("view_reservations")}
+                        </Button>
+                    </Card>
+                </Col> */}
+            </Row>
+
+            {/* Subscription Status */}
+            <Card
+                title={t("subscription_plan")}
+                style={{ marginBottom: "24px" }}
+                extra={
+                    <Space>
+                        {subscription?.status == "active" ? (
+                            <Countdown
+                                title={t("expires_in")}
+                                value={subscription.expires_at}
+                                prefix={<ClockCircleOutlined />}
+                                format={`D ${t("days")} H ${t("hours")}`}
                             />
+                        ) : (
                             <Button
-                                type="link"
-                                href={route("user.properties.index")}
-                                style={{ paddingLeft: 0 }}
+                                type="primary"
+                                href={route("user.subscription.index")}
                             >
-                                عرض جميع العقارات
+                                {t("upgrade_plan")}
                             </Button>
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="عدد المشاهدات"
-                                value={stats?.total_views || 0}
-                                prefix={<EyeOutlined />}
-                            />
-                            <Progress
-                                percent={Math.min(
-                                    ((stats?.total_views || 0) / 100) * 100,
-                                    100
+                        )}
+                    </Space>
+                }
+            >
+                <Row gutter={16}>
+                    <Col xs={24} md={12}>
+                        <Space direction="vertical">
+                            <Title level={4} style={{ marginBottom: "4px" }}>
+                                {subscription?.plan_name ||
+                                    t("no_active_subscription")}
+                                {subscription && (
+                                    <span style={{ marginLeft: "8px" }}>
+                                        {getSubscriptionStatusTag(
+                                            subscription.status
+                                        )}
+                                    </span>
                                 )}
-                                size="small"
-                                status="active"
-                                style={{ marginTop: "8px" }}
-                            />
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="الاستفسارات"
-                                value={stats?.total_inquiries || 0}
-                                prefix={<MessageOutlined />}
-                            />
-                            <Button
-                                type="link"
-                                href={route("user.inquiries.index")}
-                                style={{ paddingLeft: 0 }}
-                            >
-                                عرض الاستفسارات
-                            </Button>
-                        </Card>
-                    </Col>
-                    <Col xs={24} sm={12} md={6}>
-                        <Card>
-                            <Statistic
-                                title="طلبات الحجز"
-                                value={stats?.total_reservations || 0}
-                                prefix={<MessageOutlined />}
-                            />
-                            <Button
-                                type="link"
-                                href={route("user.reservations")}
-                                style={{ paddingLeft: 0 }}
-                            >
-                                عرض الحجوزات
-                            </Button>
-                        </Card>
-                    </Col>
-                </Row>
-
-                {/* حالة الاشتراك */}
-                <Card
-                    title="باقة الاشتراك"
-                    style={{ marginBottom: "24px" }}
-                    extra={
-                        <Space>
-                            {subscription?.status == "active" ? (
-                                <Countdown
-                                    title="تنتهي خلال"
-                                    value={subscription.expires_at}
-                                    prefix={<ClockCircleOutlined />}
-                                    format="D يوم H ساعة"
-                                />
+                            </Title>
+                            {subscription ? (
+                                <>
+                                    <Text type="secondary">
+                                        <DollarOutlined />{" "}
+                                        {subscription.status === "active"
+                                            ? t("active_plan")
+                                            : t("inactive_plan")}{" "}
+                                    </Text>
+                                </>
                             ) : (
-                                <Button
-                                    type="primary"
-                                    href={route("user.subscription.index")}
-                                >
-                                    ترقية الباقة
-                                </Button>
+                                <Text type="secondary">
+                                    {t("no_active_subscription")}
+                                </Text>
                             )}
                         </Space>
-                    }
-                >
-                    <Row gutter={16}>
-                        <Col xs={24} md={12}>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <div
+                            style={{
+                                // background: "#f0f2f5",
+                                padding: "16px",
+                                borderRadius: "8px",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Title level={5} style={{ marginBottom: "16px" }}>
+                                {t("subscription_features")}
+                            </Title>
                             <Space direction="vertical">
-                                <Title
-                                    level={4}
-                                    style={{ marginBottom: "4px" }}
-                                >
-                                    {subscription?.plan_name ||
-                                        "لا يوجد اشتراك نشط"}
-                                    {subscription && (
-                                        <span style={{ marginLeft: "8px" }}>
-                                            {getSubscriptionStatusTag(
-                                                subscription.status
-                                            )}
-                                        </span>
-                                    )}
-                                </Title>
-                                {subscription ? (
+                                {subscription?.features?.length ? (
+                                    subscription.features.map(
+                                        (feature, index) => (
+                                            <Text key={index}>
+                                                <CheckCircleOutlined />{" "}
+                                                {feature}
+                                            </Text>
+                                        )
+                                    )
+                                ) : (
                                     <>
-                                        <Text type="secondary">
-                                            <DollarOutlined />{" "}
-                                            {subscription.status === "active"
-                                                ? "باقة نشطة"
-                                                : "باقة غير نشطة"}{" "}
+                                        <Text>
+                                            <CheckCircleOutlined />{" "}
+                                            {t("priority_search")}
+                                        </Text>
+                                        <Text>
+                                            <CheckCircleOutlined />{" "}
+                                            {t("unlimited_listings")}
+                                        </Text>
+                                        <Text>
+                                            <CheckCircleOutlined />{" "}
+                                            {t("detailed_analytics")}
+                                        </Text>
+                                        <Text>
+                                            <CheckCircleOutlined />{" "}
+                                            {t("dedicated_support")}
                                         </Text>
                                     </>
-                                ) : (
-                                    <Text type="secondary">
-                                        ليس لديك اشتراك نشط
-                                    </Text>
                                 )}
                             </Space>
-                        </Col>
-                        <Col xs={24} md={12}>
-                            <div
-                                style={{
-                                    background: "#f0f2f5",
-                                    padding: "16px",
-                                    borderRadius: "8px",
-                                }}
+                            <Button
+                                type="primary"
+                                style={{ marginTop: "16px" }}
+                                href={route("user.subscription.index")}
                             >
-                                <Title
-                                    level={5}
-                                    style={{ marginBottom: "16px" }}
-                                >
-                                    مميزات الاشتراك
-                                </Title>
-                                <Space direction="vertical">
-                                    <Text>
-                                        <CheckCircleOutlined /> أولوية الظهور في
-                                        نتائج البحث
-                                    </Text>
-                                    <Text>
-                                        <CheckCircleOutlined /> رفع عدد غير
-                                        محدود من العقارات
-                                    </Text>
-                                    <Text>
-                                        <CheckCircleOutlined /> لوحة تحليل
-                                        بيانات مفصلة
-                                    </Text>
-                                    <Text>
-                                        <CheckCircleOutlined /> دعم فني مخصص
-                                    </Text>
-                                </Space>
-                                <Button
-                                    type="primary"
-                                    style={{ marginTop: "16px" }}
-                                    href={route("user.subscription.index")}
-                                >
-                                    {subscription
-                                        ? "إدارة الاشتراك"
-                                        : "اختر باقة"}
-                                </Button>
-                            </div>
-                        </Col>
-                    </Row>
-                </Card>
-
-                {/* أحدث العقارات */}
-                <Card title="أحدث عقاراتك">
-                    {properties.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "24px" }}>
-                            <Title level={4} type="secondary">
-                                لم تقم بإدراج أي عقارات حتى الآن
-                            </Title>
+                                {subscription
+                                    ? t("manage_subscription")
+                                    : t("choose_plan")}
+                            </Button>
                         </div>
-                    ) : (
-                        <Row gutter={[16, 16]}>
-                            {properties.slice(0, 4).map((property) => (
-                                <Col
-                                    xs={24}
-                                    sm={12}
-                                    md={12}
-                                    lg={8}
-                                    xl={6}
-                                    key={property.id}
-                                >
-                                    <PropertyCard
-                                        property={property}
-                                        actions={[
-                                            <Button
-                                                type="link"
-                                                href={route(
-                                                    "user.properties.edit",
-                                                    property.id
-                                                )}
-                                            >
-                                                تعديل
-                                            </Button>,
-                                            <Button
-                                                type="link"
-                                                href={route(
-                                                    "properties.show",
-                                                    property.id
-                                                )}
-                                            >
-                                                عرض
-                                            </Button>,
-                                        ]}
-                                    />
-                                </Col>
-                            ))}
-                        </Row>
-                    )}
-                </Card>
-            </div>
-        </AppLayout>
+                    </Col>
+                </Row>
+            </Card>
+
+            {/* Recent Properties */}
+            <Card title={t("recent_properties")}>
+                {properties.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "24px" }}>
+                        <Title level={4} type="secondary">
+                            {t("no_properties_listed")}
+                        </Title>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            href={route("user.properties.create")}
+                            style={{ marginTop: "16px" }}
+                        >
+                            {t("add_property")}
+                        </Button>
+                    </div>
+                ) : (
+                    <Row gutter={[16, 16]}>
+                        {properties.slice(0, 4).map((property) => (
+                            <Col
+                                xs={24}
+                                sm={12}
+                                md={12}
+                                lg={8}
+                                xl={6}
+                                key={property.id}
+                            >
+                                <PropertyCard
+                                    property={property}
+                                    actions={[
+                                        <Button
+                                            type="link"
+                                            href={route(
+                                                "user.properties.edit",
+                                                property.id
+                                            )}
+                                        >
+                                            {t("edit")}
+                                        </Button>,
+                                        <Button
+                                            type="link"
+                                            href={route(
+                                                "properties.show",
+                                                property.id
+                                            )}
+                                        >
+                                            {t("view")}
+                                        </Button>,
+                                    ]}
+                                />
+                            </Col>
+                        ))}
+                    </Row>
+                )}
+            </Card>
+        </div>
     );
 };
 

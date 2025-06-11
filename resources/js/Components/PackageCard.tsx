@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { usePage, Link } from "@inertiajs/react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Text, Title } = Typography;
 
@@ -44,6 +45,7 @@ const PackageCard: React.FC<PackageCardProps> = ({
     showActions = true,
 }) => {
     const { url } = usePage();
+    const { t } = useLanguage();
     const isRegistrationPage = url.includes("/register");
 
     const handleFrequencyChange = (e: RadioChangeEvent) => {
@@ -84,8 +86,12 @@ const PackageCard: React.FC<PackageCardProps> = ({
                         size="middle"
                         style={{ marginBottom: 16 }}
                     >
-                        <Radio.Button value="monthly">شهري</Radio.Button>
-                        <Radio.Button value="yearly">سنوي</Radio.Button>
+                        <Radio.Button value="monthly">
+                            {t("Monthly")}
+                        </Radio.Button>
+                        <Radio.Button value="yearly">
+                            {t("Yearly")}
+                        </Radio.Button>
                     </Radio.Group>
 
                     <Text strong style={{ fontSize: 24 }}>
@@ -94,13 +100,15 @@ const PackageCard: React.FC<PackageCardProps> = ({
                             : pkg.yearly_price}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 16 }}>
-                        {selectedFrequency === "monthly" ? "/شهر" : "/سنة"}
+                        {selectedFrequency === "monthly"
+                            ? `/${t("Month")}`
+                            : `/${t("Year")}`}
                     </Text>
                 </div>
 
                 {selectedFrequency === "yearly" && (
                     <Text style={{ textAlign: "center", color: "#52c41a" }}>
-                        توفير{" "}
+                        {t("Save")}{" "}
                         {Math.round(
                             100 - (pkg.yearly_price / (pkg.price * 12)) * 100
                         )}
@@ -113,18 +121,18 @@ const PackageCard: React.FC<PackageCardProps> = ({
                     style={{ textAlign: "center", display: "block" }}
                 >
                     {pkg.user_type === "agent"
-                        ? "مثالية للوكلاء العقاريين"
+                        ? t("Ideal for real estate agents")
                         : pkg.user_type === "company"
-                        ? "للشركات والمطورين العقاريين"
-                        : "مثالية للأفراد والمالكين"}
+                        ? t("For companies and real estate developers")
+                        : t("Ideal for individuals and owners")}
                 </Text>
 
                 <List
                     size="small"
                     dataSource={[
                         ...pkg.features,
-                        `${pkg.max_listings} عرض`,
-                        `${pkg.max_adds} عرض مميز`,
+                        `${pkg.max_listings} ${t("Listings")}`,
+                        `${pkg.max_adds} ${t("Featured Listings")}`,
                     ]}
                     renderItem={(feature) => (
                         <List.Item style={{ padding: "4px 0", border: "none" }}>
@@ -148,13 +156,15 @@ const PackageCard: React.FC<PackageCardProps> = ({
                                     borderRadius: 4,
                                 }}
                             >
-                                {selected ? "محدد" : "اختر الباقة"}
+                                {selected ? t("Selected") : t("Choose Package")}
                             </Tag>
                         ) : (
                             <Link
                                 href={`/register?package=${pkg.id}&frequency=${selectedFrequency}`}
                             >
-                                <Button type="primary">اشتراك الآن</Button>
+                                <Button type="primary">
+                                    {t("Subscribe Now")}
+                                </Button>
                             </Link>
                         )}
                     </div>

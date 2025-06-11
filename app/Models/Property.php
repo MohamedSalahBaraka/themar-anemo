@@ -30,6 +30,7 @@ class Property extends Model
         'address',
         'published_at',
         'features',
+        'city_id',
         'expires_at',
         'is_featured',
         'rejection_reason',
@@ -38,6 +39,10 @@ class Property extends Model
     protected $casts = [
         'features' => 'array',
     ];
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -8,3 +8,7 @@ location ~ \.php$ {
     fastcgi_buffers 16 16k;
     fastcgi_buffer_size 32k;
 }
+<!-- front layout  -->
+<!-- dark mode fix -->
+profile fix
+<!-- allowing to set featuered  -->

@@ -1,5 +1,5 @@
 // src/components/PropertyForm.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Form,
     Input,
@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { Property } from "@/types/property";
 import MapPicker from "./MapPicker";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -40,6 +41,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     loading = false,
 }) => {
     const [form] = Form.useForm();
+    const { t } = useLanguage();
     const [deletedImages, setDeletedImages] = useState<number[]>([]);
     const [location, setLocation] = useState<
         { lat: number; lng: number } | undefined
@@ -48,6 +50,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             ? { lat: initialValues.latitude, lng: initialValues.longitude }
             : undefined
     );
+    const [cities, setCities] = useState<{ id: number; title: string }[]>([]);
+
+    useEffect(() => {
+        fetch("/cities") // adjust path if needed
+            .then((res) => res.json())
+            .then((data) => setCities(data))
+            .catch(() => message.error(t("failedToLoadCities")));
+    }, []);
 
     React.useEffect(() => {
         if (initialValues?.latitude && initialValues?.longitude) {
@@ -90,32 +100,34 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="title"
-                        label="عنوان العقار"
+                        label={t("propertyTitle")}
                         rules={[
-                            { required: true, message: "الرجاء إدخال العنوان" },
+                            { required: true, message: t("pleaseEnterTitle") },
                         ]}
                     >
                         <Input
                             style={{
                                 background: "transparent",
                             }}
-                            placeholder="مثال: شقة جميلة 3 غرف نوم"
+                            placeholder={t(
+                                "example: beautiful 3 bedroom apartment"
+                            )}
                         />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="type"
-                        label="نوع العقار"
+                        label={t("propertyType")}
                         rules={[
-                            { required: true, message: "الرجاء اختيار النوع" },
+                            { required: true, message: t("pleaseSelectType") },
                         ]}
                     >
-                        <Select placeholder="اختر نوع العقار">
-                            <Option value="apartment">شقة</Option>
-                            <Option value="villa">فيلا</Option>
-                            <Option value="office">مكتب</Option>
-                            <Option value="land">أرض</Option>
+                        <Select placeholder={t("selectPropertyType")}>
+                            <Option value="apartment">{t("apartment")}</Option>
+                            <Option value="villa">{t("villa")}</Option>
+                            <Option value="office">{t("office")}</Option>
+                            <Option value="land">{t("land")}</Option>
                         </Select>
                     </Form.Item>
                 </Col>
@@ -125,23 +137,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="purpose"
-                        label="الغرض"
+                        label={t("purpose")}
                         rules={[
-                            { required: true, message: "الرجاء اختيار الغرض" },
+                            {
+                                required: true,
+                                message: t("pleaseSelectPurpose"),
+                            },
                         ]}
                     >
-                        <Select placeholder="اختر الغرض">
-                            <Option value="sale">للبيع</Option>
-                            <Option value="rent">للإيجار</Option>
+                        <Select placeholder={t("selectPurpose")}>
+                            <Option value="sale">{t("forSale")}</Option>
+                            <Option value="rent">{t("forRent")}</Option>
                         </Select>
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
                     <Form.Item
                         name="price"
-                        label="السعر"
+                        label={t("price")}
                         rules={[
-                            { required: true, message: "الرجاء إدخال السعر" },
+                            { required: true, message: t("pleaseEnterPrice") },
                         ]}
                     >
                         <InputNumber<number>
@@ -163,47 +178,65 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <Form.Item
                 name="description"
-                label="الوصف"
-                rules={[{ required: true, message: "الرجاء إدخال الوصف" }]}
+                label={t("description")}
+                rules={[
+                    { required: true, message: t("pleaseEnterDescription") },
+                ]}
             >
-                <TextArea rows={4} placeholder="وصف تفصيلي للعقار" />
+                <TextArea
+                    rows={4}
+                    placeholder={t("detailedPropertyDescription")}
+                />
             </Form.Item>
 
-            <Divider orientation="left">التفاصيل</Divider>
+            <Divider orientation="left">{t("details")}</Divider>
 
             <Row gutter={16}>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="bedrooms" label="غرف النوم">
+                    <Form.Item name="bedrooms" label={t("bedrooms")}>
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="bathrooms" label="الحمامات">
+                    <Form.Item name="bathrooms" label={t("bathrooms")}>
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} sm={12} md={8}>
-                    <Form.Item name="area" label="المساحة (قدم مربع)">
+                    <Form.Item name="area" label={t("areaSqFt")}>
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
             </Row>
 
-            <Divider orientation="left">الموقع</Divider>
+            <Divider orientation="left">{t("location")}</Divider>
+            <Form.Item
+                name="city_id"
+                label={t("city")}
+                rules={[{ required: true, message: t("pleaseSelectCity") }]}
+            >
+                <Select placeholder={t("selectCity")}>
+                    {cities.map((city) => (
+                        <Select.Option key={city.id} value={city.id}>
+                            {city.title}
+                        </Select.Option>
+                    ))}
+                </Select>
+            </Form.Item>
 
             <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name="address" label="العنوان">
+                    <Form.Item name="address" label={t("address")}>
                         <Input
                             style={{
                                 background: "transparent",
                             }}
-                            placeholder="العنوان الكامل للعقار"
+                            placeholder={t("fullPropertyAddress")}
                         />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name="floor" label="الطابق (إن وجد)">
+                    <Form.Item name="floor" label={t("floorIfApplicable")}>
                         <InputNumber min={0} style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
@@ -225,22 +258,22 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             </Row>
             <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name="latitude" label="خط العرض">
+                    <Form.Item name="latitude" label={t("latitude")}>
                         <InputNumber style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name="longitude" label="خط الطول">
+                    <Form.Item name="longitude" label={t("longitude")}>
                         <InputNumber style={{ width: "100%" }} />
                     </Form.Item>
                 </Col>
             </Row>
 
-            <Divider orientation="left">الصور</Divider>
+            <Divider orientation="left">{t("images")}</Divider>
 
             <Form.Item
                 name="images"
-                label="صور العقار"
+                label={t("propertyImages")}
                 valuePropName="fileList"
                 getValueFromEvent={normFile}
             >
@@ -254,11 +287,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 >
                     <div>
                         <PlusOutlined />
-                        <div style={{ marginTop: 8 }}>رفع</div>
+                        <div style={{ marginTop: 8 }}>{t("upload")}</div>
                     </div>
                 </Upload>
             </Form.Item>
-            <Form.Item label="الميزات">
+            <Form.Item label={t("features")}>
                 <Form.List name="features">
                     {(fields, { add, remove }) => (
                         <>
@@ -277,11 +310,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                                         rules={[
                                             {
                                                 required: true,
-                                                message: "يرجى إدخال الميزة",
+                                                message:
+                                                    t("pleaseEnterFeature"),
                                             },
                                         ]}
                                     >
-                                        <Input placeholder="مثال: دعم العملاء على مدار الساعة" />
+                                        <Input
+                                            placeholder={t(
+                                                "example: 24/7 customer support"
+                                            )}
+                                        />
                                     </Form.Item>
                                     <Button
                                         type="text"
@@ -298,7 +336,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                                     block
                                     icon={<PlusOutlined />}
                                 >
-                                    إضافة ميزة
+                                    {t("addFeature")}
                                 </Button>
                             </Form.Item>
                         </>
@@ -308,9 +346,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <Form.Item>
                 <Space>
                     <Button type="primary" htmlType="submit" loading={loading}>
-                        حفظ التغييرات
+                        {t("saveChanges")}
                     </Button>
-                    <Button onClick={onCancel}>إلغاء</Button>
+                    <Button onClick={onCancel}>{t("cancel")}</Button>
                 </Space>
             </Form.Item>
         </Form>

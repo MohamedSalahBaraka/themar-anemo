@@ -16,8 +16,12 @@ import {
 
 const { Item: DescriptionsItem } = Descriptions;
 const { Meta: ListItemMeta } = List.Item;
-
-const ServiceDetailsPage = ({ service, relatedServices }) => {
+const ServiceDetailsPage = ({ service, relatedServices }) => (
+    <AdminLayout>
+        <Page service={service} relatedServices={relatedServices} />
+    </AdminLayout>
+);
+const Page = ({ service, relatedServices }) => {
     const formatDescription = (text) => {
         if (!text) return "";
         return text.replace(/\n/g, "<br>");

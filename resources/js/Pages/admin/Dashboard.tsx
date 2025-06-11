@@ -1,5 +1,5 @@
 // src/pages/admin/Dashboard.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
     Card,
     Row,
@@ -58,14 +58,15 @@ const Page: React.FC = () => {
     const [timeRange, setTimeRange] = useState<string>("7days");
     const [dateRange, setDateRange] = useState<any>(null);
 
-    const { t, language, setLanguage } = useLanguage();
-    const { stats, revenueData } = usePage<AdminDashboardProps>().props;
+    const { t } = useLanguage();
+    const { stats, revenueData, userGrowth } =
+        usePage<AdminDashboardProps>().props;
 
     const revenueChartData = {
         labels: revenueData.map((item) => item.date),
         datasets: [
             {
-                label: "الإيرادات اليومية",
+                label: t("daily_revenue"),
                 data: revenueData.map((item) => item.total),
                 backgroundColor: "rgba(54, 162, 235, 0.5)",
                 borderColor: "rgba(54, 162, 235, 1)",
@@ -75,14 +76,27 @@ const Page: React.FC = () => {
     };
 
     const userGrowthData = {
-        labels: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو"],
+        labels: [
+            t("january"),
+            t("february"),
+            t("march"),
+            t("april"),
+            t("may"),
+            t("june"),
+            t("july"),
+            t("august"),
+            t("september"),
+            t("october"),
+            t("november"),
+            t("december"),
+        ],
         datasets: [
             {
-                label: "مستخدمين جدد",
-                data: [12, 19, 3, 5, 2, 3],
+                label: t("new_users"),
+                data: userGrowth, // Comes from backend
                 backgroundColor: "rgba(75, 192, 192, 0.5)",
                 borderColor: "rgba(75, 192, 192, 1)",
-                tension: 0.1,
+                tension: 0.3,
             },
         ],
     };
@@ -95,7 +109,7 @@ const Page: React.FC = () => {
             },
             title: {
                 display: true,
-                text: "نظرة عامة على الإيرادات",
+                text: t("revenue_overview"),
             },
         },
         scales: {
@@ -110,14 +124,14 @@ const Page: React.FC = () => {
 
     return (
         <div className="admin-dashboard" style={{ padding: "24px" }}>
-            <Title level={2}>لوحة تحكم المشرف</Title>
+            <Title level={2}>{t("admin_dashboard")}</Title>
 
             {/* بطاقات الإحصائيات */}
             <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="إجمالي المستخدمين"
+                            title={t("total_users")}
                             value={stats?.users_count || 0}
                             prefix={<UserOutlined />}
                             valueStyle={{ color: "#3f8600" }}
@@ -127,7 +141,7 @@ const Page: React.FC = () => {
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="إجمالي العقارات"
+                            title={t("total_properties")}
                             value={stats?.properties_count || 0}
                             prefix={<HomeOutlined />}
                             valueStyle={{ color: "#3f8600" }}
@@ -137,7 +151,7 @@ const Page: React.FC = () => {
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="العروض النشطة"
+                            title={t("active_listings")}
                             value={stats?.active_listings || 0}
                             prefix={<HomeOutlined />}
                             valueStyle={{ color: "#3f8600" }}
@@ -147,7 +161,7 @@ const Page: React.FC = () => {
                 <Col xs={24} sm={12} md={6}>
                     <Card>
                         <Statistic
-                            title="إيرادات 30 يوم"
+                            title={t("30days_revenue")}
                             value={stats?.revenue_30days || 0}
                             prefix={<DollarOutlined />}
                             valueStyle={{ color: "#3f8600" }}
@@ -159,16 +173,16 @@ const Page: React.FC = () => {
             </Row>
 
             {/* الفلاتر */}
-            <Card style={{ marginBottom: "24px" }}>
+            {/* <Card style={{ marginBottom: "24px" }}>
                 <Space size="large">
                     <Select
                         defaultValue="7days"
                         style={{ width: 120 }}
                         onChange={(value) => setTimeRange(value)}
                     >
-                        <Option value="7days">آخر 7 أيام</Option>
-                        <Option value="30days">آخر 30 يوم</Option>
-                        <Option value="90days">آخر 90 يوم</Option>
+                        <Option value="7days">{t("last_7days")}</Option>
+                        <Option value="30days">{t("last_30days")}</Option>
+                        <Option value="90days">{t("last_90days")}</Option>
                     </Select>
 
                     <RangePicker
@@ -177,12 +191,12 @@ const Page: React.FC = () => {
                     />
 
                     <Select defaultValue="all" style={{ width: 120 }}>
-                        <Option value="all">جميع الأنواع</Option>
-                        <Option value="sale">للبيع</Option>
-                        <Option value="rent">للإيجار</Option>
+                        <Option value="all">{t("all_types")}</Option>
+                        <Option value="sale">{t("for_sale")}</Option>
+                        <Option value="rent">{t("for_rent")}</Option>
                     </Select>
                 </Space>
-            </Card>
+            </Card> */}
 
             {/* الرسوم البيانية */}
             <Row gutter={[16, 16]}>
@@ -191,7 +205,7 @@ const Page: React.FC = () => {
                         title={
                             <Space>
                                 <BarChartOutlined />
-                                <Text strong>تقرير الإيرادات</Text>
+                                <Text strong>{t("revenue_report")}</Text>
                             </Space>
                         }
                     >
@@ -203,7 +217,7 @@ const Page: React.FC = () => {
                         title={
                             <Space>
                                 <UserOutlined />
-                                <Text strong>نمو المستخدمين</Text>
+                                <Text strong>{t("user_growth")}</Text>
                             </Space>
                         }
                     >
@@ -215,7 +229,7 @@ const Page: React.FC = () => {
                                     ...chartOptions.plugins,
                                     title: {
                                         display: true,
-                                        text: "نمو المستخدمين",
+                                        text: t("user_growth"),
                                     },
                                 },
                                 scales: {
@@ -230,7 +244,7 @@ const Page: React.FC = () => {
             </Row>
 
             {/* النشاط الأخير */}
-            <Card title="النشاط الأخير" style={{ marginTop: "24px" }}>
+            <Card title={t("recent_activity")} style={{ marginTop: "24px" }}>
                 <div
                     style={{
                         minHeight: "200px",
@@ -239,9 +253,7 @@ const Page: React.FC = () => {
                         justifyContent: "center",
                     }}
                 >
-                    <Text type="secondary">
-                        ستظهر هنا أحدث المعاملات والأنشطة
-                    </Text>
+                    <Text type="secondary">{t("recent_activity_message")}</Text>
                 </div>
             </Card>
         </div>
