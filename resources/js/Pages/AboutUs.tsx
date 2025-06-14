@@ -46,7 +46,6 @@ const Page: React.FC = () => {
             <div style={{ position: "relative", overflow: "hidden" }}>
                 <div
                     style={{
-                        textAlign: "right",
                         padding: "40px 0",
                         background: "linear-gradient(135deg, #7091D2, #5275B9)",
                         clipPath: "polygon(0 0, 100% 0, 100% 70%, 0% 100%)",
@@ -84,14 +83,12 @@ const Page: React.FC = () => {
                 </div>
             </div>
             <div
-                style={{ padding: "24px", direction: "rtl" }}
+                style={{ padding: "24px" }}
                 className="container mx-auto px-4 py-6"
             >
-                <Card style={{ textAlign: "right" }}>
+                <Card>
                     <Typography>
-                        <Title level={4} style={{ textAlign: "right" }}>
-                            {t("about_our_platform")}
-                        </Title>
+                        <Title level={4}>{t("about_our_platform")}</Title>
 
                         <Paragraph>{appConfigs["about.detailed"]}</Paragraph>
                     </Typography>
