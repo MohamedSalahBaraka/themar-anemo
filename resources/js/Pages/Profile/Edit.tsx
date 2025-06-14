@@ -9,6 +9,7 @@ import { Button, Col, Form, Image, Input, message, Row, Upload } from "antd";
 import { useLanguage } from "@/contexts/LanguageContext";
 import React from "react";
 import { User } from "@/types/user";
+import AdminLayout from "@/Layouts/AdminLayout";
 interface props extends PageProps {
     user: User;
 }
@@ -17,15 +18,26 @@ export default function Edit({
     status,
     auth,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
-    return (
-        <AppLayout>
-            <Page
-                mustVerifyEmail={mustVerifyEmail}
-                status={status}
-                auth={auth}
-            />
-        </AppLayout>
-    );
+    if (auth.user.role === "admin")
+        return (
+            <AdminLayout>
+                <Page
+                    mustVerifyEmail={mustVerifyEmail}
+                    status={status}
+                    auth={auth}
+                />
+            </AdminLayout>
+        );
+    else
+        return (
+            <AppLayout>
+                <Page
+                    mustVerifyEmail={mustVerifyEmail}
+                    status={status}
+                    auth={auth}
+                />
+            </AppLayout>
+        );
 }
 const Page = ({
     mustVerifyEmail,
