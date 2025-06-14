@@ -21,15 +21,15 @@ class SubscriptionController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('error', 'You must be logged in to view subscriptions.');
         }
-        $subscription = $user->subscription();
+        $subscription = $user->subscription;
         return Inertia::render('user/SubscriptionPage', [
             'packages' => Package::where('isActive', true)->get()->map(function ($package) {
                 return [
                     'id' => $package->id,
                     'name' => $package->name,
                     'price' => (int) $package->price,
-                    'duration' => $package->duration,
                     'description' => $package->description,
+                    'max_adds' => $package->max_adds,
                     'max_listings' => $package->max_listings,
                     'features' => $package->features ?? [],
                     'is_active' => $package->is_active,
@@ -50,28 +50,28 @@ class SubscriptionController extends Controller
                     'features' => $subscription->package->features ?? [],
                 ]
             ] : null,
-            'transactions' => $user->transactions()
-                ->with('invoice')
-                ->latest()
-                ->get()
-                ->map(function ($transaction) {
-                    return [
-                        'id' => $transaction->id,
-                        'type' => $transaction->type,
-                        'amount' => $transaction->amount,
-                        'method' => $transaction->method,
-                        'status' => $transaction->status,
-                        'reference' => $transaction->reference,
-                        'paid_at' => $transaction->paid_at?->toDateTimeString(),
-                        'created_at' => $transaction->created_at->toDateTimeString(),
-                        'invoice' => $transaction->invoice ? [
-                            'invoice_number' => $transaction->invoice->invoice_number,
-                            'invoice_pdf_url' => $transaction->invoice->invoice_pdf_url,
-                            'issue_date' => $transaction->invoice->created_at->toDateString(),
-                            'due_date' => $transaction->invoice->created_at->addDays(30)->toDateString(),
-                        ] : null
-                    ];
-                }),
+            // 'transactions' => $user->transactions()
+            // ->with('invoice')
+            // ->latest()
+            // ->get()
+            // ->map(function ($transaction) {
+            //     return [
+            //         'id' => $transaction->id,
+            //         'type' => $transaction->type,
+            //         'amount' => $transaction->amount,
+            //         'method' => $transaction->method,
+            //         'status' => $transaction->status,
+            //         'reference' => $transaction->reference,
+            //         'paid_at' => $transaction->paid_at?->toDateTimeString(),
+            //         'created_at' => $transaction->created_at->toDateTimeString(),
+            //         'invoice' => $transaction->invoice ? [
+            //             'invoice_number' => $transaction->invoice->invoice_number,
+            //             'invoice_pdf_url' => $transaction->invoice->invoice_pdf_url,
+            //             'issue_date' => $transaction->invoice->created_at->toDateString(),
+            //             'due_date' => $transaction->invoice->created_at->addDays(30)->toDateString(),
+            //         ] : null
+            //     ];
+            // }),
         ]);
     }
 

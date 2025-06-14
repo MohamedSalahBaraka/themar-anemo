@@ -346,11 +346,13 @@ const Page: React.FC = () => {
                     style={{
                         position: "absolute",
                         bottom: 40,
-                        right: 40,
+                        ...(language === "ar" ? { right: 40 } : { left: 40 }),
                         maxWidth: 500,
                         borderRadius: 12,
                         padding: 24,
-                        fontFamily: "Arial, sans-serif",
+                        ...(language === "en" && {
+                            fontFamily: "Arial, sans-serif",
+                        }),
                     }}
                 >
                     {/* Title */}

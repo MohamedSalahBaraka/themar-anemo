@@ -10,6 +10,7 @@ use App\Models\Faq;
 use App\Models\Package;
 use App\Models\Property;
 use App\Models\TeamMember;
+use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -175,7 +176,11 @@ class HomeController extends Controller
     {
         $aboutValues = AboutValue::all();
         $teamMembers = TeamMember::all();
-        return Inertia::render('AboutUs', ['aboutValues' => $aboutValues, 'teamMembers' => $teamMembers]);
+        $statictis['cities'] = City::count();
+        $statictis['all'] = Property::count();
+        $statictis['active'] = Property::where('status', 'available')->where('approved', true)->count();
+
+        return Inertia::render('AboutUs', ['aboutValues' => $aboutValues, 'teamMembers' => $teamMembers, 'statictis' =>  $statictis]);
     }
     public function getConfigs()
     {

@@ -536,10 +536,7 @@ const Page: React.FC = () => {
                         <Empty description={t("no_featured_properties")} />
                     )}
                 </section>
-                <Card
-                    title={t("property_categories")}
-                    style={{ textAlign: "right", direction: "rtl" }}
-                >
+                <Card title={t("property_categories")}>
                     <Row gutter={16}>
                         {realEstateTypes.map((item, index) => (
                             <Col key={index} span={6}>

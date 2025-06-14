@@ -319,7 +319,6 @@ const Page = ({
 
             <div
                 style={{
-                    background: "#fafafa",
                     padding: 20,
                     marginBottom: 20,
                     borderRadius: 4,

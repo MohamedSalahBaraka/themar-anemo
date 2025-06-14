@@ -238,7 +238,6 @@ const Page: React.FC = () => {
                     columns={columns}
                     pagination={false}
                     bordered
-                    style={{ direction: "rtl" }}
                 />
             </Card>
             <Card

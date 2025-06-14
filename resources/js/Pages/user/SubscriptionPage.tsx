@@ -17,6 +17,7 @@ import type { DescriptionsProps, TableProps } from "antd";
 import { PageProps } from "@/types";
 import AppLayout from "@/Layouts/Layout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CheckOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -25,8 +26,8 @@ interface Package {
     name: string;
     description: string;
     price: number;
-    duration: number; // in days
     max_listings: number;
+    max_adds: number;
     features: string[] | null;
     created_at: string;
     updated_at: string;
@@ -266,9 +267,9 @@ const Page: React.FC = () => {
                   },
                   {
                       key: "6",
-                      label: t("duration"),
+                      label: t("max_featured_listings"),
                       children: `${
-                          props.currentSubscription.package.duration
+                          props.currentSubscription.package.max_adds
                       } ${t("days")}`,
                   },
               ]
@@ -313,7 +314,7 @@ const Page: React.FC = () => {
             >
                 <div className="packages-list">
                     <List
-                        grid={{ gutter: 16, xs: 1, sm: 2, lg: 3 }}
+                        grid={{ gutter: 24, sm: 1, lg: 1 }}
                         dataSource={props.packages}
                         renderItem={(pkg) => (
                             <List.Item>
@@ -324,7 +325,6 @@ const Page: React.FC = () => {
                                         borderRadius: 12,
                                         boxShadow:
                                             "0 4px 12px rgba(0, 0, 0, 0.15)",
-                                        backgroundColor: "#f9f9f9",
                                         transition: "0.3s",
                                     }}
                                     headStyle={{
@@ -383,20 +383,46 @@ const Page: React.FC = () => {
                                     ]}
                                 >
                                     <div style={{ minHeight: 100 }}>
-                                        <Divider />
                                         <Space
                                             direction="vertical"
                                             size="middle"
                                         >
-                                            <Text>
-                                                📅 {t("duration")}:{" "}
-                                                {pkg.duration} {t("days")}
-                                            </Text>
-                                            <Text>
-                                                📦 {t("max_listings")}:{" "}
-                                                {pkg.max_listings}
-                                            </Text>
                                             <Text>{pkg.description}</Text>
+                                            <Divider />
+                                            {pkg.features && (
+                                                <List
+                                                    size="small"
+                                                    dataSource={[
+                                                        ...pkg.features,
+                                                        `${
+                                                            pkg.max_listings
+                                                        } ${t("Listings")}`,
+                                                        `${pkg.max_adds} ${t(
+                                                            "Featured Listings"
+                                                        )}`,
+                                                    ]}
+                                                    renderItem={(feature) => (
+                                                        <List.Item
+                                                            style={{
+                                                                padding:
+                                                                    "4px 0",
+                                                                border: "none",
+                                                            }}
+                                                        >
+                                                            <Space align="start">
+                                                                <CheckOutlined
+                                                                    style={{
+                                                                        color: "#52c41a",
+                                                                    }}
+                                                                />
+                                                                <Text>
+                                                                    {feature}
+                                                                </Text>
+                                                            </Space>
+                                                        </List.Item>
+                                                    )}
+                                                />
+                                            )}
                                         </Space>
                                     </div>
                                 </Card>
@@ -406,7 +432,7 @@ const Page: React.FC = () => {
                 </div>
             </Card>
 
-            <Card
+            {/* <Card
                 title={t("transaction_history")}
                 loading={!props.transactions}
             >
@@ -416,7 +442,7 @@ const Page: React.FC = () => {
                     rowKey="id"
                     pagination={{ pageSize: 5 }}
                 />
-            </Card>
+            </Card> */}
 
             <Modal
                 title={t("invoice_details")}

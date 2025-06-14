@@ -106,11 +106,11 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
             icon: <SearchOutlined />,
             label: <Link href="/user/inquiries">{t("inquiries")}</Link>,
         },
-        {
-            key: "reservations",
-            icon: <SearchOutlined />,
-            label: <Link href="/user/reservations">{t("reservations")}</Link>,
-        },
+        // {
+        //     key: "reservations",
+        //     icon: <SearchOutlined />,
+        //     label: <Link href="/user/reservations">{t("reservations")}</Link>,
+        // },
         {
             key: "MyListingsPage",
             icon: <ShopOutlined />,
@@ -133,7 +133,7 @@ const MainLayout = ({ children }: AdminLayoutProps) => {
         {
             key: "SettingsPage",
             icon: <SettingOutlined />,
-            label: <Link href="/user/SettingsPage">{t("settings")}</Link>,
+            label: <Link href="/profile">{t("settings")}</Link>,
         },
     ];
 

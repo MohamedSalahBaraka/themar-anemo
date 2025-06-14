@@ -237,7 +237,7 @@ const Page: React.FC = () => {
                 >
                     <Row>
                         <Col
-                            sm={12}
+                            sm={6}
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
@@ -253,7 +253,7 @@ const Page: React.FC = () => {
                             </Text>
                         </Col>
                         <Col
-                            sm={12}
+                            sm={6}
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
@@ -269,7 +269,7 @@ const Page: React.FC = () => {
                             </Text>
                         </Col>
                         <Col
-                            sm={12}
+                            sm={6}
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
@@ -283,7 +283,7 @@ const Page: React.FC = () => {
                             <Text style={{ color: "#ccc" }}>{t("cities")}</Text>
                         </Col>
                         <Col
-                            sm={12}
+                            sm={6}
                             style={{
                                 display: "flex",
                                 flexDirection: "column",

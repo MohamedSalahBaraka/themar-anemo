@@ -156,7 +156,7 @@ const Page: React.FC = () => {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-6">{t("our_services")}</h1>
 
-                <div className="bg-white p-6 rounded-lg shadow mb-6">
+                <div className=" p-6 rounded-lg shadow mb-6">
                     <Row gutter={[16, 16]} align="middle">
                         <Col xs={24} sm={12} md={8}>
                             <Search

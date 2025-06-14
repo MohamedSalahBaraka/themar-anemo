@@ -288,6 +288,14 @@ class ConfigSeeder extends Seeder
                 'is_public' => true,
             ],
             [
+                'key' => 'about.statictis_experiance',
+                'value' => 5,
+                'type' => 'number',
+                'description' => 'سنوات الخبرة',
+                'group' => 'about',
+                'is_public' => true,
+            ],
+            [
                 'key' => 'about.detailed',
                 'value' => 'نحن منصة عقارية رائدة ملتزمون بالجودة والثقة.',
                 'type' => 'textarea',
